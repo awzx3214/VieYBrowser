@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<iapp>
+<title>VieY</title>
+<icon>icon.png</icon>
+<packageName>kawaii.viey.browser</packageName>
+<versionName>1.0</versionName>
+<versionint>1</versionint>
+<sdk>15</sdk>
+<yuv>3</yuv>
+
+<remark></remark>
+<Permissions>android.permission.READ_EXTERNAL_STORAGE
+android.permission.REQUEST_INSTALL_PACKAGES
+android.permission.INTERNET
+android.permission.WRITE_EXTERNAL_STORAGE</Permissions>
+<createTime>2026-08-11 00:47:31</createTime>
+<upTime>2026-08-11 00:47:31</upTime>
+</iapp>

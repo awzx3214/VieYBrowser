@@ -1,0 +1,335 @@
+package kawaii.viey.browser;
+
+import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.os.Build;
+import android.os.LocaleList;
+import java.util.Locale;
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipEntry;
+import android.content.SharedPreferences;
+import android.os.Environment;
+import android.preference.PreferenceManager;
+import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.ArrayList;
+
+public class VieYApp extends Application {
+	
+	public static final String KEY_WINDOW_URLS = "saved_window_urls";
+	public static final String PREFS_NAME = "kawaii_browser_prefs";
+	public static final String KEY_DARK_MODE = "dark_mode";
+	public static final String KEY_HOME_URL = "home_url";
+	public static final String KEY_SEARCH_ENGINE = "search_engine";
+	public static final String KEY_ACTIVE_CERT_NAME = "active_cert_name";
+	public static final String KEY_ACTIVE_CERT_PWD = "active_cert_pwd";
+	private static VieYApp instance;
+	public static final String KEY_LANGUAGE = "language";
+	public static final String LANG_AUTO = "auto";
+	public static final String LANG_ZH = "zh-CN";
+	public static final String LANG_TW = "zh-TW";
+	public static final String LANG_EN = "en-US";
+	private static final String PREF_DOWNLOAD_PATH = "download_path";
+	public static final String PREF_UA = "user_agent";
+	public static final String UA_DEFAULT = "";
+	public static final String IPV4 = "prefer_ipv4";
+	public static final String TOOLBAR_POS_TOP = "top";
+	public static final String TOOLBAR_POS_BOTTOM = "bottom";
+	public static final String TOOLBAR_POS_TOP_SIDE = "top_side";
+	public static final String TOOLBAR_POS_BOTTOM_SIDE = "bottom_side";
+	private static final String KEY_TOOLBAR_POS = "toolbar_pos";
+	public static final String KEY_FIRST_LAUNCH = "is_first_launch";
+	public static final String KEY_PULL_REFRESH = "pull_refresh";
+	
+	public static boolean isPullRefresh(Context context) {
+		return getPrefs(context).getBoolean(KEY_PULL_REFRESH, true);
+	}
+	
+	public static void setPullRefresh(Context context, boolean enabled) {
+		getPrefs(context).edit().putBoolean(KEY_PULL_REFRESH, enabled).apply();
+	}
+	
+	public static boolean isFirstLaunch(Context context){
+		return getPrefs(context).getBoolean(KEY_FIRST_LAUNCH, true);
+	}
+	
+	public static void setFirstLaunchCompleted(Context context){
+		getPrefs(context).edit().putBoolean(KEY_FIRST_LAUNCH, false).apply();
+	}
+	
+	public static String getToolbarPosition(Context context){
+		return getPrefs(context).getString(KEY_TOOLBAR_POS, TOOLBAR_POS_TOP);
+	}
+	
+	public static void setToolbarPosition(Context context,String pos){
+		getPrefs(context).edit().putString(KEY_TOOLBAR_POS,pos).apply();
+	}
+	
+	public static String getToolbarPositionDisplayName(Context ctx,String value){
+		switch (value){
+			case TOOLBAR_POS_BOTTOM:
+			return ctx.getString(R.string.toolbar_pos_bottom);
+			case TOOLBAR_POS_TOP_SIDE:
+			return ctx.getString(R.string.toolbar_pos_top_side);
+			case TOOLBAR_POS_BOTTOM_SIDE:
+			return ctx.getString(R.string.toolbar_pos_bottom_side);
+			default:
+			return ctx.getString(R.string.toolbar_pos_top);
+		}
+	}
+	
+	public static class CertInfo{
+		public String filePath;
+		public String password;
+		public CertInfo(String path,String pwd){
+			filePath = path;
+			password = pwd;
+		}
+	}
+	
+	public static String getUserAgent(Context context) {
+		return getPrefs(context).getString(PREF_UA, UA_DEFAULT);
+	}
+	
+	public static boolean isPreferIpv4(Context context) {
+		return getPrefs(context).getBoolean(IPV4, false);
+	}
+	
+	public static void setPreferIpv4(Context context, boolean enable) {
+		getPrefs(context).edit().putBoolean(IPV4, enable).apply();
+	}
+	public static void setUserAgent(Context context, String ua) {
+		getPrefs(context).edit().putString(PREF_UA, ua).apply();
+	}
+	
+	public static void saveWindowUrls(Context context, List<String> urlList){
+		SharedPreferences sp = getPrefs(context);
+		Set<String> set = new HashSet<>(urlList);
+		sp.edit().putStringSet(KEY_WINDOW_URLS, set).apply();
+	}
+	
+	public static List<String> getSavedWindowUrls(Context context){
+		Set<String> set = getPrefs(context).getStringSet(KEY_WINDOW_URLS, null);
+		if(set == null || set.isEmpty()) return new ArrayList<>();
+		return new ArrayList<>(set);
+	}
+	
+	public static void clearSavedWindowUrls(Context context){
+		getPrefs(context).edit().remove(KEY_WINDOW_URLS).apply();
+	}
+	
+	public static String getDownloadPath(Context context) {
+		String defaultPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+		return getPrefs(context).getString(PREF_DOWNLOAD_PATH, defaultPath);
+	}
+	
+	public static void setDownloadPath(Context context, String path) {
+		getPrefs(context).edit().putString(PREF_DOWNLOAD_PATH, path).apply();
+	}
+	
+	public static File getCertDir(Context context){
+		File root = new File(context.getFilesDir(),"gemini");
+		File certDir = new File(root,"cert");
+		if(!certDir.exists()) certDir.mkdirs();
+		return certDir;
+	}
+	
+	
+	public static void setActiveCertName(Context context,String fileName){
+		getPrefs(context).edit().putString(KEY_ACTIVE_CERT_NAME,fileName).apply();
+	}
+	
+	public static void setActiveCertPassword(Context context,String pwd){
+		getPrefs(context).edit().putString(KEY_ACTIVE_CERT_PWD,pwd).apply();
+	}
+	
+	public static String getActiveCertName(Context context){
+		return getPrefs(context).getString(KEY_ACTIVE_CERT_NAME,null);
+	}
+	
+	public static String getActiveCertPassword(Context context){
+		return getPrefs(context).getString(KEY_ACTIVE_CERT_PWD,"");
+	}
+	
+	
+	public static CertInfo getCurrentActiveCertInfo(Context context){
+		String name = getActiveCertName(context);
+		if(name==null||name.isEmpty()) return null;
+		File certFile = new File(getCertDir(context),name);
+		if(!certFile.exists()) return null;
+		String pwd = getActiveCertPassword(context);
+		return new CertInfo(certFile.getAbsolutePath(),pwd);
+	}
+	
+	public static void clearActiveCert(Context context){
+		getPrefs(context).edit()
+		.remove(KEY_ACTIVE_CERT_NAME)
+		.remove(KEY_ACTIVE_CERT_PWD)
+		.apply();
+	}
+	
+	public static String getLanguage(Context context) {
+		return getPrefs(context).getString(KEY_LANGUAGE, LANG_AUTO);
+	}
+	
+	public static void setLanguage(Context context, String lang) {
+		getPrefs(context).edit().putString(KEY_LANGUAGE, lang).apply();
+	}
+	
+	public static String getLanguageDisplayName(Context context) {
+		String lang = getLanguage(context);
+		switch (lang) {
+			case LANG_ZH:
+			return context.getString(R.string.lang_zh);
+			case LANG_TW:
+			return context.getString(R.string.lang_tw);
+			case LANG_EN:
+			return context.getString(R.string.lang_en);
+			default:
+			return context.getString(R.string.lang_auto);
+		}
+	}
+	
+	public static Context applyLanguage(Context context) {
+		String lang = getLanguage(context);
+		Locale locale;
+		
+		switch (lang) {
+			case LANG_ZH:
+			locale = Locale.SIMPLIFIED_CHINESE;
+			break;
+			case LANG_TW:
+			locale = Locale.TRADITIONAL_CHINESE;
+			break;
+			case LANG_EN:
+			locale = Locale.ENGLISH;
+			break;
+			default:
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+				locale = LocaleList.getDefault().get(0);
+			} else {
+				locale = Locale.getDefault();
+			}
+			break;
+		}
+		
+		Configuration config = new Configuration();
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+			LocaleList localeList = new LocaleList(locale);
+			config.setLocales(localeList);
+		} else {
+			config.setLocale(locale);
+		}
+		return context.createConfigurationContext(config);
+	}
+	
+	
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		
+		copyThis(this);
+		instance = this;
+		i.m(getApplicationContext());
+	}
+	
+	public static VieYApp getInstance() {
+		return instance;
+	}
+	
+	public static SharedPreferences getPrefs(Context context) {
+		return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+	}
+	
+	public static boolean isDarkMode(Context context) {
+		return getPrefs(context).getBoolean(KEY_DARK_MODE, false);
+	}
+	
+	public static void setDarkMode(Context context, boolean dark) {
+		getPrefs(context).edit().putBoolean(KEY_DARK_MODE, dark).apply();
+	}
+	
+	public static String getHomeUrl(Context context) {
+		return getPrefs(context).getString(KEY_HOME_URL, "https://github.com/awzx3214/VieYBrowser");
+	}
+	
+	public static void setHomeUrl(Context context, String url) {
+		getPrefs(context).edit().putString(KEY_HOME_URL, url).apply();
+	}
+	
+	public static String getSearchEngine(Context context) {
+		return getPrefs(context).getString(KEY_SEARCH_ENGINE, "https://www.bing.com/search?q=");
+	}
+	
+	public static void setSearchEngine(Context context, String engine) {
+		getPrefs(context).edit().putString(KEY_SEARCH_ENGINE, engine).apply();
+	}
+	
+	
+	public static void copyThis(Context ctx){
+		File targetDir = new File(ctx.getFilesDir(),"xy");
+		if(!targetDir.exists()){
+			targetDir.mkdirs();
+		} else {
+			deleteFilesInDir(targetDir);
+		}
+		
+		new Thread(()->{
+			try (InputStream is = ctx.getAssets().open("data.zip")) {
+				ZipInputStream zipIn = new ZipInputStream(is);
+				ZipEntry entry;
+				byte[] buffer = new byte[4096];
+				while ((entry = zipIn.getNextEntry()) != null) {
+					File outFile = new File(targetDir, entry.getName());
+					if (!outFile.getCanonicalPath().startsWith(targetDir.getCanonicalPath())) {
+						continue;
+					}
+					if (entry.isDirectory()) {
+						outFile.mkdirs();
+					} else {
+						if (!outFile.getParentFile().exists()) {
+							outFile.getParentFile().mkdirs();
+						}
+						try (FileOutputStream fos = new FileOutputStream(outFile)) {
+							int len;
+							while ((len = zipIn.read(buffer)) != -1) {
+								fos.write(buffer, 0, len);
+							}
+						}
+					}
+					zipIn.closeEntry();
+				}
+				zipIn.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}).start();
+	}
+	
+	private static void deleteFilesInDir(File dir) {
+		if (dir == null || !dir.isDirectory()) {
+			return;
+		}
+		File[] files = dir.listFiles();
+		if (files != null) {
+			for (File file : files) {
+				if (file.isDirectory()) {
+					deleteFilesInDir(file);
+					file.delete();
+				} else {
+					file.delete();
+				}
+			}
+		}
+	}
+}

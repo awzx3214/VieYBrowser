@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style
+        name="AppTheme"
+        parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">#00FFDD</item>
+        <item name="colorPrimaryDark">#4FE5CC</item>
+        <item name="colorAccent">#00FFDD</item>
+        <item name="android:windowBackground">@color/bg_primary</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:statusBarColor">@color/status_bar_color</item>
+        <item name="buttonStyle">@style/appButton</item>
+        <item name="editTextStyle">@style/appEditText</item>
+    </style>
+
+    <style
+        name="AppTheme.Dark"
+        parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">#00FFDD</item>
+        <item name="colorPrimaryDark">#4FE5CC</item>
+        <item name="colorAccent">#00FFDD</item>
+        <item name="android:windowBackground">@color/bg_primary</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:statusBarColor">#1A1A1A</item>
+        <item name="buttonStyle">@style/appButton</item>
+        <item name="editTextStyle">@style/appEditText</item>
+    </style>
+
+    <style
+        name="StartTheme"
+        parent="AppTheme">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:statusBarColor">#80000000</item>
+    </style>
+
+    <style
+        name="AppBaseTheme"
+        parent="@style/Theme.AppCompat.Light.DarkActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="colorAccent">#00FFDD</item>
+        <item name="android:statusBarColor">@color/status_bar_color</item>
+        <item name="colorControlNormal">#ffffff</item>
+        <item name="buttonStyle">@style/appButton</item>
+        <item name="editTextStyle">@style/appEditText</item>
+    </style>
+
+    <style name="BottomSheetMenuItemStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:paddingHorizontal">10dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+    </style>
+
+    <style name="LeftSlideAnim">
+        <item name="android:windowEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:windowExitAnimation">@anim/slide_out_left</item>
+    </style>
+
+    <style
+        name="appButton"
+        parent="Widget.AppCompat.Button">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:background">@drawable/btn_selector</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style
+        name="appEditText"
+        parent="Widget.AppCompat.EditText">
+        <item name="android:textSize">14sp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:background">@drawable/edittext_selector</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+</resources>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:orientation="vertical">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="#f0ffffff"
+        app:cardCornerRadius="14dp"
+        app:cardMaxElevation="2dp"
+        android:layout_margin="15dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <LinearLayout
+                android:id="@+id/layout_page_search"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <EditText
+                    android:id="@+id/et_page_search"
+                    android:layout_width="0dp"
+                    android:minHeight="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:background="#00000000"
+                    android:hint="@string/input_search_keyword"
+                    android:paddingHorizontal="12dp"
+                    android:singleLine="true"
+                    android:textSize="14sp"
+                    android:imeOptions="actionSearch"
+                    android:requiresFadingEdge="horizontal"
+                    android:fadingEdgeLength="12dp"
+                    android:textColor="@color/text_primary"
+                    android:gravity="center_vertical"
+                    android:textColorHint="@color/text_hint" />
+                <ImageView
+                    android:id="@+id/btn_search_prev"
+                    android:padding="5dp"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_arrow_up"
+                    android:background="?attr/selectableItemBackgroundBorderless" />
+                <ImageView
+                    android:id="@+id/btn_search_next"
+                    android:padding="5dp"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_arrow_down"
+                    android:background="?attr/selectableItemBackgroundBorderless" />
+                <ImageView
+                    android:id="@+id/btn_search_close"
+                    android:padding="5dp"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_close"
+                    android:background="?attr/selectableItemBackgroundBorderless" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</LinearLayout>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        app:cardElevation="0dp"
+        app:cardCornerRadius="14dp"
+        app:cardBackgroundColor="#c0000000">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/snackbar_text"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="text"
+                android:gravity="center_vertical"
+                android:textColor="#ffffff"
+                android:layout_marginLeft="15dp"/>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#00000000"
+                app:cardElevation="0dp"
+                app:cardCornerRadius="10dp"
+                android:layout_margin="8dp"
+                android:layout_marginRight="20dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/snackbar_action"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ok"
+                        android:padding="5dp"
+                        android:textColor="#00ffdd"
+                        android:background="?attr/selectableItemBackground"/>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</LinearLayout>

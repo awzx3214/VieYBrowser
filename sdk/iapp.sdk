@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?><iapp>
+<sdklist>
+<sdk aar="true" time="1788367322520" maven="" more="">org.bouncycastle:bcprov-jdk18on:1.78</sdk>
+<sdk aar="true" time="1788367322520" maven="" more="">org.bouncycastle:bcpkix-jdk18on:1.78</sdk>
+
+
+
+
+<sdk md5="8cd86bce4a1db711654849c9f3610746">iapp_luxuryLib.ilib</sdk>
+</sdklist>
+<relySdklist>
+
+
+<sdk aar="true" select="true" time="1788367354723" more="系统添加的依赖库" parent="系统添加">org.bouncycastle:bcutil-jdk18on:1.78</sdk>
+<sdk aar="true" select="false" time="1788367354723" more="系统添加的依赖库" parent="系统添加">org.bouncycastle:bcutil-jdk18on:1.78</sdk>
+</relySdklist>
+</iapp>

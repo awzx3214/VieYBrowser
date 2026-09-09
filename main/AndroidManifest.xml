@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="kawaii.viey.browser"
+    android:versionCode="20260908"
+    android:versionName="0.1 (bate1)">
+
+    <uses-sdk
+        android:minSdkVersion="17"
+        android:targetSdkVersion="34" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+
+    <application
+        android:name=".VieYApp"
+        android:allowBackup="true"
+        android:networkSecurityConfig="@xml/network_config"
+        android:icon="@mipmap/i"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/i"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:name=".start"
+            android:theme="@style/StartTheme"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.APP_BROWSER" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <data android:scheme="gemini" />
+                <data android:scheme="spartan" />
+                <data android:scheme="scroll" />
+                <data android:scheme="nex" />
+                <data android:scheme="nps" />
+                <data android:scheme="titan" />
+                <data android:scheme="misfin" />
+                <data android:scheme="text" />
+                <data android:scheme="finger" />
+                <data android:scheme="scorpion" />
+                <data android:scheme="kepler" />
+                <data android:scheme="keplers" />
+                <data android:scheme="gopher" />
+                <data android:scheme="gophers" />
+                <data android:scheme="molerat" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false" />
+        <activity
+            android:name=".HistoryActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false" />
+        <activity
+            android:name=".DownloadActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false" />
+        <activity
+            android:name=".SettingsActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false" />
+        <activity
+            android:name=".BookmarksActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false" />
+        <activity
+            android:name=".CertActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false" />
+        <activity
+            android:name=".UaActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false" />
+        <activity
+            android:name=".UpActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false" />
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:exported="false"
+            android:authorities="kawaii.viey.browser.myFileProvider"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_provider" />
+        </provider>
+        <provider
+            android:name=".filesProvider"
+            android:permission="android.permission.MANAGE_DOCUMENTS"
+            android:exported="true"
+            android:authorities="kawaii.viey.browser.filesProvider"
+            android:grantUriPermissions="true">
+            <intent-filter>
+                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+            </intent-filter>
+        </provider>
+        <meta-data
+            android:name="author"
+            android:value="呆毛飘啊飘" />
+    </application>
+</manifest>

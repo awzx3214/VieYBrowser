@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="15dp"
+        app:cardMaxElevation="0dp"
+        android:layout_marginBottom="-15dp">
+        
+        <LinearLayout
+            android:id="@+id/bg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingTop="20dp"
+            android:paddingBottom="30dp">
+            
+            <LinearLayout
+                android:id="@+id/img"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/menu_download_image"
+                    android:text="@string/download_image"
+                    style="@style/BottomSheetMenuItemStyle" />
+
+                <TextView
+                    android:id="@+id/menu_view_image"
+                    android:text="@string/view_image"
+                    style="@style/BottomSheetMenuItemStyle" />
+
+                <TextView
+                    android:id="@+id/menu_share_image"
+                    android:text="@string/share_image"
+                    style="@style/BottomSheetMenuItemStyle" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/txt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/menu_open_link"
+                    android:text="@string/open_link"
+                    style="@style/BottomSheetMenuItemStyle" />
+
+                <TextView
+                    android:id="@+id/menu_copy_link_url"
+                    android:text="@string/copy_link_url"
+                    style="@style/BottomSheetMenuItemStyle" />
+
+                <TextView
+                    android:id="@+id/menu_copy_link_text"
+                    android:text="@string/copy_link_text"
+                    style="@style/BottomSheetMenuItemStyle" />
+
+                <TextView
+                    android:id="@+id/menu_background_open"
+                    android:text="@string/background_open"
+                    style="@style/BottomSheetMenuItemStyle" />
+
+                <TextView
+                    android:id="@+id/menu_new_window_open"
+                    android:text="@string/new_window_open"
+                    style="@style/BottomSheetMenuItemStyle" />
+
+                <TextView
+                    android:id="@+id/menu_share_link"
+                    android:text="@string/share_link"
+                    style="@style/BottomSheetMenuItemStyle" />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/menu_page_info"
+                android:text="@string/page_info"
+                style="@style/BottomSheetMenuItemStyle" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</LinearLayout>

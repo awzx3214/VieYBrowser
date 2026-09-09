@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_primary">#FFFFFF</color>
+    <color name="bg_secondary">#F5F5F5</color>
+    <color name="toolbar_bg">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_primary_dark">#4fe5cc</color>
+    <color name="text_drawable">#00FFDD</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_hint">#60000000</color>
+    <color name="accent">#00FFDD</color>
+    <color name="accent_light">#D1FDF8</color>
+    <color name="divider">#E0E0E0</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="progress_bg">#E0E0E0</color>
+    <color name="progress_color">#00FFDD</color>
+    <color name="url_input_bg">#F0F0F0</color>
+    <color name="url_input_bg_night">#2D2D2D</color>
+    <color name="icon_color">#424242</color>
+    <color name="status_bar_color">#CCCCCC</color>
+</resources>

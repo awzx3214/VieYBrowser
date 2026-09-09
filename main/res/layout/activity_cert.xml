@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_primary">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp">
+        <ImageView
+            android:id="@+id/back_tool"
+            android:padding="8dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_arrow_back" />
+        <LinearLayout
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0">
+            <androidx.cardview.widget.CardView
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                app:cardCornerRadius="8dp">
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:padding="2dp"
+                        android:layout_width="32dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/logo" />
+                    <TextView
+                        android:textSize="16sp"
+                        android:textColor="#FF000000"
+                        android:gravity="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:text="@string/cert_settings" />
+                    <ImageView
+                        android:padding="2dp"
+                        android:layout_width="32dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/ic_cert" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+        <ImageView
+            android:id="@+id/menu_tool"
+            android:padding="8dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_menu" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdgeLength="12dp"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <Button
+                    android:id="@+id/btnAddCert"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/cert_add" />
+
+                <Button
+                    android:id="@+id/btnCleanCert"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/cert_clean" />
+
+                <Button
+                    android:id="@+id/btnCreateCert"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/cert_create" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutCreateCertPanel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:padding="12dp">
+
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/cert_gen_title_1"
+                    android:textSize="15sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="6dp">
+                    <EditText
+                        android:id="@+id/etGenCertPwd"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/cert_hint_gen_pwd" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <Button
+                            android:id="@+id/btnGenP12"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cert_btn_gen_p12" />
+                        <Button
+                            android:id="@+id/btnGenBks"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cert_btn_gen_bks" />
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnCertAdvanced"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/advanced_option" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutCertAdvancedPanel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:layout_marginTop="6dp"
+                        android:padding="10dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cert_advanced_desc"
+                            android:textSize="13sp"
+                            android:textColor="@color/text_secondary" />
+
+                        <EditText
+                            android:id="@+id/etCertCN"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:hint="@string/cert_hint_cn" />
+
+                        <EditText
+                            android:id="@+id/etCertDNS"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:hint="@string/cert_hint_dns_multi" />
+
+                        <EditText
+                            android:id="@+id/etCertIP"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:hint="@string/cert_hint_ip_multi" />
+
+                        <EditText
+                            android:id="@+id/etCertUserId"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:hint="@string/cert_hint_userid" />
+
+                        <EditText
+                            android:id="@+id/etCertDomain"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:hint="@string/cert_hint_domain" />
+
+                        <EditText
+                            android:id="@+id/etCertOrg"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:hint="@string/cert_hint_org" />
+
+                        <EditText
+                            android:id="@+id/etCertCountry"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:hint="@string/cert_hint_country" />
+
+                        <EditText
+                            android:id="@+id/etCertEmail"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:inputType="textEmailAddress"
+                            android:hint="@string/cert_hint_email" />
+
+                        <EditText
+                            android:id="@+id/etCertValidDay"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:inputType="number"
+                            android:hint="@string/cert_hint_valid_days" />
+
+                    </LinearLayout>
+
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/cert_gen_title_2"
+                    android:layout_marginTop="50dp"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:id="@+id/crtText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="6sp"
+                    android:layout_marginTop="6dp" />
+                <Button
+                    android:id="@+id/btnSelectPemCert"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/cert_btn_select_pem_cert" />
+                <TextView
+                    android:id="@+id/keyText"
+                    android:textSize="6sp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp" />
+                <Button
+                    android:id="@+id/btnSelectPemKey"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/cert_btn_select_pem_key" />
+
+                <Button
+                    android:id="@+id/btnClipboardGetPem"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/cert_btn_clipboard_pem" />
+
+                <EditText
+                    android:id="@+id/etPem2P12Pwd"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/cert_hint_pem_out_pwd"
+                    android:layout_marginTop="6dp" />
+
+                <Button
+                    android:id="@+id/btnPemToP12"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/cert_btn_pem_to_p12" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutCertPanel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+                <TextView
+                    android:id="@+id/tvCertTip"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="12dp"
+                    android:text="@string/cert_tip"
+                    android:textColor="@color/text_secondary" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/divider" />
+
+                <LinearLayout
+                    android:id="@+id/layoutCertList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+</LinearLayout>
