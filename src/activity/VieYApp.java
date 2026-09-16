@@ -30,16 +30,16 @@ public class VieYApp extends Application {
 	public static final String PREFS_NAME = "kawaii_browser_prefs";
 	public static final String KEY_DARK_MODE = "dark_mode";
 	public static final String KEY_HOME_URL = "home_url";
+    public static final String KEY_HOME_MODE = "home_mode";
 	public static final String KEY_SEARCH_ENGINE = "search_engine";
 	public static final String KEY_ACTIVE_CERT_NAME = "active_cert_name";
 	public static final String KEY_ACTIVE_CERT_PWD = "active_cert_pwd";
-	private static VieYApp instance;
 	public static final String KEY_LANGUAGE = "language";
 	public static final String LANG_AUTO = "auto";
 	public static final String LANG_ZH = "zh-CN";
 	public static final String LANG_TW = "zh-TW";
 	public static final String LANG_EN = "en-US";
-	private static final String PREF_DOWNLOAD_PATH = "download_path";
+	public static final String PREF_DOWNLOAD_PATH = "download_path";
 	public static final String PREF_UA = "user_agent";
 	public static final String UA_DEFAULT = "";
 	public static final String IPV4 = "prefer_ipv4";
@@ -47,9 +47,78 @@ public class VieYApp extends Application {
 	public static final String TOOLBAR_POS_BOTTOM = "bottom";
 	public static final String TOOLBAR_POS_TOP_SIDE = "top_side";
 	public static final String TOOLBAR_POS_BOTTOM_SIDE = "bottom_side";
-	private static final String KEY_TOOLBAR_POS = "toolbar_pos";
+	public static final String KEY_TOOLBAR_POS = "toolbar_pos";
 	public static final String KEY_FIRST_LAUNCH = "is_first_launch";
 	public static final String KEY_PULL_REFRESH = "pull_refresh";
+	public static final String USE_TABS = "use_tabs";
+	private static VieYApp instance;
+    public static class CertInfo{
+		public String filePath;
+		public String password;
+		public CertInfo(String path,String pwd){
+			filePath = path;
+			password = pwd;
+		}
+	}
+    
+    
+    
+public static final String KEY_CUSTOM_ENGINES = "custom_engines";
+private static final String ENGINE_FIELD_SEP = "\u0001";
+private static final String ENGINE_ENTRY_SEP = "\u0002";
+
+
+public static List<String[]> getCustomEngines(Context context) {
+    List<String[]> result = new ArrayList<>();
+    String raw = getPrefs(context).getString(KEY_CUSTOM_ENGINES, "");
+    if (raw == null || raw.isEmpty()) return result;
+    for (String entry : raw.split(ENGINE_ENTRY_SEP)) {
+        if (entry.isEmpty()) continue;
+        String[] parts = entry.split(ENGINE_FIELD_SEP, -1);
+        if (parts.length >= 3) {
+            result.add(new String[]{parts[0], parts[1], parts[2]});
+        }
+    }
+    return result;
+}
+
+public static void setCustomEngines(Context context, List<String[]> engines) {
+    StringBuilder sb = new StringBuilder();
+    for (String[] e : engines) {
+        if (sb.length() > 0) sb.append(ENGINE_ENTRY_SEP);
+        sb.append(e[0]).append(ENGINE_FIELD_SEP)
+          .append(e[1]).append(ENGINE_FIELD_SEP)
+          .append(e[2]);
+    }
+    getPrefs(context).edit().putString(KEY_CUSTOM_ENGINES, sb.toString()).apply();
+}
+
+public static void addCustomEngine(Context context, String name, String url, String fast) {
+    List<String[]> list = getCustomEngines(context);
+    list.add(new String[]{name, url, fast});
+    setCustomEngines(context, list);
+}
+
+public static void removeCustomEngine(Context context, String url) {
+    List<String[]> list = getCustomEngines(context);
+    List<String[]> filtered = new ArrayList<>();
+    for (String[] e : list) {
+        if (!e[1].equals(url)) filtered.add(e);
+    }
+    setCustomEngines(context, filtered);
+}
+
+
+
+	
+	
+	public static void useTabs(Context context, boolean enabled) {
+		getPrefs(context).edit().putBoolean(USE_TABS, enabled).apply();
+	}
+	
+	public static boolean useTabs(Context context) {
+		return getPrefs(context).getBoolean(USE_TABS, true);
+	}
 	
 	public static boolean isPullRefresh(Context context) {
 		return getPrefs(context).getBoolean(KEY_PULL_REFRESH, true);
@@ -88,14 +157,6 @@ public class VieYApp extends Application {
 		}
 	}
 	
-	public static class CertInfo{
-		public String filePath;
-		public String password;
-		public CertInfo(String path,String pwd){
-			filePath = path;
-			password = pwd;
-		}
-	}
 	
 	public static String getUserAgent(Context context) {
 		return getPrefs(context).getString(PREF_UA, UA_DEFAULT);
@@ -238,7 +299,7 @@ public class VieYApp extends Application {
 	public void onCreate() {
 		super.onCreate();
 		
-		copyThis(this);
+		copyThis();
 		instance = this;
 		i.m(getApplicationContext());
 	}
@@ -260,15 +321,23 @@ public class VieYApp extends Application {
 	}
 	
 	public static String getHomeUrl(Context context) {
-		return getPrefs(context).getString(KEY_HOME_URL, "https://github.com/awzx3214/VieYBrowser");
+		return getPrefs(context).getString(KEY_HOME_URL, "viek://home/html/VieY.html");
 	}
 	
 	public static void setHomeUrl(Context context, String url) {
 		getPrefs(context).edit().putString(KEY_HOME_URL, url).apply();
 	}
+    
+    public static String getHomeMode(Context context) {
+		return getPrefs(context).getString(KEY_HOME_MODE, "list");
+	}
+	
+	public static void setHomeMode(Context context, String str) {
+		getPrefs(context).edit().putString(KEY_HOME_MODE, str).apply();
+	}
 	
 	public static String getSearchEngine(Context context) {
-		return getPrefs(context).getString(KEY_SEARCH_ENGINE, "https://www.bing.com/search?q=");
+		return getPrefs(context).getString(KEY_SEARCH_ENGINE, "https://www.bing.com/search?q=%s");
 	}
 	
 	public static void setSearchEngine(Context context, String engine) {
@@ -276,47 +345,56 @@ public class VieYApp extends Application {
 	}
 	
 	
-	public static void copyThis(Context ctx){
-		File targetDir = new File(ctx.getFilesDir(),"xy");
+	public void copyThis(){
+		File targetDir = new File(getFilesDir(),"xy");
 		if(!targetDir.exists()){
 			targetDir.mkdirs();
 		} else {
 			deleteFilesInDir(targetDir);
 		}
+		File dir = new File(getFilesDir(),"html");
+		if(!dir.exists()){
+			dir.mkdirs();
+		}
 		
 		new Thread(()->{
-			try (InputStream is = ctx.getAssets().open("data.zip")) {
-				ZipInputStream zipIn = new ZipInputStream(is);
-				ZipEntry entry;
-				byte[] buffer = new byte[4096];
-				while ((entry = zipIn.getNextEntry()) != null) {
-					File outFile = new File(targetDir, entry.getName());
-					if (!outFile.getCanonicalPath().startsWith(targetDir.getCanonicalPath())) {
-						continue;
-					}
-					if (entry.isDirectory()) {
-						outFile.mkdirs();
-					} else {
-						if (!outFile.getParentFile().exists()) {
-							outFile.getParentFile().mkdirs();
-						}
-						try (FileOutputStream fos = new FileOutputStream(outFile)) {
-							int len;
-							while ((len = zipIn.read(buffer)) != -1) {
-								fos.write(buffer, 0, len);
-							}
-						}
-					}
-					zipIn.closeEntry();
-				}
-				zipIn.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			fuzs(targetDir,"data");
+			fuzs(dir,"html");
 		}).start();
 	}
 	
-	private static void deleteFilesInDir(File dir) {
+	private void fuzs(File targetDir, String file) {
+		try (InputStream is = getAssets().open(file)) {
+			ZipInputStream zipIn = new ZipInputStream(is);
+			ZipEntry entry;
+			byte[] buffer = new byte[4096];
+			while ((entry = zipIn.getNextEntry()) != null) {
+				File outFile = new File(targetDir, entry.getName());
+				if (!outFile.getCanonicalPath().startsWith(targetDir.getCanonicalPath())) {
+					continue;
+				}
+				if (entry.isDirectory()) {
+					outFile.mkdirs();
+				} else {
+					if (!outFile.getParentFile().exists()) {
+						outFile.getParentFile().mkdirs();
+					}
+					try (FileOutputStream fos = new FileOutputStream(outFile)) {
+						int len;
+						while ((len = zipIn.read(buffer)) != -1) {
+							fos.write(buffer, 0, len);
+						}
+					}
+				}
+				zipIn.closeEntry();
+			}
+			zipIn.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void deleteFilesInDir(File dir) {
 		if (dir == null || !dir.isDirectory()) {
 			return;
 		}

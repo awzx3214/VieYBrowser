@@ -15,6 +15,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/ic_arrow_back" />
+            
         <LinearLayout
             android:gravity="center"
             android:layout_width="match_parent"
@@ -36,15 +37,16 @@
                         android:src="@drawable/logo" />
                     <TextView
                         android:textSize="16sp"
-                        android:textColor="#FF000000"
                         android:gravity="center"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
-                        android:text="@string/bookmarks" />
+                        android:text="@string/bookmarks"
+                        android:textColor="@color/text_primary" />
                     <ImageView
                         android:padding="2dp"
                         android:layout_width="32dp"
                         android:layout_height="30dp"
+                        android:id="@+id/sign_tool"
                         android:src="@drawable/ic_bookmark_filled" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -56,6 +58,7 @@
             android:layout_height="40dp"
             android:src="@drawable/ic_menu" />
     </LinearLayout>
+
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="40dp"
@@ -65,7 +68,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#eeeeee">
+            android:background="@color/btn_bg">
             <EditText
                 android:id="@+id/etSearchBookmark"
                 android:minHeight="0dp"
@@ -75,10 +78,39 @@
                 android:background="#00000000"
                 android:textSize="12sp"
                 android:textColorHint="@color/text_secondary"
-                android:textColor="#000000"
                 android:layout_marginHorizontal="5dp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/tvPath"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="15dp"
+        android:layout_marginBottom="5dp"
+        android:singleLine="true"
+        android:ellipsize="start"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:text="@string/root_folder" />
+
+    <Button
+        android:id="@+id/backPath"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="15dp"
+        android:layout_marginBottom="5dp"
+        android:text="@string/back_folder" />
+
+    <kawaii.viey.browser.RecyclerViey
+        android:id="@+id/recyclerBookmarks"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdgeLength="12dp"
+        android:clipToPadding="false"
+        android:scrollbars="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <TextView
         android:id="@+id/textEmpty"
         android:layout_width="wrap_content"
@@ -89,13 +121,5 @@
         android:layout_gravity="center"
         android:layout_marginTop="60dp"
         android:visibility="gone" />
-    <ListView
-        android:requiresFadingEdge="vertical"
-        android:fadingEdgeLength="12dp"
-        android:divider="@null"
-        android:id="@+id/listViewBookmarks"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:dividerHeight="0dp" />
 
 </LinearLayout>

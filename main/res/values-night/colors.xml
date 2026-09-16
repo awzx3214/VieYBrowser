@@ -2,16 +2,18 @@
 <resources>
     <color name="bg_primary">#121212</color>
     <color name="bg_secondary">#1E1E1E</color>
-    <color name="toolbar_bg">#1C1C1C</color>
+    <color name="toolbar_bg">#000000</color>
     <color name="text_primary">#E0E0E0</color>
     <color name="text_drawable">#00FFDD</color>
-    <color name="text_secondary">#AAAAAA</color>
+    <color name="text_secondary">#757575</color>
     <color name="text_hint">#666666</color>
     <color name="accent">#4FE5CC</color>
     <color name="accent_light">#3D1A2B</color>
     <color name="divider">#333333</color>
-    <color name="card_bg">#1E1E1E</color>
+    <color name="card_bg">#333333</color>
     <color name="progress_bg">#333333</color>
+    <color name="btn_bg">#333333</color>
+    <color name="btn_bg2">#80333333</color>
     <color name="progress_color">#4FE5CC</color>
     <color name="url_input_bg">#2D2D2D</color>
     <color name="icon_color">#E0E0E0</color>

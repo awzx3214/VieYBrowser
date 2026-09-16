@@ -1,35 +1,34 @@
 package kawaii.viey.browser;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.TextView;
-import androidx.appcompat.app.AppCompatActivity;
-import java.util.List;
-import android.text.Editable;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.TextWatcher;
-import android.text.style.ForegroundColorSpan;
-import android.widget.EditText;
-import java.util.ArrayList;
+import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BookmarksActivity extends BaseActivity {
 	
-	private ListView listView;
-	private TextView emptyView;
+	private RecyclerView recyclerBookmarks;
+	private TextView emptyView, tvPath;
 	private List<BookmarkManager.Bookmark> bookmarks, allBookmarkData;
-	private BookmarkAdapter adapter;
+	private TAdapter<BookmarkManager.Bookmark> adapter;
 	private EditText etSearchBookmark;
 	private String mSearchKey = "";
+	
+	
+	private final List<String> folderPath = new ArrayList<>();
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -37,13 +36,80 @@ public class BookmarksActivity extends BaseActivity {
 		setContentView(R.layout.activity_bookmarks);
 		
 		if (getSupportActionBar() != null) {
-			getSupportActionBar().setTitle(R.string.bookmarks);
 			getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		}
 		
-		listView = findViewById(R.id.listViewBookmarks);
+		
+		
+		recyclerBookmarks = findViewById(R.id.recyclerBookmarks);
 		emptyView = findViewById(R.id.textEmpty);
 		etSearchBookmark = findViewById(R.id.etSearchBookmark);
+		recyclerBookmarks = findViewById(R.id.recyclerBookmarks);
+		emptyView = findViewById(R.id.textEmpty);
+		etSearchBookmark = findViewById(R.id.etSearchBookmark);
+		tvPath = findViewById(R.id.tvPath);
+		
+		
+		findViewById(R.id.backPath).setOnClickListener(v -> {
+			if (!folderPath.isEmpty()) {
+				folderPath.remove(folderPath.size() - 1);
+				loadBookmarks();
+				updateTitle();
+			}
+		});
+		
+		
+		adapter = new TAdapter<>(new TAdapter.ItemBinder<BookmarkManager.Bookmark>() {
+			@Override
+			public String getTitle(BookmarkManager.Bookmark item) {
+				return item.title == null ? "" : item.title;
+			}
+			@Override
+			public String getTime(BookmarkManager.Bookmark item) {
+				return "";
+			}
+			@Override
+			public String getUrl(BookmarkManager.Bookmark item) {
+				return item.isFolder ? getString(R.string.folder) : (item.url == null ? "" : item.url);
+			}
+			@Override
+			public int getIconRes(BookmarkManager.Bookmark item) {
+                if(BookmarkManager.isProtectedFolder(BookmarksActivity.this, item)) return R.drawable.ic_home;
+				return item.isFolder ? R.drawable.ic_folder : R.drawable.ic_bookmark_filled;
+			}
+		});
+		adapter.setDarkMode(isDark());
+		
+		recyclerBookmarks.setLayoutManager(new LinearLayoutManager(this));
+		recyclerBookmarks.setAdapter(adapter);
+		
+		adapter.setOnItemClickListener(position -> {
+			if (position < bookmarks.size()) {
+				BookmarkManager.Bookmark b = bookmarks.get(position);
+				if (b.isFolder) {
+					folderPath.add(b.id);
+					loadBookmarks();
+					updateTitle();
+				} else {
+					Intent resultIntent = new Intent();
+					resultIntent.putExtra("url", b.url);
+					setResult(RESULT_OK, resultIntent);
+					finish();
+				}
+			}
+		});
+		
+		adapter.setOnItemLongClickListener(position -> {
+			if (position < bookmarks.size()) {
+				BookmarkManager.Bookmark b = bookmarks.get(position);
+				if (b.isFolder) {
+					showFolderOperationMenu(b);
+				} else {
+					showBookmarkOperationMenu(b);
+				}
+			}
+		});
+		
 		etSearchBookmark.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -55,171 +121,153 @@ public class BookmarksActivity extends BaseActivity {
 			@Override
 			public void afterTextChanged(Editable s) {}
 		});
+		
+		BookmarkManager.ensureDefaultFolder(this);
+		
 		loadBookmarks();
+		updateTitle();
 		
-		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				if (position < bookmarks.size()) {
-					BookmarkManager.Bookmark b = bookmarks.get(position);
-					Intent resultIntent = new Intent();
-					resultIntent.putExtra("url", b.url);
-					setResult(RESULT_OK, resultIntent);
-					finish();
-				}
-			}
-		});
+		findViewById(R.id.back_tool).setOnClickListener(v -> onBackPressed());
+		findViewById(R.id.menu_tool).setOnClickListener(v -> showAddMenu());
 		
-		listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-			@Override
-			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-				if (position < bookmarks.size()) {
-					BookmarkManager.Bookmark b = bookmarks.get(position);
-					showOperationMenu(position, b);
-				}
-				return true;
-			}
-		});
-		findViewById(R.id.back_tool).setOnClickListener(v->{
-			finish();
-		});
-		findViewById(R.id.menu_tool).setOnClickListener(v->{
-			i.utw(R.string.operation, "test");
-		});
+		if (isDark()) {
+			i.zs(findViewById(R.id.back_tool), "#ffffff");
+			i.zs(findViewById(R.id.menu_tool), "#ffffff");
+			i.zs(findViewById(R.id.sign_tool), "#ffffff");
+		}
 	}
 	
 	private void loadBookmarks() {
-		allBookmarkData = BookmarkManager.getBookmarks(this);
+		allBookmarkData = BookmarkManager.getChildren(this, folderPath);
+		if (allBookmarkData == null) {
+			folderPath.clear();
+			allBookmarkData = BookmarkManager.getChildren(this, folderPath);
+		}
 		filterBookmark();
 	}
 	
-	private void filterBookmark(){
-		if(mSearchKey.isEmpty()){
+	private void filterBookmark() {
+		if (mSearchKey.isEmpty()) {
 			bookmarks = new ArrayList<>(allBookmarkData);
-		}else{
+		} else {
 			bookmarks = new ArrayList<>();
-			for(BookmarkManager.Bookmark b : allBookmarkData){
-				String title = b.title != null ? b.title.toLowerCase():"";
-				String url = b.url != null ? b.url.toLowerCase():"";
-				if(title.contains(mSearchKey) || url.contains(mSearchKey)){
-					bookmarks.add(b);
-				}
-			}
+			searchAll(BookmarkManager.getBookmarks(this), mSearchKey, bookmarks);
 		}
-		adapter = new BookmarkAdapter();
-		listView.setAdapter(adapter);
+		
+		adapter.setSearchKey(mSearchKey);
+		adapter.setData(bookmarks);
 		
 		if (bookmarks.isEmpty()) {
 			emptyView.setVisibility(View.VISIBLE);
-			listView.setVisibility(View.GONE);
+			recyclerBookmarks.setVisibility(View.GONE);
 		} else {
 			emptyView.setVisibility(View.GONE);
-			listView.setVisibility(View.VISIBLE);
+			recyclerBookmarks.setVisibility(View.VISIBLE);
 		}
 	}
 	
-	private SpannableString getHighlightText(String source, String keyword) {
-		if (source == null) source = "";
-		SpannableString sp = new SpannableString(source);
-		if (keyword == null || keyword.isEmpty()) {
-			return sp;
-		}
-		String srcLower = source.toLowerCase();
-		String keyLower = keyword.toLowerCase();
-		int keyLen = keyLower.length();
-		int index = 0;
-		while ((index = srcLower.indexOf(keyLower, index)) != -1) {
-			sp.setSpan(
-			new ForegroundColorSpan(0xff00ffdd),
-			index,
-			index + keyLen,
-			Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-			);
-			index += keyLen;
-		}
-		return sp;
-	}
-	
-	private class BookmarkAdapter extends BaseAdapter {
-		
-		@Override
-		public int getCount() {
-			return bookmarks.size();
-		}
-		
-		@Override
-		public Object getItem(int position) {
-			return bookmarks.get(position);
-		}
-		
-		@Override
-		public long getItemId(int position) {
-			return position;
-		}
-		
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			ViewHolder holder;
-			if (convertView == null) {
-				convertView = getLayoutInflater().inflate(R.layout.item_simple, parent, false);
-				holder = new ViewHolder();
-				holder.ivIcon = convertView.findViewById(R.id.iv_icon);
-				holder.tvTitle = convertView.findViewById(R.id.tv_title);
-				holder.tvTime = convertView.findViewById(R.id.tv_time);
-				holder.tvUrl = convertView.findViewById(R.id.tv_url);
-				convertView.setTag(holder);
+	private void searchAll(List<BookmarkManager.Bookmark> list, String key,
+	List<BookmarkManager.Bookmark> out) {
+		if (list == null) return;
+		for (BookmarkManager.Bookmark b : list) {
+			if (b.isFolder) {
+				searchAll(b.children, key, out);
 			} else {
-				holder = (ViewHolder) convertView.getTag();
+				String title = b.title != null ? b.title.toLowerCase() : "";
+				String url = b.url != null ? b.url.toLowerCase() : "";
+				if (title.contains(key) || url.contains(key)) {
+					out.add(b);
+				}
 			}
-			
-			BookmarkManager.Bookmark bookmark = bookmarks.get(position);
-			holder.tvTitle.setText(getHighlightText(bookmark.title == null ? "" : bookmark.title, mSearchKey));
-			holder.ivIcon.setImageResource(R.drawable.ic_bookmark_filled);
-			holder.tvUrl.setText(getHighlightText(bookmark.url == null ? "" : bookmark.url, mSearchKey));
-			holder.tvTime.setText("");
-			
-			return convertView;
-		}
-		
-		class ViewHolder {
-			ImageView ivIcon;
-			TextView tvTitle;
-			TextView tvTime;
-			TextView tvUrl;
 		}
 	}
-
-	private void showOperationMenu(final int position, final BookmarkManager.Bookmark bookmark) {
+	
+	
+	private void updateTitle() {
+		updatePathText();
+		
+		if (getSupportActionBar() == null) return;
+		if (folderPath.isEmpty()) {
+			getSupportActionBar().setTitle(R.string.bookmarks);
+		} else {
+			String lastId = folderPath.get(folderPath.size() - 1);
+			BookmarkManager.Bookmark folder = BookmarkManager.findById(this, lastId);
+			getSupportActionBar().setTitle(folder != null ? folder.title : getString(R.string.bookmarks));
+		}
+	}
+	
+	private void updatePathText() {
+		if (tvPath == null) return;
+		
+		StringBuilder sb = new StringBuilder(getString(R.string.root_folder));
+		for (String id : folderPath) {
+			BookmarkManager.Bookmark folder = BookmarkManager.findById(this, id);
+			String name = (folder != null && folder.title != null && !folder.title.isEmpty())
+			? folder.title : id;
+			sb.append(" / ").append(name);
+		}
+		tvPath.setText(sb.toString());
+	}
+	
+	@Override
+	public void onBackPressed() {
+		if (!folderPath.isEmpty()) {
+			folderPath.remove(folderPath.size() - 1);
+			loadBookmarks();
+			updateTitle();
+		} else {
+			super.onBackPressed();
+		}
+	}
+	
+	
+	private void showBookmarkOperationMenu(final BookmarkManager.Bookmark bookmark) {
 		i.utw(getString(R.string.operation),
 		getString(R.string.what_to_do),
 		getString(R.string.open),
 		getString(R.string.copy),
 		getString(R.string.delete),
 		new mk.jk() {
-			@Override
-			public void onListClick(String nr, int num) {
-			}
-			
-			@Override
-			public void onButton1Click()
-			{
+			@Override public void onListClick(String nr, int num) {}
+			@Override public void onButton1Click() {
 				Intent resultIntent = new Intent();
 				resultIntent.putExtra("url", bookmark.url);
 				setResult(RESULT_OK, resultIntent);
 				finish();
 			}
-			@Override
-			public void onButton2Click() {
+			@Override public void onButton2Click() {
 				showCopySelectDialog(bookmark);
 			}
-			@Override
-			public void onButton3Click() {
-				showDeleteDialog(position);
+			@Override public void onButton3Click() {
+				showDeleteDialog(bookmark);
 			}
-			@Override
-			public void onDialogDismissed() {}
-			@Override
-			public void onSelect(String content) {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+		});
+	}
+	
+	private void showFolderOperationMenu(final BookmarkManager.Bookmark folder) {
+		final boolean locked = BookmarkManager.isProtectedFolder(this, folder);
+		i.utw(getString(R.string.operation),
+		getString(R.string.what_to_do),
+		locked ? "" : getString(R.string.rename),
+		locked ? "" : getString(R.string.delete),
+        getString(R.string.open),
+		new mk.jk() {
+			@Override public void onListClick(String nr, int num) {}
+			@Override public void onButton1Click() {
+				if (!locked) showRenameFolderDialog(folder);
+			}
+			@Override public void onButton2Click() {
+				if (!locked) showDeleteDialog(folder);
+			}
+            @Override public void onButton3Click() {
+				folderPath.add(folder.id);
+				loadBookmarks();
+				updateTitle();
+			}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
 		});
 	}
 	
@@ -230,53 +278,169 @@ public class BookmarksActivity extends BaseActivity {
 		getString(R.string.copy_link),
 		getString(R.string.cancel),
 		new mk.jk() {
-			@Override
-			public void onListClick(String nr, int num) {
-			}
-			
-			@Override
-			public void onButton1Click()
-			{
+			@Override public void onListClick(String nr, int num) {}
+			@Override public void onButton1Click() {
 				ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 				String title = bookmark.title != null ? bookmark.title : "";
-				ClipData clip = ClipData.newPlainText("title", title);
-				clipboard.setPrimaryClip(clip);
+				clipboard.setPrimaryClip(ClipData.newPlainText("title", title));
 			}
-			@Override
-			public void onButton2Click()
-			{
+			@Override public void onButton2Click() {
 				ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 				String url = bookmark.url != null ? bookmark.url : "";
-				ClipData clip = ClipData.newPlainText("url", url);
-				clipboard.setPrimaryClip(clip);
+				clipboard.setPrimaryClip(ClipData.newPlainText("url", url));
 			}
-			@Override
-			public void onButton3Click() {}
-			@Override
-			public void onDialogDismissed() {}
-			@Override
-			public void onSelect(String content) {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
 		});
 	}
-	private void showDeleteDialog(final int position) {
+	
+	private void showDeleteDialog(final BookmarkManager.Bookmark bookmark) {
+		String message = bookmark.isFolder ? getString(R.string.del_folder) : getString(R.string.confirm_delete_bookmark);
 		i.utw(getString(R.string.delete_bookmark),
-		getString(R.string.confirm_delete_bookmark),
+		message,
 		getString(R.string.cancel),
 		getString(R.string.delete),
-		new mk.jk(){
-			@Override public void onButton1Click(){}
-			@Override public void onButton2Click(){}
-			@Override public void onButton3Click(){
-				if (position < bookmarks.size()) {
-					BookmarkManager.removeBookmark(BookmarksActivity.this, bookmarks.get(position).url);
-					loadBookmarks();
-				}
+		new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {
+				BookmarkManager.removeBookmark(BookmarksActivity.this, bookmark.id);
+				loadBookmarks();
 			}
-			@Override public void onDialogDismissed(){
-			}
-			@Override public void onListClick(String nr,int num){}
-			@Override public void onSelect(String content){}
+			@Override public void onDialogDismissed() {}
+			@Override public void onListClick(String nr, int num) {}
+			@Override public void onSelect(String content) {}
 		});
 	}
+	
+	private void showAddMenu() {
+		i.utw(getString(R.string.operation),
+		getString(R.string.what_to_do),
+		getString(R.string.add_bookmark),
+		getString(R.string.add_folder),
+		getString(R.string.cancel),
+		new mk.jk() {
+			@Override public void onListClick(String nr, int num) {}
+			@Override public void onButton1Click() {
+				showAddBookmarkDialog();
+			}
+			@Override public void onButton2Click() {
+				showAddFolderDialog();
+			}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+		});
+	}
+	
+	private void showAddBookmarkDialog() {
+		LinearLayout layout = new LinearLayout(this);
+		layout.setOrientation(LinearLayout.VERTICAL);
+		
+		final EditViey etTitle = new EditViey(this);
+		etTitle.setSingleLine(true);
+		etTitle.setHeight(i.dp2px(56));
+		etTitle.setHint(getString(R.string.title));
+		layout.addView(etTitle);
+		
+		final EditViey etUrl = new EditViey(this);
+		etUrl.setSingleLine(true);
+		etUrl.setHeight(i.dp2px(56));
+		etUrl.setHint(getString(R.string.url));
+		layout.addView(etUrl);
+		
+		i.utw(R.string.add_bookmark, layout, R.string.cancel, R.string.confirm,
+		new mk.jk() {
+			@Override
+			public void onButton3Click() {
+				String title = etTitle.getText().toString().trim();
+				String url = etUrl.getText().toString().trim();
+				if (url.isEmpty()) return;
+				if (title.isEmpty()) title = url;
+				String parentId = folderPath.isEmpty() ? null : folderPath.get(folderPath.size() - 1);
+				BookmarkManager.addBookmark(BookmarksActivity.this, parentId, title, url);
+				loadBookmarks();
+			}
+			@Override public void onButton1Click(){}
+			@Override public void onButton2Click(){}
+			@Override public void onDialogDismissed(){}
+			@Override public void onListClick(String nr, int num){}
+			@Override public void onSelect(String content){}
+		});
+		
+		
+	}
+	
+	private void showAddFolderDialog() {
+		final EditViey etName = new EditViey(this);
+		etName.setSingleLine(true);
+		etName.setHeight(i.dp2px(56));
+		etName.setHint(getString(R.string.folder_name));
+		
+		i.utw(R.string.add_folder, etName, R.string.cancel, R.string.confirm,
+		new mk.jk() {
+			@Override
+			public void onButton3Click() {
+				String name = etName.getText().toString().trim();
+				if (name.isEmpty()) name = getString(R.string.folder);
+				String parentId = folderPath.isEmpty() ? null : folderPath.get(folderPath.size() - 1);
+				if (BookmarkManager.hasFolderWithTitle(BookmarksActivity.this, parentId, name)) {
+					i.twi(R.string.had_folder);
+					return;
+				}
+				BookmarkManager.addFolder(BookmarksActivity.this, parentId, name);
+				loadBookmarks();
+			}
+			@Override public void onButton1Click(){}
+			@Override public void onButton2Click(){}
+			@Override public void onDialogDismissed(){}
+			@Override public void onListClick(String nr, int num){}
+			@Override public void onSelect(String content){}
+		});
+		
+	}
+	
+	private void showRenameFolderDialog(final BookmarkManager.Bookmark folder) {
+		if (BookmarkManager.isProtectedFolder(this, folder)) return;
+		
+		final EditViey etName = new EditViey(this);
+		etName.setSingleLine(true);
+		etName.setHeight(i.dp2px(56));
+		etName.setText(folder.title);
+		etName.setSelection(folder.title == null ? 0 : folder.title.length());
+		
+		i.utw(R.string.rename, etName, R.string.cancel, R.string.confirm,
+		new mk.jk() {
+			@Override
+			public void onButton3Click() {
+				String name = etName.getText().toString().trim();
+				if (!name.isEmpty()) {
+					if (BookmarkManager.hasFolderWithTitle(BookmarksActivity.this, currentParentIdOf(folder.id), name)) {
+						i.twi(R.string.had_folder);
+						return;
+					}
+					BookmarkManager.renameBookmark(BookmarksActivity.this, folder.id, name);
+					loadBookmarks();
+					updateTitle();
+				}
+			}
+			@Override public void onButton1Click(){}
+			@Override public void onButton2Click(){}
+			@Override public void onDialogDismissed(){}
+			@Override public void onListClick(String nr, int num){}
+			@Override public void onSelect(String content){}
+		});
+		
+		
+	}
+	
+	
+	private String currentParentIdOf(String folderId) {
+		List<String> path = BookmarkManager.getFolderPath(this, folderId);
+		if (path == null || path.size() < 2) return null;
+		return path.get(path.size() - 2);
+	}
+	
 	
 }

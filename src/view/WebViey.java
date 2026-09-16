@@ -23,6 +23,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.view.View;
 import android.view.ViewGroup;
+import android.util.Base64;
 import android.view.MotionEvent;
 import android.webkit.WebChromeClient.CustomViewCallback;
 import android.content.pm.ActivityInfo;
@@ -57,15 +58,19 @@ public class WebViey extends WebView {
 			}
 		}
 	};
+	
+	private boolean mMultiTouch = false;
+	private boolean mIsPullTouch = false;
+	private final ScrollbarHelper mScrollbar;
 	private ViewGroup mRootLayout;
 	private static String certPath = "";
 	private static String certPwd = "";
 	private static String certType = "default";
 	
-	private String smlonetIs = "";
-	private String smlonetTxt = "";
-	private String smlonetMime = "";
-	private String smlonetToken = "";
+	private String smolnetIs = "";
+	private String smolnetTxt = "";
+	private String smolnetMime = "";
+	private String smolnetToken = "";
 	
 	private volatile Thread mThread;
 	private volatile String murl;
@@ -84,15 +89,35 @@ public class WebViey extends WebView {
 		return getContext().getPackageManager().queryIntentActivities(intent, 0);
 	}
 	
-	public WebViey(Context context, AttributeSet attrs) {
-		super(context, attrs);
-		initDir();
-		initWebSettings();
-		setupClient();
+	public WebViey(Context context) {
+		this(context, null);
 	}
 	
-	public WebViey(Context context) {
-		super(context);
+	public WebViey(Context context, AttributeSet attrs) {
+		super(context, attrs);
+		
+		mScrollbar = new ScrollbarHelper(this, new ScrollbarHelper.ScrollMetrics() {
+			@Override
+			public int computeVerticalScrollRange() {
+				return WebViey.super.computeVerticalScrollRange();
+			}
+			
+			@Override
+			public int computeVerticalScrollExtent() {
+				return WebViey.super.computeVerticalScrollExtent();
+			}
+			
+			@Override
+			public int computeVerticalScrollOffset() {
+				return WebViey.super.computeVerticalScrollOffset();
+			}
+			
+			@Override
+			public void scrollBy(int dy) {
+				WebViey.super.scrollBy(0, dy);
+			}
+		});
+		
 		initDir();
 		initWebSettings();
 		setupClient();
@@ -115,6 +140,8 @@ public class WebViey extends WebView {
 	}
 	
 	private void initWebSettings() {
+		setVerticalScrollBarEnabled(false);
+		setHorizontalScrollBarEnabled(false);
 		setOverScrollMode(View.OVER_SCROLL_NEVER);
 		WebSettings ws = getSettings();
 		ws.setMediaPlaybackRequiresUserGesture(false);
@@ -144,112 +171,143 @@ public class WebViey extends WebView {
 	}
 	
 	public void titan(String url, String isFile, String text, String mime, String token) {
-		smlonetIs = isFile;
-		smlonetTxt = text;
-		smlonetMime = mime;
-		smlonetToken = token;
+		smolnetIs = isFile;
+		smolnetTxt = text;
+		smolnetMime = mime;
+		smolnetToken = token;
 		runUrl(url);
 	}
 	public void misfin(String url, String to, String text, String type) {
-		smlonetIs = to;
-		smlonetTxt = text;
-		smlonetMime = type;
+		smolnetIs = to;
+		smolnetTxt = text;
+		smolnetMime = type;
 		runUrl(url);
 	}
 	public void scroll(String url, String meta) {
-		smlonetIs = meta;
+		smolnetIs = meta;
 		runUrl(url);
 	}
-    public void nps(String url, String str) {
-		smlonetIs = str;
+	public void nps(String url, String str) {
+		smolnetIs = str;
 		runUrl(url);
 	}
 	public void molerat(String url, String method, String form) {
-		smlonetIs = method;
-		smlonetTxt = form;
+		smolnetIs = method;
+		smolnetTxt = form;
 		runUrl(url);
 	}
 	
+	private void setSmolnetImg(String name, String id, long size)
+	{
+		post(() -> evaluateJavascript("javascript:window.onSmolnetImgResult('" + name + "', '" + id + "', '" + size + "')", null));
+	}
+	
+	public void getSmolnetImg(String url,final String backId) {
+		new Thread(() -> {
+			try {
+				if (!xyDir.exists()) xyDir.mkdirs();
+				String hash = WebUtil.getHash(url.getBytes(), "SHA-256");
+				final String name = hash + "." + kawaii.viey.browser.xy.mk.getUrl(url).ext;
+				File file = new File(xyDir, name);
+				
+				if (file.exists()) {
+					long size = file.length();
+					setSmolnetImg(name, backId, size);
+					return;
+				}
+				
+				String content = getSmolnetData(url);
+				if (content == null) {
+					setSmolnetImg("get fail", backId, 0L);
+					return;
+				}
+				String key = "内容:\n";
+				int index = content.indexOf(key);
+				if (index == -1) {
+					setSmolnetImg("get fail", backId, 0L);
+					return;
+				}
+				String data = content.substring(index + key.length()).trim();
+				if (!data.startsWith("data:image/")) {
+					setSmolnetImg("get fail", backId, 0L);
+					return;
+				}
+				int comma = data.indexOf(',');
+				if (comma == -1) {
+					setSmolnetImg("get fail", backId, 0L);
+					return;
+				}
+				byte[] bytes = Base64.decode(data.substring(comma + 1),Base64.DEFAULT);
+				
+				try (FileOutputStream out = new FileOutputStream(file)) {
+					out.write(bytes);
+				}
+				long size = file.length();
+				setSmolnetImg(name, backId, size);
+			} catch (Exception e) {
+				i.log(e);
+			}
+		}).start();
+	}
+	
+	public String getSmolnetData(String url) {
+		return kawaii.viey.browser.xy.mk.getData(url, smolnetIs, smolnetTxt, smolnetMime, smolnetToken, certPath,certPwd,certType);
+	}
+	
+	public void runViek(String url) {
+		WebUtil.runViek(this, url);
+	}
+	
 	public void runUrl(final String url) {
+		if(url.toLowerCase().startsWith("viek://"))
+		{
+			runViek(url);
+			return;
+		}
+		
 		if(mThread != null){
 			mThread.interrupt();
 		}
-		
 		murl = url;
-		
 		if(listener != null){
 			listener.onProgressChanged(10, webId);
 			listener.onPageStarted(url, webId);
 		}
 		Thread newThread = new Thread(() -> {
-			String dat = "";
-			String xy = "error";
-			if (url.startsWith("gemini://")) {
-				dat = gemini.get(url,certPath,certPwd,certType);
-				xy = "gemini";
-			} else if (url.startsWith("scroll://")) {
-				dat = scroll.get(url,smlonetIs,certPath,certPwd,certType);
-				xy = "scroll";
-				smlonetIs = "";
-			} else if (url.startsWith("nps://")) {
-				dat = nps.get(url,smlonetIs);
-				xy = "nps";
-				smlonetIs = "";
-			} else if (url.startsWith("gopher://") || url.startsWith("gophers://")) {
-				dat = gopher.get(url, false).replace("	","%09");
-				if("open viey download".equals(dat))
-				{
-					murl = null;
-					if(listener != null)
-					{
-						mainHandler.post(() -> {
-							listener.onDownloadStart(url,"","","",0,webId);
-							//listener.onProgressChanged(100, webId);
-							listener.onReceivedIcon(BitmapFactory.decodeResource(i.m().getResources(), R.drawable.logo), webId);
-						});
-					}
-					return;
-				}
+			int idx = url.indexOf("://");
+			String xy = idx >= 0 ? url.substring(0, idx) : "error";
+			
+			switch (xy) {
+				case "gopher":
+				case "gophers":
 				xy = "gopher";
-			} else if (url.startsWith("kepler://") || url.startsWith("keplers://")) {
-				dat = kepler.get(url,certPath,certPwd,certType);
+				break;
+				case "kepler":
+				case "keplers":
 				xy = "kepler";
-			} else if(url.startsWith("nex://")) {
-				dat = nex.get(url);
-				xy = "nex";
-			} else if(url.startsWith("spartan://")) {
-				dat = spartan.get(url);
-				xy = "spartan";
-			} else if(url.startsWith("molerat://")) {
-				if(TextUtils.isEmpty(smlonetIs)) smlonetIs = "get";
-				dat = molerat.get(url,smlonetIs,smlonetTxt,certPath,certPwd,certType);
-				xy = "molerat";
-				smlonetIs = "";
-				smlonetTxt = "";
-			} else if(url.startsWith("scorpion://")) {
-				dat = scorpion.get(url,certPath,certPwd,certType);
+				case "scorpion":
+				case "scorpions":
 				xy = "scorpion";
-			} else if(url.startsWith("finger://")) {
-				dat = finger.get(url);
-				xy = "finger";
-			} else if(url.startsWith("text://")) {
-				dat = text.get(url);
-				xy = "text";
-			} else if(url.startsWith("titan://")) {
-				dat = titan.get(url, smlonetIs, smlonetTxt, smlonetMime, smlonetToken, certPath,certPwd,certType);
-				xy = "titan";
-				smlonetIs = "";
-				smlonetTxt = "";
-				smlonetMime = "";
-				smlonetToken = "";
-			} else if(url.startsWith("misfin://")) {
-				dat = misfin.get(url, smlonetIs, smlonetTxt, smlonetMime, certPath,certPwd,certType);
-				xy = "misfin";
-				smlonetIs = "";
-				smlonetTxt = "";
-				smlonetMime = "";
+				break;
 			}
-			final String content = initData(dat);
+			String dat = getSmolnetData(url);
+			if("open viey download".equals(dat) && "gopher".equals(xy))
+			{
+				murl = null;
+				if(listener != null)
+				{
+					mainHandler.post(() -> {
+						listener.onDownloadStart(url,"","","",0,webId);
+					});
+				}
+				return;
+			}
+			
+			smolnetIs = "";
+			smolnetTxt = "";
+			smolnetMime = "";
+			smolnetToken = "";
+			final String content = WebUtil.initData(dat);
 			final String xyy = xy;
 			mainHandler.post(() -> {
 				
@@ -257,7 +315,7 @@ public class WebViey extends WebView {
 					return;
 				}
 				try {
-					String template = initTemplate(i.fr(new File(xyDir, xyy+".html")));
+					String template = WebUtil.initTemplate(i.fr(new File(xyDir, xyy+".html")));
 					String content2 = content.replace("\\","\\\\").replace("\n","\\n").replace("'","\\'");
 					String htmlContent = template.replace("#Vie内容#", content2);
 					long ts = System.currentTimeMillis();
@@ -289,55 +347,42 @@ public class WebViey extends WebView {
 		newThread.start();
 	}
 	
-	private String initData(String str)
-	{
-		if(str.startsWith(i.getString(R.string.error)))
-		{
-			if(str.contains("ECONNREFUSED")) str = str + i.getString(R.string.error_ECONNREFUSED);
-			else if(str.contains("java.net.UnknownHostException")) str = str + i.getString(R.string.error_UnknownHostException);
-			else if(str.contains("java.net.SocketTimeoutException")) str = str + i.getString(R.string.error_SocketTimeoutException);
-		}
-		return str;
-	}
-	
-	private String initTemplate(String str)
-	{
-		return str.replace("隐藏原始数据",i.getString(R.string.hide_y_data))
-		.replace("显示原始数据",i.getString(R.string.show_y_data))
-		.replace("请输入...",i.getString(R.string.input_requset))
-		.replace("渲染模式：",i.getString(R.string.render_mode))
-		.replace("网页请求重定向:",i.getString(R.string.web_redirect))
-		.replace("网页请求客户端提供证书:<br>请到设置中添加并且应用证书后，再次刷新页面",i.getString(R.string.web_client_cert))
-		.replace("网页请求输入内容:",i.getString(R.string.web_input_content))
-        .replace("确定要删除此内容吗？",i.getString(R.string.confirm_delete_content))
-		.replace("打开",i.getString(R.string.open))
-		.replace("错误",i.getString(R.string.error));
-	}
-	
 	@Override
 	public void loadUrl(String url) {
 		if (i.canRun(url)) {
 			runUrl(url);
 			return;
+		} else if (i.canRun2(url)) {
+			super.loadUrl(url);
+		} else {
+			WebUtil.loadWai(url);
 		}
-		super.loadUrl(url);
 	}
 	
 	@Override
-	public void loadUrl(String url, Map<String, String> additionalHttpHeaders) {
+	public void loadUrl(String url, Map<String, String> headers) {
 		if (i.canRun(url)) {
 			runUrl(url);
 			return;
+		} else if (i.canRun2(url)) {
+			super.loadUrl(url, headers);
+		} else {
+			WebUtil.loadWai(url);
 		}
-		super.loadUrl(url, additionalHttpHeaders);
 	}
 	
 	public String urrl(String ax) {
 		if (TextUtils.isEmpty(ax)) return "about:blank";
-		if(ax.contains(".html?url=") && ax.contains("/files/xy/") && ax.contains("/kawaii.viey.browser/") && ax.startsWith("file://")){
-			String url = i.sj(ax,".html?url=",null);
-			if(!TextUtils.isEmpty(url)){
-				ax = url;
+		
+		String dir = "file://"+ getContext().getFilesDir().getAbsolutePath() + "/";
+		if(ax.startsWith(dir)){
+			if(ax.contains(".html?url=") && ax.contains("/files/xy/")){
+				String url = i.sj(ax,".html?url=",null);
+				if(!TextUtils.isEmpty(url)){
+					ax = url;
+				}
+			} else {
+				ax = ax.replace(dir, "viek://home/");
 			}
 		}
 		return ax;
@@ -345,7 +390,7 @@ public class WebViey extends WebView {
 	
 	@Override
 	public String getUrl() {
-		if(murl != null && !TextUtils.isEmpty(murl)){
+		if(!TextUtils.isEmpty(murl)){
 			return murl;
 		}
 		return urrl(super.getUrl());
@@ -411,7 +456,7 @@ public class WebViey extends WebView {
 				injectJs();
 				murl = null;
 				super.onPageFinished(view, url);
-                url = urrl(url);
+				url = urrl(url);
 				if (listener != null) {
 					listener.onPageFinished(url, webId);
 				}
@@ -431,13 +476,7 @@ public class WebViey extends WebView {
 				
 				if (i.canRun2(url)) return false;
 				
-				Uri uri = Uri.parse(url);
-				if (uri == null || uri.getScheme() == null) return true;
-				List<android.content.pm.ResolveInfo> apps = getAppsForUri(uri);
-				if (apps == null || apps.isEmpty()) {
-					return true;
-				}
-				showAppChooserDialog(uri, apps);
+				WebUtil.loadWai(url);
 				return true;
 			}
 			
@@ -447,7 +486,7 @@ public class WebViey extends WebView {
 			@Override
 			public void onProgressChanged(WebView view, int newProgress) {
 				super.onProgressChanged(view, newProgress);
-				if (listener != null) {
+				if (listener != null && murl == null) {
 					listener.onProgressChanged(newProgress, webId);
 				}
 			}
@@ -677,7 +716,7 @@ public class WebViey extends WebView {
 			
 			@Override
 			public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, final JsPromptResult result) {
-				final android.widget.EditText editText = new android.widget.EditText(getContext());
+				final EditViey editText = new EditViey(getContext());
 				editText.setHint(message);
 				editText.setText(defaultValue);
 				i.utw("Prompt",
@@ -721,70 +760,40 @@ public class WebViey extends WebView {
 	}
 	
 	
-	
 	public void setOnWebViewListener(OnWebViewListener l) {
 		this.listener = l;
 	}
 	
-	private void showAppChooserDialog(Uri uri, List<android.content.pm.ResolveInfo> apps) {
-		Context ctx = getContext();
-		android.content.pm.PackageManager pm = ctx.getPackageManager();
-		
-		String[] appNames = new String[apps.size()];
-		for (int i = 0; i < apps.size(); i++) {
-			appNames[i] = apps.get(i).loadLabel(pm).toString();
-		}
-		
-		i.utw(R.string.open_link,
-		appNames,
-		R.string.cancel,
-		new mk.jk() {
-			@Override
-			public void onButton1Click() {}
-			
-			@Override
-			public void onButton2Click() {}
-			
-			@Override
-			public void onButton3Click() {
-				
-			}
-			
-			@Override
-			public void onDialogDismissed() {}
-			
-			@Override
-			public void onListClick(String nr, int num) {
-				
-				if (num >= 0 && num < apps.size()) {
-					android.content.pm.ResolveInfo ri = apps.get(num);
-					android.content.Intent intent =
-					new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);
-					intent.setPackage(ri.activityInfo.packageName);
-					intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
-					try {
-						ctx.startActivity(intent);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-			
-			@Override
-			public void onSelect(String content) {}
-		}
-		);
-	}
-	
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent event) {
-		if (getScrollY() == 0) {
+		final int action = event.getActionMasked();
+		
+		if (event.getPointerCount() >= 2) {
+			mMultiTouch = true;
+		}
+		
+		if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+			if(mIsPullTouch) {
+				if (listener != null) {
+					MotionEvent cancel = MotionEvent.obtain(event);
+					cancel.setAction(MotionEvent.ACTION_CANCEL);
+					listener.onDispatchTouchEvent(cancel);
+					cancel.recycle();
+				}
+			}
+			mMultiTouch = false;
+			mIsPullTouch = false;
+		}
+		
+		if (getScrollY() == 0 && !mMultiTouch) {
 			if (listener != null) {
-				if(listener.onDispatchTouchEvent(event)){
+				if (listener.onDispatchTouchEvent(event)) {
+					mIsPullTouch = true;
 					return true;
 				}
 			}
 		}
+		
 		return super.dispatchTouchEvent(event);
 	}
 	
@@ -801,6 +810,73 @@ public class WebViey extends WebView {
 		}
 		super.destroy();
 	}
+	
+	@Override
+	protected void dispatchDraw(Canvas canvas) {
+		super.dispatchDraw(canvas);
+		mScrollbar.draw(canvas, true);
+	}
+	
+	@Override
+	protected void onScrollChanged(int l, int t, int oldl, int oldt) {
+		super.onScrollChanged(l, t, oldl, oldt);
+		mScrollbar.updateThumbPosition();
+		if (t != oldt) {
+			mScrollbar.showTemporarily();
+		}
+		invalidate();
+	}
+	
+	@Override
+	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+		super.onSizeChanged(w, h, oldw, oldh);
+		mScrollbar.updateThumbPosition();
+		invalidate();
+	}
+	
+	
+	@Override
+	public boolean onTouchEvent(MotionEvent ev) {
+		if (mScrollbar.onTouchEvent(ev)) {
+			return true;
+		}
+		return super.onTouchEvent(ev);
+	}
+	
+	
+	public void setThumbColor(int color) {
+		mScrollbar.setThumbColor(color);
+	}
+	
+	public void setThumbSize(float widthDp, float heightDp) {
+		mScrollbar.setThumbSize(widthDp, heightDp);
+	}
+	
+	@Override
+	protected void onDetachedFromWindow() {
+		super.onDetachedFromWindow();
+		mScrollbar.detach();
+	}
+	
+	@Override
+	public void goBack() {
+		if (murl != null) {
+			murl = null;
+			if(listener != null){
+				listener.onProgressChanged(100, webId);
+				listener.onPageFinished(getUrl(), webId);
+			}
+		} else {
+			super.goBack();
+		}
+	}
+	
+	@Override
+	public boolean canGoBack() {
+		if (murl != null) return true;
+		return super.canGoBack();
+	}
+	
 	
 	public void injectJs() {
 		String jsCode = "!function(){document.addEventListener('focus',e=>{const t=e.target;if(t.tagName!=='INPUT'&&t.tagName!=='TEXTAREA') return;if(t.disabled||t.readOnly) return;if(t.tagName==='INPUT'&&!/^(text|password|search|email|number|tel|url)$/.test(t.type)) return;const top=t.getBoundingClientRect().top+window.scrollY-window.innerHeight/3;window.scrollTo({top,behavior:'smooth'});},!0);}();";

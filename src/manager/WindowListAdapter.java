@@ -50,7 +50,7 @@ public class WindowListAdapter extends RecyclerView.Adapter<WindowListAdapter.Vi
 		}
 		
 		if (position == mCurrentIndex) {
-			holder.tvTitle.setTextColor(0xFF00FFDD);
+			holder.tvTitle.setTextColor(0xFF00ffdd);
 		} else {
             if(i.isDark()){
 			holder.tvTitle.setTextColor(0xFFFFFFFF);

@@ -10,16 +10,26 @@
         android:layout_height="wrap_content"
         app:cardCornerRadius="15dp"
         app:cardMaxElevation="0dp"
+        app:cardBackgroundColor="@color/card_bg"
         android:layout_marginBottom="-15dp">
-        
+
+
         <LinearLayout
             android:id="@+id/bg"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:paddingTop="20dp"
+            android:paddingTop="10dp"
             android:paddingBottom="30dp">
-            
+
+            <TextView
+                android:id="@+id/url"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:paddingHorizontal="10dp"
+                android:singleLine="true"
+                android:text="url" />
+
             <LinearLayout
                 android:id="@+id/img"
                 android:layout_width="match_parent"
@@ -29,17 +39,20 @@
                 <TextView
                     android:id="@+id/menu_download_image"
                     android:text="@string/download_image"
-                    style="@style/BottomSheetMenuItemStyle" />
+                    style="@style/BottomSheetMenuItemStyle"
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:id="@+id/menu_view_image"
                     android:text="@string/view_image"
-                    style="@style/BottomSheetMenuItemStyle" />
+                    style="@style/BottomSheetMenuItemStyle"
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:id="@+id/menu_share_image"
                     android:text="@string/share_image"
-                    style="@style/BottomSheetMenuItemStyle" />
+                    style="@style/BottomSheetMenuItemStyle"
+                    android:textColor="@color/text_primary" />
 
             </LinearLayout>
 
@@ -52,37 +65,44 @@
                 <TextView
                     android:id="@+id/menu_open_link"
                     android:text="@string/open_link"
-                    style="@style/BottomSheetMenuItemStyle" />
+                    style="@style/BottomSheetMenuItemStyle"
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:id="@+id/menu_copy_link_url"
                     android:text="@string/copy_link_url"
-                    style="@style/BottomSheetMenuItemStyle" />
+                    style="@style/BottomSheetMenuItemStyle"
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:id="@+id/menu_copy_link_text"
                     android:text="@string/copy_link_text"
-                    style="@style/BottomSheetMenuItemStyle" />
+                    style="@style/BottomSheetMenuItemStyle"
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:id="@+id/menu_background_open"
                     android:text="@string/background_open"
-                    style="@style/BottomSheetMenuItemStyle" />
+                    style="@style/BottomSheetMenuItemStyle"
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:id="@+id/menu_new_window_open"
                     android:text="@string/new_window_open"
-                    style="@style/BottomSheetMenuItemStyle" />
+                    style="@style/BottomSheetMenuItemStyle"
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:id="@+id/menu_share_link"
                     android:text="@string/share_link"
-                    style="@style/BottomSheetMenuItemStyle" />
+                    style="@style/BottomSheetMenuItemStyle"
+                    android:textColor="@color/text_primary" />
             </LinearLayout>
             <TextView
                 android:id="@+id/menu_page_info"
                 android:text="@string/page_info"
-                style="@style/BottomSheetMenuItemStyle" />
+                style="@style/BottomSheetMenuItemStyle"
+                android:textColor="@color/text_primary" />
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>

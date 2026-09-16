@@ -1,10 +1,8 @@
 package kawaii.viey.browser;
 
-import android.os.Build;
-import android.webkit.CookieManager;
-import android.webkit.SslErrorHandler;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.os.*;
+import android.app.AlertDialog;
+import android.webkit.*;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -23,10 +21,32 @@ import java.security.NoSuchAlgorithmException;
 import android.text.TextUtils;
 import kawaii.viey.browser.*;
 import java.net.InetAddress;
-import android.os.Handler;
-import android.os.Looper;
+import android.view.ViewGroup;
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.net.Uri;
+import java.util.List;
 
 public class WebUtil {
+	
+	public static AlertDialog ad;
+	
+	public static void runViek(WebViey web, String url)
+	{
+		if(TextUtils.isEmpty(url)) return;
+		if(url.toLowerCase().startsWith("viek://home/"))
+		{
+			String filesDir = "file://"+i.m().getFilesDir().getAbsolutePath() + "/";
+			url = filesDir + url.substring("viek://home/".length());
+            web.loadUrl(url);
+		}
+		else
+		{
+			i.tw("unfinished");
+		}
+	}
 	
 	public static void refresh(WebViey v) {
 		v.loadUrl(v.getUrl());
@@ -114,7 +134,7 @@ public class WebUtil {
 		v.evaluateJavascript(js, null);
 	}
 	
-	private static String getHash(byte[] input, String way) {
+	public static String getHash(byte[] input, String way) {
 		try {
 			if (way.equals("CRC32")) {
 				CRC32 crc32 = new CRC32();
@@ -139,5 +159,136 @@ public class WebUtil {
 		}
 	}
 	
+	
+	public static void loadWai(String url) {
+		
+		if (ad != null && ad.isShowing()) {
+			ad.dismiss();
+		}
+		
+		Activity ctx = (Activity) i.mm();
+		String targetUrl = url;
+		if (url != null) {
+			if (url.contains("wtai://wp/mc;")) {
+				targetUrl = url.replace("wtai://wp/mc;", "tel:");
+			} else if (url.contains("wtai://wp/nt;")) {
+				targetUrl = url.replace("wtai://wp/nt;", "sms:");
+			} else if (url.contains("wtai://wp/st;")) {
+				targetUrl = url.replace("wtai://wp/st;", "sms:");
+			}
+		}
+		
+		final Uri targetUri = Uri.parse(targetUrl);
+		final Intent queryIntent = new Intent(Intent.ACTION_VIEW);
+		queryIntent.setDataAndType(targetUri, null);
+		
+		final PackageManager pm = ctx.getPackageManager();
+		final List<ResolveInfo> apps = pm.queryIntentActivities(queryIntent, PackageManager.MATCH_ALL);
+		if (apps == null || apps.isEmpty()) return;
+		
+		androidx.recyclerview.widget.RecyclerView rv =
+		new androidx.recyclerview.widget.RecyclerView(ctx);
+		rv.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(ctx, 3));
+		
+		final android.view.LayoutInflater inflater =
+		android.view.LayoutInflater.from(ctx);
+		
+		ad = mk.utw(ctx, i.getString(R.string.open_out_link), rv, null, null, i.getString(R.string.cancel), "true", i.isNight(), new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onListClick(String nr, int num) {}
+			@Override public void onSelect(String content) {}
+		});
+		
+		rv.setAdapter(new androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
+			@Override
+			public androidx.recyclerview.widget.RecyclerView.ViewHolder onCreateViewHolder(
+			android.view.ViewGroup parent, int viewType) {
+				android.view.View v = inflater.inflate(
+				R.layout.item_menu_grid, parent, false);
+				return new androidx.recyclerview.widget.RecyclerView.ViewHolder(v) {};
+			}
+			
+			@Override
+			public void onBindViewHolder(androidx.recyclerview.widget.RecyclerView.ViewHolder holder, final int position) {
+				final ResolveInfo info = apps.get(position);
+				
+				android.widget.ImageView iv = holder.itemView.findViewById(R.id.iv_icon);
+				android.widget.TextView tv = holder.itemView.findViewById(R.id.tv_text);
+				
+				tv.setTextSize(14f);
+				tv.setSingleLine(true);
+				int size = i.dp2px(40);
+				ViewGroup.LayoutParams params = iv.getLayoutParams();
+				params.width = size;
+				params.height = size;
+				iv.setLayoutParams(params);
+				iv.setImageDrawable(info.loadIcon(pm));
+				tv.setText(info.loadLabel(pm).toString());
+				
+				holder.itemView.setOnClickListener(new android.view.View.OnClickListener() {
+					@Override
+					public void onClick(android.view.View v) {
+						ad.dismiss();
+						Intent intent = new Intent(Intent.ACTION_VIEW);
+						intent.setDataAndType(targetUri, null);
+						intent.setClassName(
+						info.activityInfo.packageName,
+						info.activityInfo.name);
+						intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+						try {
+							ctx.startActivity(intent);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+			}
+			@Override
+			public int getItemCount() {
+				return apps.size();
+			}
+		});
+	}
+	
+	public static String initData(String str)
+	{
+		if(str.startsWith(i.getString(R.string.error)))
+		{
+			if(str.contains("ECONNREFUSED")) str = str + i.getString(R.string.error_ECONNREFUSED);
+			else if(str.contains("java.net.UnknownHostException")) str = str + i.getString(R.string.error_UnknownHostException);
+			else if(str.contains("java.net.SocketTimeoutException")) str = str + i.getString(R.string.error_SocketTimeoutException);
+		}
+		return str;
+	}
+	
+	public static String initTemplate(String str)
+	{
+		return str.replace("隐藏原始数据",i.getString(R.string.hide_y_data))
+		.replace("显示原始数据",i.getString(R.string.show_y_data))
+		.replace("请输入...",i.getString(R.string.input_requset))
+		.replace("渲染模式：",i.getString(R.string.render_mode))
+		.replace("网页请求重定向:",i.getString(R.string.web_redirect))
+		.replace("网页请求客户端提供证书:<br>请到设置中添加并且应用证书后，再次刷新页面",i.getString(R.string.web_client_cert))
+		.replace("网页请求输入内容:",i.getString(R.string.web_input_content))
+		.replace("确定要删除此内容吗？",i.getString(R.string.confirm_delete_content))
+		.replace("提交内容",i.getString(R.string.submit_text))
+		.replace("选择文件",i.getString(R.string.file_choose))
+		.replace("文件名称",i.getString(R.string.file_name))
+		.replace("文件大小:",i.getString(R.string.file_size))
+		.replace("文件类型",i.getString(R.string.file_mime))
+		.replace("文件路径",i.getString(R.string.file_path))
+		.replace("提交",i.getString(R.string.submit))
+		.replace("图片加载失败",i.getString(R.string.img_load_fail))
+		.replace("正在加载中...",i.getString(R.string.loading))
+		.replace("嵌入",i.getString(R.string.embed))
+		.replace("文件",i.getString(R.string.file))
+		.replace("打开",i.getString(R.string.open))
+		.replace("错误",i.getString(R.string.error))
+		.replace("文本",i.getString(R.string.text))
+		.replace("删除",i.getString(R.string.delete));
+	}
 	
 }

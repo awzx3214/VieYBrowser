@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
-<LinearLayout
+    android:orientation="vertical"
+    android:background="@color/bg_primary">
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="40dp">
         <ImageView
@@ -18,7 +20,7 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1.0">
-            <androidx.cardview.widget.CardView 
+            <androidx.cardview.widget.CardView
                 android:layout_gravity="center"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -34,15 +36,16 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                         android:src="@drawable/logo" />
                     <TextView
                         android:textSize="16sp"
-                        android:textColor="#FF000000"
                         android:gravity="center"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
+                        android:textColor="@color/text_primary"
                         android:text="@string/downloads" />
                     <ImageView
                         android:padding="2dp"
                         android:layout_width="32dp"
                         android:layout_height="30dp"
+                        android:id="@+id/sign_tool"
                         android:src="@drawable/ic_download" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -54,13 +57,16 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_height="40dp"
             android:src="@drawable/ic_menu" />
     </LinearLayout>
-    <ListView
-    android:requiresFadingEdge="vertical"
-                    android:fadingEdgeLength="12dp"
-        android:id="@+id/listDownload"
+
+    <kawaii.viey.browser.RecyclerViey
+        android:id="@+id/recyclerDownload"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdgeLength="12dp"
+        android:clipToPadding="false"
+        android:scrollbars="vertical"
         android:layout_width="match_parent"
-        android:dividerHeight="0dp"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
+
     <TextView
         android:id="@+id/textEmptyDownload"
         android:layout_width="match_parent"
@@ -68,5 +74,5 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
         android:gravity="center"
         android:textSize="16sp"
         android:visibility="gone"
-        android:text="@string/no_download"/>
+        android:text="@string/no_download" />
 </LinearLayout>

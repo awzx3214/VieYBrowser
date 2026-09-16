@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp">
+        <ImageView
+            android:id="@+id/back_tool"
+            android:padding="8dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_arrow_back" />
+        <View
+            android:layout_height="40dp"
+            android:layout_width="40dp" />
+        <LinearLayout
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+            <androidx.cardview.widget.CardView
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                app:cardCornerRadius="8dp">
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:padding="2dp"
+                        android:layout_width="32dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/logo" />
+                    <TextView
+                        android:textSize="16sp"
+                        android:gravity="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:textColor="@color/text_primary"
+                        android:text="外部浏览页" />
+                    <ImageView
+                        android:padding="2dp"
+                        android:layout_width="32dp"
+                        android:layout_height="30dp"
+                        android:id="@+id/sign_tool"
+                        android:src="@drawable/ic_setting" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+        <ImageView
+            android:id="@+id/menu_more"
+            android:padding="8dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
+        <ImageView
+            android:id="@+id/menu_tool"
+            android:padding="8dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_menu" />
+    </LinearLayout>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_margin="10dp"
+        android:layout_marginTop="5dp"
+        app:cardCornerRadius="25dp">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:id="@+id/toolbar"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center_vertical"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="标题"
+                        android:id="@+id/title"
+                        android:textSize="20sp"
+                        android:textColor="#000000"
+                        android:singleLine="true"
+                        android:ellipsize="end" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="当前网址"
+                        android:id="@+id/url"
+                        android:textSize="10sp"
+                        android:textColor="#80000000"
+                        android:singleLine="true"
+                        android:ellipsize="end" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:layout_marginTop="40dp"
+                android:layout_marginBottom="25dp" />
+
+            <kawaii.viey.browser.WebViey
+                android:layout_width="match_parent"
+                android:id="@+id/web"
+                android:layout_height="match_parent"
+                android:layout_above="@id/down"
+                android:layout_below="@id/toolbar"
+                android:overScrollMode="never"
+                android:scrollbars="none"
+                android:fadingEdgeLength="40dp"
+                android:fadingEdge="vertical" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="25dp"
+                android:orientation="vertical"
+                android:id="@+id/down"
+                android:layout_alignParentBottom="true">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="愛と奇跡の魔法物語"
+                    android:textSize="18sp"
+                    android:textColor="#000000"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="8dp"
+                android:src="@drawable/logo"
+                android:visibility="gone"
+                android:layout_centerInParent="true" />
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- 底部提示 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="外部应用调用 CustomTabs 时会默认打开这里..."
+        android:gravity="center"
+        android:textSize="12sp"
+        android:layout_margin="10dp"
+        android:layout_marginTop="0dp"
+        android:textColor="#000000" />
+</LinearLayout>
+

@@ -25,6 +25,10 @@ import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+
 
 public class CertActivity extends BaseActivity {
 	
@@ -34,14 +38,16 @@ public class CertActivity extends BaseActivity {
 	private static final int REQ_PEM_KEY  = 4002;
 	
 	private Button btnCertAdvanced, btnAddCert, btnCreateCert, btnCleanCert, btnGenP12, btnGenBks, btnSelectPemCert, btnSelectPemKey, btnPemToP12, btnClipboardGetPem;
-	private LinearLayout layoutCertAdvancedPanel, layoutCertPanel, layoutCertList, layoutCreateCertPanel;
+	private LinearLayout layoutCertAdvancedPanel, layoutCertPanel, layoutCreateCertPanel;
+	private RecyclerView recyclerCertList;
+	private CAdapter certAdapter;
 	private Uri selectedCertUri;
 	private String selectedCertSuffix;
 	private File mLongClickCertFile;
 	private EditText etGenCertPwd, etPem2P12Pwd, etCertCN, etCertUserId, etCertDomain, etCertOrg, etCertCountry, etCertEmail, etCertDNS, etCertIP, etCertValidDay;
 	private String mPemCertContent = null;
 	private String mPemKeyContent = null;
-	private TextView crtText, keyText;
+	private TextView crtText, keyText, tvCertEmpty;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +90,11 @@ public class CertActivity extends BaseActivity {
 		findViewById(R.id.menu_tool).setOnClickListener(v->{
 			i.utw(R.string.operation, "test");
 		});
+		if(isDark()) {
+			i.zs(findViewById(R.id.back_tool), "#ffffff");
+			i.zs(findViewById(R.id.menu_tool), "#ffffff");
+			i.zs(findViewById(R.id.sign_tool), "#ffffff");
+		}
 	}
 	
 	public static String getFileExtension(Context context, Uri uri) {
@@ -131,7 +142,6 @@ public class CertActivity extends BaseActivity {
 	private void initView(){
 		btnAddCert = findViewById(R.id.btnAddCert);
 		btnCreateCert = findViewById(R.id.btnCreateCert);
-		layoutCertList = findViewById(R.id.layoutCertList);
 		btnCleanCert = findViewById(R.id.btnCleanCert);
 		layoutCertPanel = findViewById(R.id.layoutCertPanel);
 		layoutCreateCertPanel = findViewById(R.id.layoutCreateCertPanel);
@@ -156,6 +166,32 @@ public class CertActivity extends BaseActivity {
 		etCertDNS = findViewById(R.id.etCertDNS);
 		etCertIP = findViewById(R.id.etCertIP);
 		etCertValidDay = findViewById(R.id.etCertValidDay);
+		recyclerCertList = findViewById(R.id.layoutCertList);
+		tvCertEmpty = findViewById(R.id.tvCertEmpty);
+		
+		
+		certAdapter = new CAdapter(new CAdapter.Callbacks() {
+			@Override
+			public String getPassword(File f) {
+				return readCertPassword(f.getName());
+			}
+			@Override
+			public String getActiveCertName() {
+				return VieYApp.getActiveCertName(CertActivity.this);
+			}
+			@Override
+			public void onItemClick(File f) {
+				setCertActive(f);
+			}
+			@Override
+			public void onItemLongClick(File f) {
+				mLongClickCertFile = f;
+				detailsMenu(f);
+			}
+		});
+		recyclerCertList.setLayoutManager(new LinearLayoutManager(this));
+		recyclerCertList.setAdapter(certAdapter);
+		
 		
 		btnCertAdvanced.setOnClickListener(v -> {
 			if(layoutCertAdvancedPanel.getVisibility() == View.VISIBLE){
@@ -432,7 +468,6 @@ public class CertActivity extends BaseActivity {
 	private void showCertInputDialog(String type){
 		LinearLayout ll = new LinearLayout(this);
 		ll.setOrientation(LinearLayout.VERTICAL);
-		ll.setPadding(48,16,48,16);
 		
 		String fileNameHint = getFileNameFromUri(this, selectedCertUri);
 		
@@ -441,12 +476,16 @@ public class CertActivity extends BaseActivity {
 			fileNameHint = fileNameHint.substring(0, lastDotIndex);
 		}
 		
-		final EditText etName = new EditText(CertActivity.this);
+		final EditViey etName = new EditViey(CertActivity.this);
+		etName.setSingleLine(true);
+		etName.setHeight(i.dp2px(56));
 		etName.setHint(R.string.cert_name_hint);
 		etName.setText(fileNameHint);
 		ll.addView(etName);
 		
-		final EditText etPwd = new EditText(CertActivity.this);
+		final EditViey etPwd = new EditViey(CertActivity.this);
+		etPwd.setSingleLine(true);
+		etPwd.setHeight(i.dp2px(56));
 		etPwd.setHint(R.string.cert_password_hint);
 		ll.addView(etPwd);
 		
@@ -584,61 +623,32 @@ public class CertActivity extends BaseActivity {
 		}
 	}
 	
-	private void refreshCertList(){
+	private void refreshCertList() {
 		layoutCreateCertPanel.setVisibility(View.GONE);
 		layoutCertPanel.setVisibility(View.VISIBLE);
-		layoutCertList.removeAllViews();
+		
 		File certDir = VieYApp.getCertDir(this);
-		if(!certDir.exists()){
-			return;
-		}
-		
-		File[] files = certDir.listFiles();
-		if(files==null||files.length==0){
-			TextView empty = new TextView(this);
-			empty.setText(R.string.cert_empty);
-			empty.setPadding(24,24,24,24);
-			layoutCertList.addView(empty);
-			return;
-		}
-		List<File> certFiles = Arrays.asList(files);
-		String activeName = VieYApp.getActiveCertName(this);
-		
-		for(File f:certFiles){
-			if(f.getName().endsWith(".p12")||f.getName().endsWith(".bks")){
-				View itemView = getLayoutInflater().inflate(R.layout.item_simple,null);
-				TextView tvTitle = itemView.findViewById(R.id.tv_title);
-				TextView tvUrl = itemView.findViewById(R.id.tv_url);
-				TextView tvTime = itemView.findViewById(R.id.tv_time);
-				ImageView ivIcon = itemView.findViewById(R.id.iv_icon);
-				ivIcon.setImageResource(R.drawable.ic_cert);
-				final File currentCertFile = f;
-				String fileName = f.getName();
-				tvTitle.setText(fileName);
-				
-				String pwdText = readCertPassword(fileName);
-				tvUrl.setText(pwdText);
-				
-				
-				if(fileName.equals(activeName)){
-					tvTime.setText(R.string.cert_active_tag);
-				}else{
-					tvTime.setText("");
+		List<File> certFiles = new ArrayList<>();
+		if (certDir.exists()) {
+			File[] files = certDir.listFiles();
+			if (files != null) {
+				for (File f : files) {
+					String n = f.getName();
+					if (n.endsWith(".p12") || n.endsWith(".bks")) {
+						certFiles.add(f);
+					}
 				}
-				
-				itemView.setOnClickListener(v -> {
-					setCertActive(currentCertFile);
-				});
-				
-				registerForContextMenu(itemView);
-				itemView.setOnLongClickListener(v -> {
-					mLongClickCertFile = currentCertFile;
-					detailsMenu(currentCertFile);
-					return true;
-				});
-				
-				layoutCertList.addView(itemView);
 			}
+		}
+		
+		certAdapter.setData(certFiles);
+		
+		if (certFiles.isEmpty()) {
+			tvCertEmpty.setVisibility(View.VISIBLE);
+			recyclerCertList.setVisibility(View.GONE);
+		} else {
+			tvCertEmpty.setVisibility(View.GONE);
+			recyclerCertList.setVisibility(View.VISIBLE);
 		}
 	}
 	
@@ -673,7 +683,7 @@ public class CertActivity extends BaseActivity {
 		
 		String[] menu = {
 			getString(R.string.cert_menu_delete),
-			getString(R.string.cert_menu_rename),
+			getString(R.string.rename),
 			getString(R.string.cert_menu_export),
 			getString(R.string.cert_menu_detail)
 		};
@@ -715,7 +725,7 @@ public class CertActivity extends BaseActivity {
 						public void onSelect(String content) {}
 					});
 				} else if(num == 1) {
-					EditText etNewName = new EditText(CertActivity.this);
+					EditViey etNewName = new EditViey(CertActivity.this);
 					etNewName.setText(nameOnly);
 					etNewName.setPadding(48,24,48,24);
 					i.utw(getString(R.string.cert_rename_title),etNewName,getString(R.string.cancel),getString(R.string.ok),new mk.jk() {
@@ -955,12 +965,12 @@ public class CertActivity extends BaseActivity {
 			if(layoutCertAdvancedPanel.getVisibility() == View.VISIBLE){
 				if(isP12){
 					GenCert.genp12(pwd, outFile.getAbsolutePath(),
-                     cn, userId, domain, org, country, email,
-                     dnsList, ipList, validDays);
+					cn, userId, domain, org, country, email,
+					dnsList, ipList, validDays);
 				}else{
 					GenCert.genbks(pwd, outFile.getAbsolutePath(),
-                     cn, userId, domain, org, country, email,
-                     dnsList, ipList, validDays);
+					cn, userId, domain, org, country, email,
+					dnsList, ipList, validDays);
 				}
 			}else{
 				if(isP12){
@@ -970,7 +980,7 @@ public class CertActivity extends BaseActivity {
 				}
 			}
 			
-            
+			
 			String base = outFile.getName();
 			int dot = base.lastIndexOf('.');
 			String baseName = base.substring(0,dot);
@@ -1019,10 +1029,10 @@ public class CertActivity extends BaseActivity {
 			try{
 				
 				try(FileOutputStream fosCert = new FileOutputStream(tempCert)){
-					fosCert.write(mPemCertContent.getBytes(StandardCharsets.UTF_8));
+					fosCert.write(mPemCertContent.replace("\\n", "\n").getBytes(StandardCharsets.UTF_8));
 				}
 				try(FileOutputStream fosKey = new FileOutputStream(tempKey)){
-					fosKey.write(mPemKeyContent.getBytes(StandardCharsets.UTF_8));
+					fosKey.write(mPemKeyContent.replace("\\n", "\n").getBytes(StandardCharsets.UTF_8));
 				}
 				
 				GenCert.pemToP12(tempCert.getAbsolutePath(), tempKey.getAbsolutePath(), outPwd, outP12File.getAbsolutePath());

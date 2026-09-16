@@ -9,13 +9,13 @@ public class nps {
 	
 	public static String get(String url, String text) {
 		if (!url.startsWith("nps://")) return i.getString(R.string.error_xy);
-        if(TextUtils.isEmpty(text)) return "";
+		if(TextUtils.isEmpty(text)) return "";
 		mk.UrlInfo info = mk.getUrl(url);
 		if(info.port == -1) return i.getString(R.string.error_port);
 		String host = info.host;
 		int port = info.port;
 		
-        Socket socket = null;
+		Socket socket = null;
 		try {
 			socket = new Socket();
 			socket.connect(mk.getSocketAddress(host, port), 10000);
@@ -23,12 +23,12 @@ public class nps {
 			PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			
-			String[] lines = text.split("\r?\n");
+            String[] lines = text.split("\\r?\\n");
 			for (String line : lines) {
-				out.println(line);
+				out.print(line);
+				out.print("\n");
 			}
-			
-			out.println(".");
+			out.print(".\n");
 			out.flush();
 			
 			StringBuilder response = new StringBuilder();

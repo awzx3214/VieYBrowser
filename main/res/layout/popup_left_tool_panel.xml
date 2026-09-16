@@ -11,7 +11,7 @@
         android:id="@+id/card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="#f0ffffff"
+        app:cardBackgroundColor="@color/card_bg"
         app:cardCornerRadius="14dp"
         app:cardMaxElevation="2dp"
         android:layout_marginLeft="15dp"

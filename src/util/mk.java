@@ -32,6 +32,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.RadioGroup;
 import android.app.Activity;
+import android.text.TextUtils;
 
 public class mk {
 	
@@ -69,6 +70,13 @@ public class mk {
 	String btn1Text, String btn2Text, String btn3Text,
 	String cancelable, String night, jk listener) {
 		
+		boolean pdDiss = true;
+		if(!TextUtils.isEmpty(title) && title.startsWith("checknodiss: "))
+		{
+			pdDiss = false;
+			title = title.substring("checknodiss: ".length());
+		}
+		final boolean disme = pdDiss;
 		m = context;
 		
 		if (content instanceof Integer) {
@@ -128,7 +136,6 @@ public class mk {
 		mainLayout.setLayoutParams(params1);
 		
 		
-		
 		if (title != null && !title.isEmpty()) {
 			TextView titleTv = new TextView(context);
 			titleTv.setText(title);
@@ -146,8 +153,6 @@ public class mk {
 			mainLayout.addView(titleTv);
 		}
 		
-		
-		
 		if (content instanceof View) {
 			
 			LinearLayout wrapLayout = new LinearLayout(context);
@@ -155,13 +160,12 @@ public class mk {
 			LinearLayout.LayoutParams.MATCH_PARENT,0,1f));
 			wrapLayout.setOrientation(LinearLayout.VERTICAL);
 			View contentView = (View) content;
-			wrapLayout.setPadding(dp2px(5), dp2px(20), dp2px(5), dp2px(10));
 			wrapLayout.addView(contentView);
 			mainLayout.addView(wrapLayout);
 			
 		} else if (content != null) {
 			ScrollView scrollView = new ScrollView(context);
-			scrollView.setPadding(dp2px(5), dp2px(20), dp2px(5), dp2px(10));
+			scrollView.setPadding(dp2px(5), dp2px(10), dp2px(5), dp2px(10));
 			scrollView.setVerticalFadingEdgeEnabled(true);
 			scrollView.setFadingEdgeLength(80);
 			LinearLayout.LayoutParams scrollParams = new LinearLayout.LayoutParams(
@@ -188,7 +192,7 @@ public class mk {
 				String[] contentArray = (String[]) content;
 				LinearLayout listContainer = new LinearLayout(context);
 				listContainer.setOrientation(LinearLayout.VERTICAL);
-				scrollView.setPadding(0, dp2px(20), 0, dp2px(10));
+				scrollView.setPadding(0, dp2px(10), 0, dp2px(10));
 				
 				
 				if (contentArray.length > 0 && ("select单选项你好Vie浏览器#".equals(contentArray[0]) || "select多选项你好Vie浏览器#".equals(contentArray[0]))) {
@@ -293,11 +297,26 @@ public class mk {
 						}
 					}
 				} else {
+                scrollView.setPadding(0, 0, 0, 0);
 					for (int i = 0; i < contentArray.length; i++) {
 						final int position = i;
 						String item = contentArray[i];
 						if (item == null) continue;
 						
+						if (item.startsWith("分类你好Vie浏览器#")) {
+							TextView categoryTv = new TextView(context);
+							categoryTv.setText("分类: "+item.substring("分类你好Vie浏览器#".length()));
+							categoryTv.setTextSize(14);
+							categoryTv.setTypeface(Typeface.DEFAULT_BOLD);
+							categoryTv.setTextColor(night.equals("false") ? Color.parseColor("#333333") : Color.parseColor("#eeeeee"));
+							categoryTv.setPadding(dp2px(15), dp2px(10), dp2px(10), dp2px(15));
+							if(pd && typeface != null) {
+								categoryTv.setTypeface(typeface);
+							}
+							listContainer.addView(categoryTv);
+							
+							continue;
+						}
 						
 						TextView itemTv = new TextView(context);
 						
@@ -320,6 +339,7 @@ public class mk {
 						);
 						innerLayout.setLayoutParams(innerLayoutParams);
 						
+						
 						if(item.startsWith("这个是Vie选中的#"))
 						{
 							itemTv.setText(item.substring("这个是Vie选中的#".length()));
@@ -341,7 +361,7 @@ public class mk {
 						itemTv.setLayoutParams(itemL);
 						
 						RippleDrawable rippleDrawable = new RippleDrawable(
-						ColorStateList.valueOf(Color.parseColor("#d1fdf8")),
+						ColorStateList.valueOf(Color.parseColor("#2000ffdd")),
 						itemTv.getBackground(),
 						null
 						);
@@ -388,7 +408,7 @@ public class mk {
 				public void onClick(View v) {
 					if (listener != null) listener.onButton1Click();
 					isDBB[0] = true;
-					dialog.dismiss();
+					if(disme) dialog.dismiss();
 				}
 			});
 			btn1.setPadding(0, dp2px(10), 0,0);
@@ -411,7 +431,7 @@ public class mk {
 				public void onClick(View v) {
 					if (listener != null) listener.onButton2Click();
 					isDBB[0] = true;
-					dialog.dismiss();
+					if(disme) dialog.dismiss();
 				}
 			});
 			LinearLayout.LayoutParams btn2Params = new LinearLayout.LayoutParams(
@@ -437,7 +457,7 @@ public class mk {
 								listener.onSelect(selectedItem[0] >= 0 ? String.valueOf(selectedItem[0]) : "");
 							}
 							isDBB[0] = true;
-							dialog.dismiss();
+							if(disme) dialog.dismiss();
 						}
 					});
 				} else {
@@ -455,7 +475,7 @@ public class mk {
 								}
 								listener.onSelect(selected.toString());
 								isDBB[0] = true;
-								dialog.dismiss();
+								if(disme) dialog.dismiss();
 							}
 						}
 					});
@@ -466,7 +486,7 @@ public class mk {
 					public void onClick(View v) {
 						if (listener != null) listener.onButton3Click();
 						isDBB[0] = true;
-						dialog.dismiss();
+						if(disme) dialog.dismiss();
 					}
 				});
 			}
@@ -474,6 +494,7 @@ public class mk {
 			rightButtonLayout.addView(btn3);
 		}
 		buttonMainLayout.addView(rightButtonLayout);
+		
 		mainLayout.addView(buttonMainLayout);
 		
 		boolean pd = cancelable.equals("false") ? false : true;
@@ -546,11 +567,7 @@ public class mk {
 		textView.setPadding(padding, padding, padding, padding);
 		textView.setBackgroundColor(Color.parseColor("#01000000"));
 		
-		RippleDrawable rippleDrawable = new RippleDrawable(
-		ColorStateList.valueOf(Color.parseColor("#d1fdf8")),
-		textView.getBackground(),
-		null
-		);
+		RippleDrawable rippleDrawable = new RippleDrawable(ColorStateList.valueOf(Color.parseColor("#2000ffdd")),textView.getBackground(),null);
 		textView.setBackground(rippleDrawable);
 		if(pd && typeface != null) {
 			textView.setTypeface(typeface);

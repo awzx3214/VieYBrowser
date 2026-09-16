@@ -1,215 +1,331 @@
 package kawaii.viey.browser;
 
-import android.os.Bundle;
-import android.view.View;
-import android.widget.*;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import android.content.Intent;
-import java.io.File;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.graphics.Typeface;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.Switch;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
+import java.io.File;
 
 public class SettingsActivity extends BaseActivity {
 	
-	private Switch switchPull, switchDarkMode, switchPreferIpv4;
-	private TextView appVersion, textToolbarPosition, textCertStatus, textDownloadPath, textLanguage, textHomeUrl, textSearchEngine;
-	private LinearLayout itemOpen, itemOfficial, itemFeedback, itemUpSetting, itemPull, itemToolbarPosition, itemPreferIpv4, itemUaSetting, itemCertSetting, itemDownloadPath, itemLanguage, itemDarkMode, itemHomeUrl, itemSearchEngine, itemClearCache, itemAbout;
-	private ImageView appLogo;
+	private LinearLayout contentContainer;
 	
+	private TextView appVersion, textToolbarPosition, textCertStatus, textDownloadPath, textLanguage, textHomeUrl, textHomeMode, textSearchEngine;
+	private Switch switchPull, switchDarkMode, switchPreferIpv4, switchCustomTab;
+	private ImageView appLogo;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_settings);
+		contentContainer = findViewById(R.id.content_container);
 		
-		if (getSupportActionBar() != null) {
-			getSupportActionBar().setTitle(R.string.settings);
-			getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-		}
-		
-		initViews();
+		buildUi();
 		loadSettings();
-		setupListeners();
 		
-		findViewById(R.id.back_tool).setOnClickListener(v->{
-			finish();
-		});
-		findViewById(R.id.menu_tool).setOnClickListener(v->{
-			i.utw(R.string.operation, "test");
-		});
+		findViewById(R.id.back_tool).setOnClickListener(v -> finish());
+		findViewById(R.id.menu_tool).setOnClickListener(v -> i.utw(R.string.operation, "test"));
 		
+		if (VieYApp.isDarkMode(this)) {
+			i.zs(findViewById(R.id.back_tool), "#ffffff");
+			i.zs(findViewById(R.id.menu_tool), "#ffffff");
+			i.zs(findViewById(R.id.sign_tool), "#ffffff");
+		}
 	}
 	
-	private String isNight() {
-		return VieYApp.isDarkMode(this) ? "true" : "false";
+	
+	private void buildUi() {
+		addSection(getString(R.string.about));
+		addAppInfoBlock();
+		
+		addItem(getString(R.string.about_info),
+		v -> i.utw(getString(R.string.about), getString(R.string.about_text)));
+		
+		addItem(getString(R.string.open_source_license),
+		v -> i.utw(R.string.open_source_license,
+		"Vie 浏览器 - 呆毛飘啊飘 (Apache License 2.0)\n" +
+		"https://gitee.com/awzx3214/VieBrowser\n\n" +
+		"Bouncy Castle Java - Bouncy Castle (MIT License)\n" +
+		"https://github.com/bcgit/bc-java\n\n"));
+		
+		addItem(getString(R.string.official_website),
+		v -> openUrlAndFinish("https://palhube666.wodemo.com/"));
+		
+		addItem(getString(R.string.feedback), v -> showFeedbackDialog());
+		
+		addSection(getString(R.string.general));
+		
+		switchDarkMode = addSwitchItem(
+		getString(R.string.night_mode),
+		VieYApp.isDarkMode(this),
+		(v, is) -> {
+			VieYApp.setDarkMode(this, is);
+			AppCompatDelegate.setDefaultNightMode(
+			is ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+			recreate();
+		});
+		
+		textLanguage = addValueItem(getString(R.string.setting_language), v -> showLanguageDialog());
+		textSearchEngine = addValueItem(getString(R.string.search_engine), v -> showSearchEngineDialog());
+		textHomeUrl = addValueItem(getString(R.string.home_url), v -> showHomeUrlDialog());
+		
+		addSection(getString(R.string.privacy));
+		
+		textCertStatus = addValueItem(getString(R.string.cert_settings),
+		v -> startActivity(new Intent(this, CertActivity.class)));
+		
+		addItem(getString(R.string.ua),
+		v -> startActivity(new Intent(this, UaActivity.class)));
+		addItem(getString(R.string.proxy),
+		v -> startActivity(new Intent(this, UpActivity.class)));
+		
+		
+		addSection(getString(R.string.advanced));
+		
+		switchPreferIpv4 = addSwitchItem(
+		getString(R.string.prefer_ipv4),
+		VieYApp.isPreferIpv4(this),
+		(v, is) -> VieYApp.setPreferIpv4(this, is));
+		
+		switchCustomTab = addSwitchItem(
+		getString(R.string.custom_tab),
+		VieYApp.useTabs(this),
+		(v, is) -> VieYApp.useTabs(this, is));
+		
+		addItem(getString(R.string.clear_cache), v -> clearCache());
+		
+		
+		addSection(getString(R.string.download));
+		textDownloadPath = addValueItem(getString(R.string.download_path),
+		v -> showDownloadPathDialog());
+		
+		addSection(getString(R.string.gesture));
+		switchPull = addSwitchItem(
+		getString(R.string.pull_refresh),
+		VieYApp.isPullRefresh(this),
+		(v, is) -> VieYApp.setPullRefresh(this, is));
+		
+		addSection(getString(R.string.customize));
+		
+		textToolbarPosition = addValueItem(getString(R.string.toolbar_position),
+		v -> showToolbarPosDialog());
+		
+		textHomeMode = addValueItem(getString(R.string.home_mode), v -> showHomeModeDialog());
+		
+		View spacer = new View(this);
+		spacer.setLayoutParams(new LinearLayout.LayoutParams(
+		LinearLayout.LayoutParams.MATCH_PARENT, i.dp2px(100)));
+		contentContainer.addView(spacer);
 	}
 	
-	private void initViews() {
-		appLogo = findViewById(R.id.app_logo);
-		appVersion = findViewById(R.id.app_version);
-		itemPreferIpv4 = findViewById(R.id.itemPreferIpv4);
-		switchPreferIpv4 = findViewById(R.id.switchPreferIpv4);
-		itemCertSetting = findViewById(R.id.itemCertSetting);
-		textCertStatus = findViewById(R.id.textCertStatus);
-		switchDarkMode = findViewById(R.id.switchDarkMode);
-		textHomeUrl = findViewById(R.id.textHomeUrl);
-		textSearchEngine = findViewById(R.id.textSearchEngine);
-		itemDarkMode = findViewById(R.id.itemDarkMode);
-		itemUaSetting = findViewById(R.id.itemUaSetting);
-		itemHomeUrl = findViewById(R.id.itemHomeUrl);
-		itemSearchEngine = findViewById(R.id.itemSearchEngine);
-		itemClearCache = findViewById(R.id.itemClearCache);
-		itemAbout = findViewById(R.id.itemAbout);
-		itemLanguage = findViewById(R.id.itemLanguage);
-		textLanguage = findViewById(R.id.textLanguage);
-		itemDownloadPath = findViewById(R.id.itemDownloadPath);
-		textDownloadPath = findViewById(R.id.textDownloadPath);
-		itemToolbarPosition = findViewById(R.id.itemToolbarPosition);
-		textToolbarPosition = findViewById(R.id.textToolbarPosition);
-		itemOpen = findViewById(R.id.itemOpen);
-		itemOfficial = findViewById(R.id.itemOfficial);
-		itemFeedback = findViewById(R.id.itemFeedback);
-		itemUpSetting = findViewById(R.id.itemUpSetting);
-		itemPull = findViewById(R.id.itemPull);
-		switchPull = findViewById(R.id.switchPull);
+	private void addSection(String title) {
+		TextView tv = new TextView(this);
+		LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+		LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+		lp.setMargins(i.dp2px(15), i.dp2px(15), i.dp2px(15), i.dp2px(15));
+		tv.setLayoutParams(lp);
+		tv.setText(title);
+		tv.setTextSize(16);
+		tv.setTextColor(0xFF00DBDB);
+		contentContainer.addView(tv);
+	}
+	
+	private LinearLayout createRow() {
+		LinearLayout row = new LinearLayout(this);
+		row.setLayoutParams(new LinearLayout.LayoutParams(
+		LinearLayout.LayoutParams.MATCH_PARENT, i.dp2px(40)));
+		row.setOrientation(LinearLayout.HORIZONTAL);
+		row.setGravity(Gravity.CENTER_VERTICAL);
+		row.setPadding(i.dp2px(10), 0, i.dp2px(10), 0);
+		
+		TypedValue out = new TypedValue();
+		getTheme().resolveAttribute(android.R.attr.selectableItemBackground, out, true);
+		row.setBackgroundResource(out.resourceId);
+		return row;
+	}
+	
+	private TextView createTitle(String text) {
+		TextView tv = new TextView(this);
+		tv.setLayoutParams(new LinearLayout.LayoutParams(
+		0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+		tv.setText(text);
+		tv.setTextSize(14);
+		tv.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
+		return tv;
+	}
+	
+	private TextView createValue() {
+		TextView tv = new TextView(this);
+		tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+		tv.setTextSize(10);
+		tv.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+		tv.setSingleLine(true);
+		tv.setEllipsize(TextUtils.TruncateAt.END);
+		return tv;
+	}
+	
+	private void addItem(String text, View.OnClickListener listener) {
+		LinearLayout row = createRow();
+		row.addView(createTitle(text));
+		row.setOnClickListener(listener);
+		contentContainer.addView(row);
+	}
+	
+	private TextView addValueItem(String text, View.OnClickListener listener) {
+		LinearLayout row = createRow();
+		row.addView(createTitle(text));
+		TextView value = createValue();
+		row.addView(value);
+		row.setOnClickListener(listener);
+		contentContainer.addView(row);
+		return value;
+	}
+	
+	private Switch addSwitchItem(String text, boolean checked, CompoundButton.OnCheckedChangeListener listener) {
+		LinearLayout row = createRow();
+		row.addView(createTitle(text));
+		
+		Switch sw = new Switch(this);
+		sw.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+		sw.setChecked(checked);
+		sw.setOnCheckedChangeListener(listener);
+		row.addView(sw);
+		row.setOnClickListener(v -> sw.performClick());
+		contentContainer.addView(row);
+		return sw;
+	}
+	
+	private void addAppInfoBlock() {
+		LinearLayout container = new LinearLayout(this);
+		container.setLayoutParams(new LinearLayout.LayoutParams(
+		LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+		container.setOrientation(LinearLayout.VERTICAL);
+		container.setGravity(Gravity.CENTER_HORIZONTAL);
+		container.setPadding(i.dp2px(10), 0, i.dp2px(10), 0);
+		
+		LinearLayout topRow = new LinearLayout(this);
+		topRow.setOrientation(LinearLayout.HORIZONTAL);
+		topRow.setGravity(Gravity.CENTER_VERTICAL);
+		topRow.setLayoutParams(new LinearLayout.LayoutParams(
+		LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+		topRow.setPadding(i.dp2px(10), 0, i.dp2px(10), 0);
+		
+		appLogo = new ImageView(this);
+		LinearLayout.LayoutParams logoLp =
+		new LinearLayout.LayoutParams(i.dp2px(50), i.dp2px(50));
+		logoLp.setMargins(i.dp2px(5), i.dp2px(5), i.dp2px(5), i.dp2px(5));
+		appLogo.setLayoutParams(logoLp);
+		topRow.addView(appLogo);
+		
+		LinearLayout infoCol = new LinearLayout(this);
+		infoCol.setOrientation(LinearLayout.VERTICAL);
+		infoCol.setLayoutParams(new LinearLayout.LayoutParams(
+		LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+		
+		infoCol.addView(makeInfoText("V i e Y", 18, R.color.text_primary, true));
+		appVersion = makeInfoText("", 10, R.color.text_secondary, true);
+		infoCol.addView(appVersion);
+		infoCol.addView(makeInfoText("呆毛飘啊飘", 10, R.color.text_secondary, true));
+		
+		topRow.addView(infoCol);
+		container.addView(topRow);
+		
+		LinearLayout greenRow = new LinearLayout(this);
+		greenRow.setOrientation(LinearLayout.HORIZONTAL);
+		greenRow.setGravity(Gravity.CENTER_VERTICAL);
+		greenRow.setLayoutParams(new LinearLayout.LayoutParams(
+		LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+		
+		ImageView greenIcon = new ImageView(this);
+		greenIcon.setLayoutParams(new LinearLayout.LayoutParams(i.dp2px(15), i.dp2px(15)));
+		greenIcon.setImageResource(R.drawable.green);
+		greenRow.addView(greenIcon);
+		greenRow.addView(makeInfoText(
+		getString(R.string.green_app_declaration), 10, R.color.text_secondary, false));
+		
+		container.addView(greenRow);
+		contentContainer.addView(container);
+	}
+	
+	private TextView makeInfoText(String text, int sizeSp, int colorRes, boolean bold) {
+		TextView tv = new TextView(this);
+		tv.setText(text);
+		tv.setTextSize(sizeSp);
+		tv.setTextColor(ContextCompat.getColor(this, colorRes));
+		if (bold) tv.setTypeface(null, Typeface.BOLD);
+		return tv;
 	}
 	
 	private void loadSettings() {
-		boolean preferIpv4 = VieYApp.isPreferIpv4(this);
-		switchPreferIpv4.setChecked(preferIpv4);
-		boolean dark = VieYApp.isDarkMode(this);
-		switchDarkMode.setChecked(dark);
 		textLanguage.setText(VieYApp.getLanguageDisplayName(this));
 		textHomeUrl.setText(VieYApp.getHomeUrl(this));
+		textHomeMode.setText(VieYApp.getHomeMode(this));
 		textSearchEngine.setText(VieYApp.getSearchEngine(this));
 		textDownloadPath.setText(VieYApp.getDownloadPath(this));
-		String activeCert = VieYApp.getActiveCertName(this);
-		if(activeCert==null||activeCert.isEmpty()){
-			textCertStatus.setText(R.string.cert_no_active);
-		}else{
-			textCertStatus.setText(activeCert);
-		}
-		String pos = VieYApp.getToolbarPosition(this);
-		textToolbarPosition.setText(VieYApp.getToolbarPositionDisplayName(this,pos));
-		boolean pullRefresh = VieYApp.isPullRefresh(this);
-		switchPull.setChecked(pullRefresh);
+		textToolbarPosition.setText(VieYApp.getToolbarPositionDisplayName(this, VieYApp.getToolbarPosition(this)));
+		updateCertStatus();
+		loadAppInfo();
 	}
 	
-	private void setupListeners() {
-		
-		loadAppInfo();
-		
-		itemToolbarPosition.setOnClickListener(v->{
-			showToolbarPosDialog();
+	private void updateCertStatus() {
+		String activeCert = VieYApp.getActiveCertName(this);
+		textCertStatus.setText((activeCert == null || activeCert.isEmpty()) ? getString(R.string.cert_no_active) : activeCert);
+	}
+	
+	private void loadAppInfo() {
+		try {
+			appLogo.setImageDrawable(
+			getPackageManager().getApplicationIcon(getPackageName()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+			PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+			appVersion.setText(pi.versionName + "  " + pi.versionCode);
+		} catch (Exception e) {
+			appVersion.setText("unknown");
+		}
+	}
+	
+	private void openUrlAndFinish(String url) {
+		Intent result = new Intent();
+		result.putExtra("url", url);
+		setResult(RESULT_OK, result);
+		finish();
+	}
+	
+	private void showFeedbackDialog() {
+		final String[] names = {"email", "gitee", "github", "qq", "coolapk", "tg"};
+		final String[] urls = {
+			"mailto:VieBrowser@hotmail.com",
+			"https://gitee.com/awzx3214/VieYBrowser",
+			"https://github.com/awzx3214/VieYBrowser",
+			"https://qm.qq.com/q/2JLhoBKXY4",
+			"https://www.coolapk.com/u/1318094",
+			"https://t.me/kawaii_v"
+		};
+		i.utw(R.string.feedback, names, new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+			@Override public void onListClick(String nr, int num) {
+				openUrlAndFinish(urls[num]);
+			}
 		});
-		
-		itemOpen.setOnClickListener(v -> {
-			i.utw(R.string.open_source_license, "Vie 浏览器 - 呆毛飘啊飘 (Apache License 2.0)\nhttps://gitee.com/awzx3214/VieBrowser\n\nBouncy Castle Java - Bouncy Castle (MIT License)\nhttps://github.com/bcgit/bc-java\n\n");
-		});
-		
-		itemOfficial.setOnClickListener(v -> {
-			Intent resultIntent = new Intent();
-			resultIntent.putExtra("url", "https://palhube666.wodemo.com/");
-			setResult(RESULT_OK, resultIntent);
-			finish();
-		});
-		
-		itemFeedback.setOnClickListener(v -> {
-			final String[] engineNames = {
-				"email", "gitee", "github", "qq", "coolapk", "tg"
-			};
-			i.utw(R.string.feedback,
-			engineNames,
-			new mk.jk() {
-				@Override
-				public void onButton1Click() {}
-				@Override
-				public void onButton2Click() {}
-				@Override
-				public void onButton3Click() {}
-				@Override
-				public void onDialogDismissed() {}
-				@Override
-				public void onListClick(String nr, int num) {
-					String url=null;
-					if(num==0) {
-						url = "mailto:VieBrowser@hotmail.com";
-					} else if(num==1) {
-						url = "https://gitee.com/awzx3214/VieYBrowser";
-					} else if(num==2) {
-						url = "https://github.com/awzx3214/VieYBrowser";
-					} else if(num==3) {
-						url = "https://qm.qq.com/q/2JLhoBKXY4";
-					} else if(num==4) {
-						url = "https://www.coolapk.com/u/1318094";
-					} else if(num==5) {
-						url = "https://t.me/kawaii_v";
-					}
-					Intent resultIntent = new Intent();
-					resultIntent.putExtra("url", url);
-					setResult(RESULT_OK, resultIntent);
-					finish();
-				}
-				@Override
-				public void onSelect(String content) {}
-			});
-		});
-		
-		itemUpSetting.setOnClickListener(v -> {
-			Intent intent = new Intent(SettingsActivity.this, UpActivity.class);
-			startActivity(intent);
-		});
-		
-		switchPull.setOnCheckedChangeListener((v, is) -> {
-			VieYApp.setPullRefresh(SettingsActivity.this, is);
-		});
-		itemPull.setOnClickListener(v->{
-			switchPull.performClick();
-		});
-		switchPreferIpv4.setOnCheckedChangeListener((v, is) -> {
-			VieYApp.setPreferIpv4(SettingsActivity.this, is);
-		});
-		itemPreferIpv4.setOnClickListener(v->{
-			switchPreferIpv4.performClick();
-		});
-		switchDarkMode.setOnCheckedChangeListener((v,is)->{
-			VieYApp.setDarkMode(SettingsActivity.this, is);
-			AppCompatDelegate.setDefaultNightMode(is ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
-			recreate();
-		});
-		itemCertSetting.setOnClickListener(v->{
-			Intent intent=new Intent(SettingsActivity.this,CertActivity.class);
-			startActivity(intent);
-		});
-		itemDownloadPath.setOnClickListener(v->{
-			showDownloadPathDialog();
-		});
-		itemLanguage.setOnClickListener(v->{
-			showLanguageDialog();
-		});
-		itemDarkMode.setOnClickListener(v->{
-			switchDarkMode.performClick();
-		});
-		itemUaSetting.setOnClickListener(v->{
-			Intent intent=new Intent(SettingsActivity.this,UaActivity.class);
-			startActivity(intent);
-		});
-		itemHomeUrl.setOnClickListener(v->{
-			showHomeUrlDialog();
-		});
-		itemSearchEngine.setOnClickListener(v->{
-			showSearchEngineDialog();
-		});
-		itemClearCache.setOnClickListener(v->{
-			clearCache();
-		});
-		itemAbout.setOnClickListener(v-> {
-			i.utw(getString(R.string.about),getString(R.string.about_text));
-		});
-		
 	}
 	
 	private void showToolbarPosDialog() {
@@ -219,217 +335,138 @@ public class SettingsActivity extends BaseActivity {
 			VieYApp.TOOLBAR_POS_TOP_SIDE,
 			VieYApp.TOOLBAR_POS_BOTTOM_SIDE
 		};
-		final String[] posNames = {
+		final String[] posNames = i.setWhich(posKeys, new String[]{
 			getString(R.string.toolbar_pos_top),
 			getString(R.string.toolbar_pos_bottom),
 			getString(R.string.toolbar_pos_top_side),
 			getString(R.string.toolbar_pos_bottom_side)
-		};
+		}, VieYApp.getToolbarPosition(this));
 		
-		mk.utw(this,
-		getString(R.string.toolbar_position),
-		posNames,
-		null, null, getString(R.string.save),
-		"true",
-		isNight(),
-		new mk.jk() {
-			@Override
-			public void onButton1Click() {}
-			@Override
-			public void onButton2Click() {}
-			@Override
-			public void onButton3Click() {}
-			@Override
-			public void onDialogDismissed() {}
-			@Override
-			public void onListClick(String nr, int num) {
+		i.utw(getString(R.string.toolbar_position), posNames, new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+			@Override public void onListClick(String nr, int num) {
 				VieYApp.setToolbarPosition(SettingsActivity.this, posKeys[num]);
-				textToolbarPosition.setText(posNames[num]);
-			}
-			@Override
-			public void onSelect(String content) {
+				textToolbarPosition.setText(nr);
 			}
 		});
 	}
 	
 	private void showDownloadPathDialog() {
-		final android.widget.EditText input = new android.widget.EditText(this);
+		final EditViey input = new EditViey(this);
+		input.setSingleLine(true);
+		input.setHeight(i.dp2px(56));
 		input.setText(VieYApp.getDownloadPath(this));
 		input.setSelection(input.getText().length());
 		
-		mk.utw(this,
-		getString(R.string.set_download_path),
-		input,
-		null,
-		getString(R.string.cancel),
-		getString(R.string.save),
-		"true",
-		isNight(),
-		new mk.jk() {
-			@Override
-			public void onButton1Click() {
-			}
-			@Override
-			public void onButton2Click() {}
-			@Override
-			public void onButton3Click() {
+		i.utw(getString(R.string.set_download_path), input,
+		getString(R.string.cancel), getString(R.string.save), new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onListClick(String nr, int num) {}
+			@Override public void onSelect(String content) {}
+			@Override public void onButton3Click() {
 				String path = input.getText().toString().trim();
-				if (!path.isEmpty()) {
-					File dir = new File(path);
-					if(!dir.exists()){
-						dir.mkdirs();
-					}
-					VieYApp.setDownloadPath(SettingsActivity.this, dir.getAbsolutePath());
-					textDownloadPath.setText(dir.getAbsolutePath());
-					i.twi(R.string.saved);
-				}
+				if (path.isEmpty()) return;
+				File dir = new File(path);
+				if (!dir.exists()) dir.mkdirs();
+				VieYApp.setDownloadPath(SettingsActivity.this, dir.getAbsolutePath());
+				textDownloadPath.setText(dir.getAbsolutePath());
+				i.twi(R.string.saved);
 			}
-			@Override
-			public void onDialogDismissed() {}
-			@Override
-			public void onListClick(String nr, int num) {}
-			@Override
-			public void onSelect(String content) {}
 		});
 	}
 	
-	
 	private void showHomeUrlDialog() {
-		final android.widget.EditText input = new android.widget.EditText(this);
+		final EditViey input = new EditViey(this);
+		input.setSingleLine(true);
+		input.setHeight(i.dp2px(56));
 		input.setText(VieYApp.getHomeUrl(this));
 		input.setSelection(input.getText().length());
 		
-		mk.utw(this,
-		getString(R.string.set_home_url),
-		input,
-		null,
-		getString(R.string.cancel),
-		getString(R.string.save),
-		"true",
-		isNight(),
-		new mk.jk() {
-			@Override
-			public void onButton1Click() {
-			}
-			@Override
-			public void onButton2Click() {}
-			@Override
-			public void onButton3Click() {
+		i.utw(getString(R.string.set_home_url), input,
+		getString(R.string.cancel), getString(R.string.save), new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onListClick(String nr, int num) {}
+			@Override public void onSelect(String content) {}
+			@Override public void onButton3Click() {
 				String url = input.getText().toString().trim();
-				if (!url.isEmpty()) {
-					if (!url.contains("://")) {
-						url = "https://" + url;
-					}
-					VieYApp.setHomeUrl(SettingsActivity.this, url);
-					textHomeUrl.setText(url);
-					i.twi(R.string.saved);
-				}
+				if (url.isEmpty()) url = "viek://home/html/VieY.html";
+				if (!url.contains("://")) url = "https://" + url;
+				VieYApp.setHomeUrl(SettingsActivity.this, url);
+				textHomeUrl.setText(url);
+				i.twi(R.string.saved);
 			}
-			@Override
-			public void onDialogDismissed() {}
-			@Override
-			public void onListClick(String nr, int num) {}
-			@Override
-			public void onSelect(String content) {}
 		});
 	}
 	
+	private void showHomeModeDialog() {
+		
+		final String[] langNames = i.setWhich(new String[]{
+			"list",
+			"grid"
+		}, VieYApp.getHomeMode(this));
+		
+		i.utw(getString(R.string.setting_language), langNames, new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+			@Override public void onListClick(String nr, int num) {
+				VieYApp.setHomeMode(SettingsActivity.this, nr);
+				textHomeMode.setText(nr);
+			}
+		});
+	}
 	
 	private void showLanguageDialog() {
 		final String[] langKeys = {
-			VieYApp.LANG_AUTO,
-			VieYApp.LANG_ZH,
-			VieYApp.LANG_TW,
-			VieYApp.LANG_EN
+			VieYApp.LANG_AUTO, VieYApp.LANG_ZH, VieYApp.LANG_TW, VieYApp.LANG_EN
 		};
-		final String[] langNames = {
+		
+		final String[] langNames = i.setWhich(langKeys, new String[]{
 			getString(R.string.lang_auto),
 			getString(R.string.lang_zh),
 			getString(R.string.lang_tw),
 			getString(R.string.lang_en)
-		};
+		}, VieYApp.getLanguage(this));
 		
-		String currentLang = VieYApp.getLanguage(this);
-		
-		mk.utw(this,
-		getString(R.string.setting_language),
-		langNames,
-		null, null, getString(R.string.save),
-		"true",
-		isNight(),
-		new mk.jk() {
-			@Override
-			public void onButton1Click() {}
-			
-			@Override
-			public void onButton2Click() {}
-			
-			@Override
-			public void onButton3Click() {}
-			
-			@Override
-			public void onDialogDismissed() {}
-			
-			@Override
-			public void onListClick(String nr, int num) {
+		i.utw(getString(R.string.setting_language), langNames, new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+			@Override public void onListClick(String nr, int num) {
 				VieYApp.setLanguage(SettingsActivity.this, langKeys[num]);
-				textLanguage.setText(langNames[num]);
+				textLanguage.setText(nr);
 				i.restartAsk();
-			}
-			
-			@Override
-			public void onSelect(String content) {
 			}
 		});
 	}
 	
-	
 	private void showSearchEngineDialog() {
-		final String[] engines = {
-			"https://www.google.com/search?q=",
-			"https://www.bing.com/search?q=",
-			"https://duckduckgo.com/?q=",
-			"https://search.yahoo.com/search?p="
-		};
-		final String[] engineNames = {
-			"Google", "Bing", "DuckDuckGo", "Yahoo"
-		};
-		
-		i.utw(getString(R.string.set_search_engine),
-		engineNames, getString(R.string.save),
-		new mk.jk() {
-			@Override
-			public void onButton1Click() {}
-			
-			@Override
-			public void onButton2Click() {}
-			
-			@Override
-			public void onButton3Click() {}
-			
-			@Override
-			public void onDialogDismissed() {}
-			
-			@Override
-			public void onListClick(String nr, int num) {
-				VieYApp.setSearchEngine(SettingsActivity.this, engines[num]);
-				textSearchEngine.setText(engines[num]);
-				i.twi(R.string.saved);
-			}
-			
-			@Override
-			public void onSelect(String content) {}
-		});
+		Intent intent = new Intent(this, EngineActivity.class);
+		startActivityForResult(intent, 10001);
 	}
 	
 	@Override
-	protected void onResume() {
-		super.onResume();
-		String activeCert = VieYApp.getActiveCertName(this);
-		if(activeCert==null||activeCert.isEmpty()){
-			textCertStatus.setText(R.string.cert_no_active);
-		}else{
-			textCertStatus.setText(activeCert);
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode == 10001 && resultCode == RESULT_OK && data != null) {
+			String url = data.getStringExtra(EngineActivity.EXTRA_ENGINE_URL);
+			if (url != null && !url.isEmpty()) {
+				VieYApp.setSearchEngine(this, url);
+				textSearchEngine.setText(url);
+				i.twi(R.string.saved);
+			}
 		}
 	}
 	
@@ -438,52 +475,34 @@ public class SettingsActivity extends BaseActivity {
 			android.webkit.WebView webView = new android.webkit.WebView(this);
 			webView.clearCache(true);
 			webView.destroy();
+			
 			File externalFilesDir = getExternalFilesDir(null);
 			if (externalFilesDir != null) {
-				File logDir = new File(externalFilesDir, "log");
-				File crashLogsDir = new File(externalFilesDir, "crash_logs");
-				deleteDir(logDir);
-				deleteDir(crashLogsDir);
+				deleteDir(new File(externalFilesDir, "log"));
+				deleteDir(new File(externalFilesDir, "crash_logs"));
 			}
-			
 			i.twi(R.string.cache_cleared);
 		} catch (Exception e) {
 			i.twi(R.string.error_occurred);
 		}
 	}
 	
-	
 	private void deleteDir(File dir) {
-		if (dir == null || !dir.exists()) {
-			return;
-		}
+		if (dir == null || !dir.exists()) return;
 		File[] files = dir.listFiles();
 		if (files != null) {
-			for (File file : files) {
-				if (file.isDirectory()) {
-					deleteDir(file);
-				}
-				file.delete();
+			for (File f : files) {
+				if (f.isDirectory()) deleteDir(f);
+				f.delete();
 			}
 		}
 		dir.delete();
 	}
 	
-	private void loadAppInfo() {
-		try {
-			appLogo.setImageDrawable(getPackageManager().getApplicationIcon(getPackageName()));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		try {
-			PackageManager pm = getPackageManager();
-			PackageInfo pi = pm.getPackageInfo(getPackageName(), 0);
-			String versionInfo = pi.versionName + "  " + pi.versionCode;
-			appVersion.setText(versionInfo);
-		} catch (Exception e) {
-			appVersion.setText("unknown");
-		}
+	@Override
+	protected void onResume() {
+		super.onResume();
+		updateCertStatus();
 	}
 	
 	@Override

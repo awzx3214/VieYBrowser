@@ -34,6 +34,10 @@ public class GridMenuAdapter extends RecyclerView.Adapter<GridMenuAdapter.ViewHo
 		holder.ivIcon.setImageResource(item.iconRes);
 		
 		int iconColor = isDarkMode ? Color.WHITE : Color.BLACK;
+        if(i.getString(R.string.night_mode).equals(item.text) && isDarkMode) {
+        iconColor = i.getColor(R.color.accent);
+        holder.tvText.setTextColor(iconColor);
+        }
 		holder.ivIcon.setImageTintList(ColorStateList.valueOf(iconColor));
 		
 		holder.tvText.setText(item.text);

@@ -10,6 +10,11 @@ import javax.net.ssl.KeyManagerFactory;
 import java.security.cert.X509Certificate;
 import kawaii.viey.browser.*;
 import java.net.Socket;
+import javax.net.ssl.SNIHostName;
+import java.util.List;
+import java.util.Collections;
+import java.util.ArrayList;
+
 
 public class gemini {
 	public static String get(String url, String cpath, String cpwd, String type) {
@@ -60,10 +65,30 @@ public class gemini {
 				ssl.init(null, tm, null);
 			}
 			
+			
 			SSLSocketFactory factory = ssl.getSocketFactory();
-			socket = (SSLSocket) factory.createSocket();
-			socket.connect(mk.getSocketAddress(host, port), 10000);
-			socket.setSoTimeout(10000);
+			socket = factory.createSocket();
+			SSLSocket sslSocket = (SSLSocket)socket;
+			try {
+				List<SNIServerName> sniList = Collections.singletonList(new SNIHostName(host));
+				SSLParameters sslParams = sslSocket.getSSLParameters();
+				sslParams.setServerNames(sniList);
+				sslSocket.setSSLParameters(sslParams);
+			} catch(Exception e){}
+			
+			List<String> enabledProtocols = new ArrayList<>();
+			for (String protocol : sslSocket.getSupportedProtocols()) {
+				if ("TLSv1.2".equals(protocol) || "TLSv1.3".equals(protocol)) {
+					enabledProtocols.add(protocol);
+				}
+			}
+			if (!enabledProtocols.isEmpty()) {
+				sslSocket.setEnabledProtocols(enabledProtocols.toArray(new String[0]));
+			}
+			// sslSocket.setEnabledProtocols(new String[]{"TLSv1.2", "TLSv1.3"});
+			sslSocket.connect(mk.getSocketAddress(host, port), 10000);
+			sslSocket.setSoTimeout(10000);
+			
 			
 			OutputStream os = socket.getOutputStream();
 			String req = "gemini://" + host + path + "\r\n";
@@ -87,7 +112,7 @@ public class gemini {
 			if (header.length() < 2 || header.length() > 1024) {
 				return i.getString(R.string.error_get) + "\nheader: "+header;
 			}
-            int status=0;
+			int status=0;
 			String meta;
 			if(header.contains(" "))
 			{

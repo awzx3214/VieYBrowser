@@ -42,7 +42,7 @@
                     android:textSize="12sp"
                     android:layout_marginTop="10dp" />
 
-                <ScrollView
+                <kawaii.viey.browser.ScrollViey
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:requiresFadingEdge="vertical"
@@ -105,56 +105,64 @@
                             android:background="#cccccc"
                             android:layout_marginTop="32dp" />
 
-                        <CheckBox
-                            android:id="@+id/cb_agree_user"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/agree_user_agreement"
-                            android:layout_marginTop="24dp" />
-
-                        <CheckBox
-                            android:id="@+id/cb_agree_privacy"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/agree_privacy_policy"
-                            android:layout_marginTop="12dp" />
-
-
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:id="@+id/layout_agree"
                             android:layout_marginTop="12dp">
+                            <CheckBox
+                                android:id="@+id/cb_agree_user"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="" />
                             <TextView
-                                android:layout_width="0dp"
-                                android:layout_weight="1"
+                                android:layout_width="wrap_content"
+                                android:textColor="@color/text_primary"
+                                android:layout_height="wrap_content"
+                                android:text="@string/i_had_read"
+                                android:textSize="14sp" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:id="@+id/open_agree"
                                 android:textColor="#00e09d"
-                                android:gravity="center"
                                 android:layout_height="wrap_content"
                                 android:text="@string/user_agreement"
                                 android:textSize="14sp" />
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_weight="1"
-                                android:textColor="#00e09d"
-                                android:gravity="center"
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/layout_privacy"
+                            android:gravity="center_vertical"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="12dp">
+                            <CheckBox
+                                android:id="@+id/cb_agree_privacy"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/privacy_policy"
+                                android:text="" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:textColor="@color/text_primary"
+                                android:layout_height="wrap_content"
+                                android:text="@string/i_had_read"
                                 android:textSize="14sp" />
                             <TextView
-                                android:layout_width="0dp"
-                                android:layout_weight="1"
+                                android:id="@+id/open_privacy"
+                                android:layout_width="wrap_content"
                                 android:textColor="#00e09d"
-                                android:gravity="center"
                                 android:layout_height="wrap_content"
-                                android:text="@string/opensource_url"
+                                android:text="@string/privacy_policy"
                                 android:textSize="14sp" />
                         </LinearLayout>
 
 
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:layout_marginTop="12dp">
                             <Button
@@ -185,8 +193,29 @@
                                 android:text="@string/btn_start_use"
                                 android:layout_marginTop="25dp" />
                         </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="right"
+                            android:layout_marginTop="12dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:textColor="@color/text_primary"
+                                android:layout_height="wrap_content"
+                                android:text="@string/you_can_down"
+                                android:textSize="14sp" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:textColor="#00e09d"
+                                android:id="@+id/open"
+                                android:gravity="center"
+                                android:layout_height="wrap_content"
+                                android:text="@string/opensource_url"
+                                android:textSize="14sp" />
+                        </LinearLayout>
                     </LinearLayout>
-                </ScrollView>
+                </kawaii.viey.browser.ScrollViey>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </LinearLayout>

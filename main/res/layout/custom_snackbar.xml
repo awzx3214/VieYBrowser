@@ -48,7 +48,7 @@
                         android:layout_height="wrap_content"
                         android:text="ok"
                         android:padding="5dp"
-                        android:textColor="#00ffdd"
+                        android:textColor="#00FFDD"
                         android:background="?attr/selectableItemBackground"/>
 
                 </LinearLayout>

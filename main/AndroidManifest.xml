@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="kawaii.viey.browser"
-    android:versionCode="20260908"
-    android:versionName="0.1 (bate1)">
+    android:versionCode="20260911"
+    android:versionName="0.2 (beta2)">
 
     <uses-sdk
         android:minSdkVersion="17"
         android:targetSdkVersion="34" />
-
+        
+        <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -28,9 +29,9 @@
         android:name=".VieYApp"
         android:allowBackup="true"
         android:networkSecurityConfig="@xml/network_config"
-        android:icon="@mipmap/i"
+        android:icon="@mipmap/icon"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/i"
+        android:roundIcon="@mipmap/icon"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme">
@@ -102,6 +103,10 @@
             android:name=".DownloadActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false" />
+            <activity
+            android:name=".EngineActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false" />
         <activity
             android:name=".SettingsActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
@@ -122,6 +127,12 @@
             android:name=".UpActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false" />
+<activity
+    android:name=".CustomTabs"
+    android:taskAffinity=""
+    android:launchMode="standard"
+    android:configChanges="orientation|screenSize|keyboardHidden"
+    android:exported="true" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:exported="false"
@@ -140,7 +151,17 @@
             <intent-filter>
                 <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
             </intent-filter>
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_provider" />
         </provider>
+        <service
+            android:name=".tab"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.support.customtabs.action.CustomTabsService" />
+            </intent-filter>
+        </service>
         <meta-data
             android:name="author"
             android:value="呆毛飘啊飘" />

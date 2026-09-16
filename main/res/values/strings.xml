@@ -1,5 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+    <string name="fastname">简称</string>
+    <string name="no_custom_engine">当前没有自定义搜索引擎</string>
+    <string name="engine_tip">输入“简称 内容”，可以快速使用对应引擎搜索，注意搜索引擎链接务必包含 %%s，%%s 用于替换关键词</string>
+    <string name="engine_url_need_s">哎呀，请包含 %s 为替换词</string>
+    <string name="del_search_engine">删除自定义搜索引擎</string>
+    <string name="add_search_engine">添加自定义搜索引擎</string>
+    <string name="custom_tab">启用 CustomTabs</string>
+    <string name="home_mode">主页书签显示模式</string>
+    <string name="no_null">哎呀，不能为空，请输入内容</string>
+    <string name="ban_operation">哎呀，这个操作不允许</string>
+    <string name="had_folder">哎呀，已存在同名文件夹</string>
+    <string name="had_bookmark">哎呀，已存在这个书签啦</string>
+    <string name="del_folder">确定删除该文件夹及内部所有内容？</string>
+    <string name="root_folder">根目录</string>
+    <string name="confirm">确定</string>
+    <string name="current">当前</string>
+    <string name="back_folder">返回上级目录</string>
+    <string name="folder">文件夹</string>
+    <string name="folder_name">文件夹名称</string>
+    <string name="add_folder">新建文件夹</string>
+    <string name="sele_folder">选择文件夹</string>
+    <string name="file">文件</string>
+    <string name="text">文本</string>
+    <string name="submit">提交</string>
+    <string name="submit_text">提交内容</string>
+    <string name="file_name">文件名称</string>
+    <string name="file_size">文件大小</string>
+    <string name="file_mime">文件类型</string>
+    <string name="img_load_fail">图片加载失败</string>
+    <string name="loading">正在加载中...</string>
+    <string name="embed">嵌入</string>
+    <string name="open_out_link">页面请求打开外部应用：</string>
+    <string name="you_can_down">你可以在此处下载源码：</string>
     <string name="confirm_delete_content">确定要删除此内容吗？</string>
     <string name="advanced_option">高级选项</string>
     <string name="cert_advanced_desc">自定义证书主题与扩展字段，多个用英文逗号分隔</string>
@@ -32,8 +65,7 @@
     <string name="welcome">欢迎</string>
     <string name="should_agree">哎呀，要阅读并同意后勾选所有选项呢</string>
     <string name="welcome_desc">欢迎使用 VieY 浏览器，\n初次使用请完成基础设置并阅读相关内容</string>
-    <string name="agree_user_agreement">我已阅读并同意《用户协议》</string>
-    <string name="agree_privacy_policy">我已阅读并同意《隐私政策》</string>
+    <string name="i_had_read">我已阅读并同意</string>
     <string name="privacy_policy">《隐私政策》</string>
     <string name="user_agreement">《用户协议》</string>
     <string name="opensource_url">开源地址</string>
@@ -138,7 +170,7 @@
     <string name="cert_active_tag">[已生效]</string>
     <string name="cert_set_active_toast">已设置为生效证书</string>
     <string name="cert_menu_delete">删除证书</string>
-    <string name="cert_menu_rename">重命名</string>
+    <string name="rename">重命名</string>
     <string name="cert_menu_export">导出证书</string>
     <string name="cert_menu_detail">详细信息</string>
     <string name="cert_delete_confirm_title">确认删除</string>

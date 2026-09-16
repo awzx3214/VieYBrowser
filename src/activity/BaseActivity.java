@@ -19,19 +19,18 @@ public class BaseActivity extends AppCompatActivity {
 	
 	@Override
 	protected void onResume() {
-		super.onResume();
 		i.m(this);
+		super.onResume();
 	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		CrashHandler.getInstance().init(this);
 		i.m(this);
-		boolean isDark = VieYApp.isDarkMode(this);
-		if(isDark){
+		if(isDark()){
 			setTheme(R.style.AppTheme_Dark);
 		}
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 		super.onCreate(savedInstanceState);
 	}
 }

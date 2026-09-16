@@ -16,7 +16,7 @@
                     android:top="4dp"
                     android:right="4dp"
                     android:bottom="4dp" />
-                <solid android:color="#efefef" />
+                <solid android:color="@color/btn_bg" />
             </shape>
         </inset>
     </item>
@@ -36,7 +36,7 @@
                     android:top="6dp"
                     android:right="6dp"
                     android:bottom="6dp" />
-                <solid android:color="#80efefef" />
+                <solid android:color="@color/btn_bg2" />
             </shape>
         </inset>
     </item>
@@ -56,7 +56,7 @@
                     android:top="4dp"
                     android:right="4dp"
                     android:bottom="4dp" />
-                <solid android:color="#efefef" />
+                <solid android:color="@color/btn_bg" />
             </shape>
         </inset>
     </item>

@@ -82,7 +82,7 @@ public class text {
 							}
 						}
 					}
-					contentType = mime + ";charset=" + charset;
+					contentType = mime + " ;charset=" + charset;
 					if (mime.startsWith("image/")) {
 						ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 						byte[] data = new byte[4096];
@@ -105,18 +105,16 @@ public class text {
 					
 				} else if (statusLine.startsWith("30 ")) {
 					statusCode = 30;
-					responseBody = meta;
+					responseBody = "内容:\n" + meta;
 				} else if (statusLine.startsWith("40 ")) {
 					statusCode = 40;
-					responseBody = "错误!\n" + meta;
+					responseBody = "内容:\n" + meta;
 				} else {
-					statusCode = 40;
-					responseBody = i.getString(R.string.error_get2) + statusLine;
+					return i.getString(R.string.error_get2) + statusLine;
 				}
 			}
 		} catch (Exception e) {
-			responseBody = i.getString(R.string.error_get2) + e.getMessage();
-			statusCode = 40;
+            return i.getString(R.string.error_get2) + e;
 		} finally {
 			try {
 				if (br != null) br.close();
@@ -125,7 +123,7 @@ public class text {
 			} catch (IOException ignored) {
 			}
 		}
-		return statusCode + " " + contentType + "\n" + responseBody;
+		return "响应:\n" + statusCode + " " + contentType + "\n\n" + responseBody;
 	}
 	
 }

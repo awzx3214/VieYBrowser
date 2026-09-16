@@ -129,6 +129,7 @@
         android:layout_height="45dp"
         android:orientation="horizontal"
         android:gravity="center"
+        android:background="@color/toolbar_bg"
         android:layout_alignParentBottom="true">
 
         <LinearLayout

@@ -14,8 +14,6 @@ import java.nio.charset.*;
 import java.util.*;
 import java.io.*;
 import android.content.res.Configuration;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
 import com.google.android.material.bottomsheet.*;
 import android.content.res.ColorStateList;
@@ -29,6 +27,8 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import android.webkit.ValueCallback;
 import android.net.Uri;
 import android.webkit.WebView.HitTestResult;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 
 public class MainActivity extends BaseActivity {
 	
@@ -72,10 +72,12 @@ public class MainActivity extends BaseActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		isDarkMode = VieYApp.isDarkMode(this);
 		AppCompatDelegate.setDefaultNightMode(isDarkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
-		
+		i.mm(this);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		initViews();
+		
+		// i.log("json",BookmarkManager.outputHome(this));
 		
 		turnDark(isDarkMode);
 		setupListeners();
@@ -229,38 +231,35 @@ public class MainActivity extends BaseActivity {
 	private void openPageSearch(){
 		WebViey web = getCurrentWeb();
 		if(web == null) return;
-		if(mPageSearchPopup != null && mPageSearchPopup.isShowing()){
-			return;
-		}
+		if(mPageSearchPopup != null && mPageSearchPopup.isShowing()) return;
 		
-		View popupView = LayoutInflater.from(this).inflate(R.layout.popup_left_search,null);
+		View popupView = LayoutInflater.from(this).inflate(R.layout.popup_left_search, null);
 		
-		etPageSearch = popupView.findViewById(R.id.et_page_search);
-		btnSearchPrev = popupView.findViewById(R.id.btn_search_prev);
-		btnSearchNext = popupView.findViewById(R.id.btn_search_next);
+		etPageSearch   = popupView.findViewById(R.id.et_page_search);
+		btnSearchPrev  = popupView.findViewById(R.id.btn_search_prev);
+		btnSearchNext  = popupView.findViewById(R.id.btn_search_next);
 		btnSearchClose = popupView.findViewById(R.id.btn_search_close);
+		View card      = popupView.findViewById(R.id.card);
 		
 		if(isDarkMode){
-			((androidx.cardview.widget.CardView)popupView.findViewById(R.id.card)).setCardBackgroundColor(Color.parseColor("#cc000000"));
+			((androidx.cardview.widget.CardView)card).setCardBackgroundColor(Color.parseColor("#cc000000"));
 			etPageSearch.setTextColor(Color.WHITE);
 			etPageSearch.setHintTextColor(Color.GRAY);
 		}else{
-			((androidx.cardview.widget.CardView)popupView.findViewById(R.id.card)).setCardBackgroundColor(Color.parseColor("#f0ffffff"));
+			((androidx.cardview.widget.CardView)card).setCardBackgroundColor(Color.parseColor("#f0ffffff"));
 			etPageSearch.setTextColor(Color.BLACK);
 			etPageSearch.setHintTextColor(Color.GRAY);
 		}
 		
+		card.setOnClickListener(v -> {});
+		
 		etPageSearch.addTextChangedListener(new TextWatcher() {
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {}
-			@Override
-			public void afterTextChanged(Editable s) {
+			@Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+			@Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+			@Override public void afterTextChanged(Editable s) {
 				WebViey w = getCurrentWeb();
 				if(w == null) return;
-				String key = s.toString().trim();
-				w.findAllAsync(key);
+				w.findAllAsync(s.toString().trim());
 			}
 		});
 		
@@ -274,9 +273,7 @@ public class MainActivity extends BaseActivity {
 			if(w!=null) w.findNext(true);
 		});
 		
-		btnSearchClose.setOnClickListener(v->{
-			closePageSearch();
-		});
+		btnSearchClose.setOnClickListener(v-> closePageSearch());
 		
 		etPageSearch.setOnEditorActionListener((v, actionId, event) -> {
 			if(actionId == EditorInfo.IME_ACTION_SEARCH){
@@ -287,56 +284,39 @@ public class MainActivity extends BaseActivity {
 			return false;
 		});
 		
-		mPageSearchPopup = new PopupWindow(popupView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+		
+		mPageSearchPopup = new PopupWindow(
+		popupView,
+		ViewGroup.LayoutParams.MATCH_PARENT,
+		ViewGroup.LayoutParams.WRAP_CONTENT);
+		
 		mPageSearchPopup.setFocusable(true);
-mPageSearchPopup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-mPageSearchPopup.setOutsideTouchable(false);
-
+		
+		mPageSearchPopup.setOutsideTouchable(false);
+		
+		mPageSearchPopup.setTouchModal(false);
+		
+		mPageSearchPopup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 		mPageSearchPopup.setAnimationStyle(R.style.LeftSlideAnim);
-		popupView.setOnTouchListener((v, event) -> {
-    if (event.getAction() == MotionEvent.ACTION_DOWN) {
-        // 获取卡片在屏幕上的位置
-        View card = popupView.findViewById(R.id.card);
-        int[] location = new int[2];
-        card.getLocationOnScreen(location);
-
-        Rect rect = new Rect(
-                location[0],
-                location[1],
-                location[0] + card.getWidth(),
-                location[1] + card.getHeight()
-        );
-
-        // 如果点在外面
-        if (!rect.contains((int) event.getRawX(), (int) event.getRawY())) {
-            closePageSearch();
-            return true;   // ✅ 消费事件，避免穿透
-        }
-    }
-    return false; // ✅ 卡片内正常处理
-});
-        
+		
 		mPageSearchPopup.setOnDismissListener(()->{
 			WebViey w = getCurrentWeb();
-			if(w!=null){
-				w.findAllAsync("");
-			}
+			if(w!=null) w.findAllAsync("");
 			etPageSearch = null;
 			btnSearchPrev = null;
 			btnSearchNext = null;
 			btnSearchClose = null;
 		});
 		
-		mPageSearchPopup.showAtLocation(findViewById(android.R.id.content), Gravity.LEFT|Gravity.TOP,0,0);
+		mPageSearchPopup.showAtLocation(findViewById(android.R.id.content),
+		Gravity.LEFT | Gravity.TOP, 0, 0);
 		
 		etPageSearch.setText("");
 		etPageSearch.requestFocus();
 		etPageSearch.postDelayed(() -> {
 			InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-			if (imm != null) {
-				imm.showSoftInput(etPageSearch, InputMethodManager.SHOW_FORCED);
-			}
-		},100);
+			if (imm != null) imm.showSoftInput(etPageSearch, InputMethodManager.SHOW_FORCED);
+		}, 100);
 	}
 	
 	
@@ -464,10 +444,12 @@ mPageSearchPopup.setOutsideTouchable(false);
 		View sheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_window_list, null);
 		bottomSheetDialog.setContentView(sheetView);
 		
+		/*
 		View bgView = sheetView.findViewById(R.id.bg);
 		if (bgView != null) {
-			bgView.setBackgroundColor(isDarkMode ? Color.BLACK : Color.WHITE);
+		bgView.setBackgroundColor(isDarkMode ? Color.BLACK : Color.WHITE);
 		}
+		*/
 		RecyclerView rvWindowList = sheetView.findViewById(R.id.rv_window_list);
 		rvWindowList.setLayoutManager(new LinearLayoutManager(this));
 		final WindowListAdapter adapter;
@@ -716,7 +698,7 @@ mPageSearchPopup.setOutsideTouchable(false);
 				}
 				fileName = fileName.replaceAll("[\\\\/:*?\"<>|]", "_");
 				
-				final android.widget.EditText edit = new android.widget.EditText(MainActivity.this);
+				final EditViey edit = new EditViey(MainActivity.this);
 				edit.setText(fileName);
 				i.utw(getString(R.string.input_download_name),edit,getString(R.string.cancel),getString(R.string.start_download),new mk.jk() {
 					@Override
@@ -1091,7 +1073,7 @@ mPageSearchPopup.setOutsideTouchable(false);
 	
 	private void setupListeners() {
 		btnTool.setOnClickListener(v->{
-            MainUtil.showLeftToolPanel(MainActivity.this, v, isDarkMode, getCurrentWeb());
+			MainUtil.showLeftToolPanel(MainActivity.this, v, isDarkMode, getCurrentWeb());
 			//showLeftToolPanel(v);
 		});
 		
@@ -1168,7 +1150,7 @@ mPageSearchPopup.setOutsideTouchable(false);
 		i.getParent(btnMenu2).setOnClickListener(v -> showPopupMenu(v));
 		i.getParent(btnWindow).setOnClickListener(v -> showWindowBottomSheet());
 		
-        titleView.setOnLongClickListener(v -> {
+		titleView.setOnLongClickListener(v -> {
 			i.twi(R.string.settings);
 			Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
 			startActivityForResult(intent, 1001);
@@ -1193,13 +1175,7 @@ mPageSearchPopup.setOutsideTouchable(false);
 		});
 		i.getParent(btnHome).setOnLongClickListener(v -> {
 			i.twi(R.string.go_search);
-			urlEditText.requestFocus();
-			urlEditText.postDelayed(() -> {
-				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-				if (imm != null) {
-					imm.showSoftInput(urlEditText, InputMethodManager.SHOW_FORCED);
-				}
-			}, 100);
+			Tools.goSearch();
 			return true;
 		});
 		i.getParent(btnBack).setOnLongClickListener(v -> {
@@ -1225,29 +1201,17 @@ mPageSearchPopup.setOutsideTouchable(false);
 		getCurrentWeb().loadUrl(url);
 	}
 	
-	private void toggleBookmark() {
-		String url = getCurrentWeb().getUrl();
-		String title = getCurrentWeb().getTitle();
-		
-		if (url == null || url.isEmpty()) return;
-		
-		if (BookmarkManager.isBookmarked(this, url)) {
-			BookmarkManager.removeBookmark(this, url);
-			i.twi(R.string.bookmark_removed);
-		} else {
-			BookmarkManager.addBookmark(this, title != null ? title : url, url);
-			i.twi(R.string.bookmark_added);
-		}
-	}
 	
 	private void showPopupMenu(View anchor) {
 		BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
 		View sheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_menu, null);
 		bottomSheetDialog.setContentView(sheetView);
+		/*
 		View bgView = sheetView.findViewById(R.id.bg);
 		if (bgView != null) {
-			bgView.setBackgroundColor(isDarkMode ? Color.BLACK : Color.WHITE);
+		bgView.setBackgroundColor(isDarkMode ? Color.BLACK : Color.WHITE);
 		}
+		*/
 		RecyclerView rvGridMenu = sheetView.findViewById(R.id.rv_grid_menu);
 		
 		GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 5);
@@ -1284,7 +1248,9 @@ mPageSearchPopup.setOutsideTouchable(false);
 			bottomSheetDialog.dismiss();
 		}));
 		menuList.add(new MenuGridItem(R.drawable.ic_bookmark_border, getString(R.string.add_bookmark), ()->{
-			toggleBookmark();
+			String url = getCurrentWeb().getUrl();
+			String title = getCurrentWeb().getTitle();
+			Tools.addBookmark(title, url);
 			bottomSheetDialog.dismiss();
 		}));
 		menuList.add(new MenuGridItem(R.drawable.ic_ua, getString(R.string.ua), ()->{
@@ -1536,18 +1502,37 @@ mPageSearchPopup.setOutsideTouchable(false);
 		}
 	}
 	
+	private String initUrl(String url) {
+		String key = "?vieimgurl=";
+		if(!TextUtils.isEmpty(url) && url.startsWith("file://") && url.contains("kawaii.viey.browser") && url.contains(key)) url = url.substring(url.indexOf(key) + key.length());
+		String dir = "file://"+ i.m().getFilesDir().getAbsolutePath() + "/";
+		if(url.startsWith(dir)) url = url.replace(dir, "viek://home/");
+		return url;
+	}
 	
 	private void showLongClickBottomSheet(int hitType, String extra, String hrefUrl, String linkText) {
 		BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
 		View sheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_longclick_menu, null);
 		bottomSheetDialog.setContentView(sheetView);
-		final String imageUrl = extra;
-		final String linkUrl = hrefUrl;
+		
+		final String imageUrl = initUrl(extra);
+		final String linkUrl = initUrl(hrefUrl);
+		
 		final String linkShowText = linkText;
+		/*
 		View bgView = sheetView.findViewById(R.id.bg);
 		if (bgView != null) {
-			bgView.setBackgroundColor(isDarkMode ? Color.BLACK : Color.WHITE);
+		bgView.setBackgroundColor(isDarkMode ? Color.BLACK : Color.WHITE);
 		}
+		*/
+		
+		
+		String url = "";
+		
+		if(TextUtils.isEmpty(linkUrl)) url = imageUrl;
+		else if(!TextUtils.isEmpty(linkUrl)) url = linkUrl;
+		
+		((TextView)sheetView.findViewById(R.id.url)).setText(url.substring(0, Math.min(url.length(), 100)));
 		
 		TextView menuOpenLink = sheetView.findViewById(R.id.menu_open_link);
 		TextView menuCopyLinkUrl = sheetView.findViewById(R.id.menu_copy_link_url);
@@ -1661,7 +1646,7 @@ mPageSearchPopup.setOutsideTouchable(false);
 					fileName = fileName.substring(0, fileName.indexOf("?"));
 				}
 				
-				final EditText edit = new EditText(MainActivity.this);
+				final EditViey edit = new EditViey(MainActivity.this);
 				edit.setText(fileName);
 				
 				i.utw(getString(R.string.input_download_name),edit,getString(R.string.cancel),getString(R.string.start_download),new mk.jk() {

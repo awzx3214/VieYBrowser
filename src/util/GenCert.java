@@ -36,7 +36,7 @@ public class GenCert {
 	private static final String SIGN_ALG = "SHA256withRSA";
 	private static final int KEY_SIZE = 2048;
 	private static final long VALID_MS = 1000L * 60 * 60 * 24 * 3650L;
-	private static final String DEFAULT_ALIAS = "androidkey";
+	private static final String DEFAULT_ALIAS = "viebrowser";
 	
 	
 	public static void genp12(String password, String outputPath) throws Exception {

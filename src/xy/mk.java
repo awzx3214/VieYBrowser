@@ -3,9 +3,43 @@ package kawaii.viey.browser.xy;
 import java.net.*;
 import kawaii.viey.browser.*;
 import java.io.File;
+import android.text.TextUtils;
 
 public class mk {
-
+	
+	public static String getData(String url, String smolnetIs, String smolnetTxt, String smolnetMime, String smolnetToken, String certPath, String certPwd, String certType) {
+		String dat = "";
+		if (url.startsWith("gemini://")) {
+			dat = gemini.get(url,certPath,certPwd,certType);
+		} else if (url.startsWith("scroll://")) {
+			dat = scroll.get(url,smolnetIs,certPath,certPwd,certType);
+		} else if (url.startsWith("nps://")) {
+			dat = nps.get(url,smolnetIs);
+		} else if (url.startsWith("gopher://") || url.startsWith("gophers://")) {
+			dat = gopher.get(url, false).replace("	","%09");
+		} else if (url.startsWith("kepler://") || url.startsWith("keplers://")) {
+			dat = kepler.get(url,certPath,certPwd,certType);
+		} else if(url.startsWith("nex://")) {
+			dat = nex.get(url);
+		} else if(url.startsWith("spartan://")) {
+			dat = spartan.get(url);
+		} else if(url.startsWith("molerat://")) {
+			if(TextUtils.isEmpty(smolnetIs)) smolnetIs = "get";
+			dat = molerat.get(url,smolnetIs,smolnetTxt,certPath,certPwd,certType);
+		} else if(url.startsWith("scorpion://") || url.startsWith("scorpions://")) {
+			dat = scorpion.get(url,certPath,certPwd,certType);
+		} else if(url.startsWith("finger://")) {
+			dat = finger.get(url);
+		} else if(url.startsWith("text://")) {
+			dat = text.get(url);
+		} else if(url.startsWith("titan://")) {
+			dat = titan.get(url, smolnetIs, smolnetTxt, smolnetMime, smolnetToken, certPath,certPwd,certType);
+		} else if(url.startsWith("misfin://")) {
+			dat = misfin.get(url, smolnetIs, smolnetTxt, smolnetMime, certPath,certPwd,certType);
+		}
+		return dat;
+	}
+	
 	public static InetSocketAddress getSocketAddress(String host, int port) {
 		if(VieYApp.isPreferIpv4(i.m())) {
 			try {
@@ -27,6 +61,7 @@ public class mk {
 		if(url.startsWith("file")) {
 			info.protocol = "file";
 			info.path = url.replace("file://","");
+			fillFileInfo(info);
 			return info;
 		}
 		
@@ -185,12 +220,44 @@ public class mk {
 			else if ("keplers".equalsIgnoreCase(protocol)) info.port = 10009;
 			else if ("spartan".equalsIgnoreCase(protocol)) info.port = 300;
 			else if ("nex".equalsIgnoreCase(protocol)) info.port = 1900;
-            else if ("nps".equalsIgnoreCase(protocol)) info.port = 1915;
+			else if ("nps".equalsIgnoreCase(protocol)) info.port = 1915;
 			else if ("scroll".equalsIgnoreCase(protocol)) info.port = 5699;
 			else if ("molerat".equalsIgnoreCase(protocol)) info.port = 2693;
 		}
-		
+		fillFileInfo(info);
 		return info;
+	}
+	
+	private static void fillFileInfo(UrlInfo info) {
+		if (info == null) return;
+		if (info.path == null || info.path.isEmpty()) {
+			return;
+		}
+		String path = info.path.replace('\\', '/');
+		if (path.endsWith("/")) {
+			return;
+		}
+		int end = path.length();
+		int slash = path.lastIndexOf('/');
+		String file = path.substring(slash + 1, end);
+		
+		int semi = file.indexOf(';');
+		if (semi >= 0) {
+			file = file.substring(0, semi);
+		}
+		
+		if (file.isEmpty()) {
+			return;
+		}
+		
+		info.file = file;
+		int dot = file.lastIndexOf('.');
+		if (dot > 0 && dot < file.length() - 1) {
+			info.filename = file.substring(0, dot);
+			info.ext = file.substring(dot + 1);
+		} else {
+			info.filename = file;
+		}
 	}
 	
 	public static class UrlInfo {
@@ -205,6 +272,9 @@ public class mk {
 		public String path = "";
 		public String query = "";
 		public String ref = "";
+		public String filename = "";
+		public String ext = "";
+		public String file = "";
 		
 		@Override
 		public String toString() {
@@ -220,6 +290,9 @@ public class mk {
 			", path='" + path + '\'' +
 			", query='" + query + '\'' +
 			", ref='" + ref + '\'' +
+			", filename='" + filename + '\'' +
+			", ext='" + ext + '\'' +
+			", file='" + file + '\'' +
 			"}";
 		}
 	}

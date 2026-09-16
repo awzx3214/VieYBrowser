@@ -68,6 +68,11 @@ public class UaActivity extends BaseActivity {
 		findViewById(R.id.menu_tool).setOnClickListener(v->{
 			i.utw(R.string.operation, "test");
 		});
+		if(isDark()) {
+		    i.zs(findViewById(R.id.back_tool), "#ffffff");
+		    i.zs(findViewById(R.id.menu_tool), "#ffffff");
+		    i.zs(findViewById(R.id.sign_tool), "#ffffff");
+		}
 	}
 
 }

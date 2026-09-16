@@ -35,15 +35,16 @@
                         android:src="@drawable/logo" />
                     <TextView
                         android:textSize="16sp"
-                        android:textColor="#FF000000"
                         android:gravity="center"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
+                        android:textColor="@color/text_primary"
                         android:text="@string/proxy" />
                     <ImageView
                         android:padding="2dp"
                         android:layout_width="32dp"
                         android:layout_height="30dp"
+                        android:id="@+id/sign_tool"
                         android:src="@drawable/ic_ua" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

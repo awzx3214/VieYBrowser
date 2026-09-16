@@ -1,5 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+    <string name="fastname">簡稱</string>
+    <string name="no_custom_engine">目前沒有自訂搜尋引擎</string>
+    <string name="engine_tip">輸入「簡稱 內容」，可以快速使用對應引擎搜尋，注意搜尋引擎連結務必包含 %%s，%%s 用於替換關鍵字</string>
+    <string name="engine_url_need_s">哎呀，請包含 %s 作為替換詞</string>
+    <string name="del_search_engine">刪除自訂搜尋引擎</string>
+    <string name="add_search_engine">新增自訂搜尋引擎</string>
+    <string name="custom_tab">啟用 CustomTabs</string>
+    <string name="home_mode">主頁書籤顯示模式</string>
+    <string name="no_null">哎呀，不能為空，請輸入內容</string>
+    <string name="ban_operation">哎呀，這個操作不允許</string>
+    <string name="had_folder">哎呀，已存在同名資料夾</string>
+    <string name="had_bookmark">哎呀，已存在這個書籤啦</string>
+    <string name="del_folder">確定刪除該資料夾及內部所有內容？</string>
+    <string name="root_folder">根目錄</string>
+    <string name="confirm">確定</string>
+    <string name="current">目前</string>
+    <string name="back_folder">返回上層目錄</string>
+    <string name="folder">資料夾</string>
+    <string name="folder_name">資料夾名稱</string>
+    <string name="add_folder">新增資料夾</string>
+    <string name="sele_folder">選擇資料夾</string>
+    <string name="file">檔案</string>
+    <string name="text">文字</string>
+    <string name="submit">提交</string>
+    <string name="submit_text">提交內容</string>
+    <string name="file_name">檔案名稱</string>
+    <string name="file_size">檔案大小</string>
+    <string name="file_mime">檔案類型</string>
+    <string name="img_load_fail">圖片載入失敗</string>
+    <string name="loading">正在載入中...</string>
+    <string name="embed">嵌入</string>
+    <string name="open_out_link">頁面請求開啟外部應用程式：</string>
+    <string name="you_can_down">你可以在此處下載原始碼：</string>
     <string name="confirm_delete_content">確定要刪除此內容嗎？</string>
     <string name="advanced_option">進階選項</string>
     <string name="cert_advanced_desc">自訂憑證主題與擴展欄位，多個請用英文逗號分隔</string>
@@ -32,8 +65,7 @@
     <string name="welcome">歡迎</string>
     <string name="should_agree">哎呀，需要閱讀並同意後勾選所有選項呢</string>
     <string name="welcome_desc">歡迎使用 VieY 瀏覽器，\n初次使用請完成基礎設定並閱讀相關內容</string>
-    <string name="agree_user_agreement">我已閱讀並同意《使用者協議》</string>
-    <string name="agree_privacy_policy">我已閱讀並同意《隱私權政策》</string>
+    <string name="i_had_read">我已閱讀並同意</string>
     <string name="privacy_policy">《隱私權政策》</string>
     <string name="user_agreement">《使用者協議》</string>
     <string name="opensource_url">開源地址</string>
@@ -138,7 +170,7 @@
     <string name="cert_active_tag">[已生效]</string>
     <string name="cert_set_active_toast">已設定為生效憑證</string>
     <string name="cert_menu_delete">刪除憑證</string>
-    <string name="cert_menu_rename">重新命名</string>
+    <string name="rename">重新命名</string>
     <string name="cert_menu_export">匯出憑證</string>
     <string name="cert_menu_detail">詳細資訊</string>
     <string name="cert_delete_confirm_title">確認刪除</string>

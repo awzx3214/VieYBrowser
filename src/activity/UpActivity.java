@@ -13,14 +13,21 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class UpActivity extends BaseActivity {
 	
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_up);
-		
-		
+		findViewById(R.id.back_tool).setOnClickListener(v->{
+			finish();
+		});
+		findViewById(R.id.menu_tool).setOnClickListener(v->{
+			i.utw(R.string.operation, "test");
+		});
+		if(isDark()) {
+		    i.zs(findViewById(R.id.back_tool), "#ffffff");
+		    i.zs(findViewById(R.id.menu_tool), "#ffffff");
+		    i.zs(findViewById(R.id.sign_tool), "#ffffff");
+		}
 	}
-	
 
 }
