@@ -40,11 +40,6 @@ public class EngineActivity extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_engine);
 		
-		if (getSupportActionBar() != null) {
-			getSupportActionBar().setTitle(R.string.search_engine);
-			getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-		}
-		
 		recyclerEngine = findViewById(R.id.recyclerEngine);
 		textEmptyEngine = findViewById(R.id.textEmptyEngine);
 		

@@ -17,13 +17,15 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import java.io.File;
+import android.text.method.DigitsKeyListener;
+import android.text.InputType;
 
 public class SettingsActivity extends BaseActivity {
 	
 	private LinearLayout contentContainer;
 	
-	private TextView appVersion, textToolbarPosition, textCertStatus, textDownloadPath, textLanguage, textHomeUrl, textHomeMode, textSearchEngine;
-	private Switch switchPull, switchDarkMode, switchPreferIpv4, switchCustomTab;
+	private TextView appVersion, textToolbarPosition, textCertStatus, textDownloadPath, textLanguage, textHomeUrl, textHomeMode, textSearchEngine, textMaxConcurrent, textDefaultThreads, textMaxRetry;
+	private Switch switchPull, switchDarkMode, switchPreferIpv4, switchCustomTab, switchVolumePage, switchDownloadNotice, switchApkAutoInstall;
 	private ImageView appLogo;
 	
 	@Override
@@ -50,27 +52,22 @@ public class SettingsActivity extends BaseActivity {
 		addSection(getString(R.string.about));
 		addAppInfoBlock();
 		
-		addItem(getString(R.string.about_info),
-		v -> i.utw(getString(R.string.about), getString(R.string.about_text)));
+		addItem(getString(R.string.about_info), v -> i.utw(getString(R.string.about), getString(R.string.about_text)));
 		
-		addItem(getString(R.string.open_source_license),
-		v -> i.utw(R.string.open_source_license,
+		addItem(getString(R.string.open_source_license), v -> i.utw(R.string.open_source_license,
 		"Vie 浏览器 - 呆毛飘啊飘 (Apache License 2.0)\n" +
 		"https://gitee.com/awzx3214/VieBrowser\n\n" +
 		"Bouncy Castle Java - Bouncy Castle (MIT License)\n" +
 		"https://github.com/bcgit/bc-java\n\n"));
 		
-		addItem(getString(R.string.official_website),
-		v -> openUrlAndFinish("https://palhube666.wodemo.com/"));
+		addItem(getString(R.string.official_website), v -> openUrlAndFinish("https://palhube666.wodemo.com/"));
 		
 		addItem(getString(R.string.feedback), v -> showFeedbackDialog());
 		
 		addSection(getString(R.string.general));
 		
 		switchDarkMode = addSwitchItem(
-		getString(R.string.night_mode),
-		VieYApp.isDarkMode(this),
-		(v, is) -> {
+		getString(R.string.night_mode), VieYApp.isDarkMode(this), (v, is) -> {
 			VieYApp.setDarkMode(this, is);
 			AppCompatDelegate.setDefaultNightMode(
 			is ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
@@ -83,45 +80,37 @@ public class SettingsActivity extends BaseActivity {
 		
 		addSection(getString(R.string.privacy));
 		
-		textCertStatus = addValueItem(getString(R.string.cert_settings),
-		v -> startActivity(new Intent(this, CertActivity.class)));
+		textCertStatus = addValueItem(getString(R.string.cert_settings), v -> startActivity(new Intent(this, CertActivity.class)));
 		
-		addItem(getString(R.string.ua),
-		v -> startActivity(new Intent(this, UaActivity.class)));
-		addItem(getString(R.string.proxy),
-		v -> startActivity(new Intent(this, UpActivity.class)));
+		addItem(getString(R.string.ua), v -> startActivity(new Intent(this, UaActivity.class)));
+		addItem(getString(R.string.proxy), v -> startActivity(new Intent(this, UpActivity.class)));
 		
 		
 		addSection(getString(R.string.advanced));
 		
-		switchPreferIpv4 = addSwitchItem(
-		getString(R.string.prefer_ipv4),
-		VieYApp.isPreferIpv4(this),
-		(v, is) -> VieYApp.setPreferIpv4(this, is));
+		switchPreferIpv4 = addSwitchItem(getString(R.string.prefer_ipv4), VieYApp.isPreferIpv4(this), (v, is) -> VieYApp.setPreferIpv4(this, is));
 		
-		switchCustomTab = addSwitchItem(
-		getString(R.string.custom_tab),
-		VieYApp.useTabs(this),
-		(v, is) -> VieYApp.useTabs(this, is));
-		
+		switchCustomTab = addSwitchItem(getString(R.string.use_custom_tab), VieYApp.useTabs(this), (v, is) -> VieYApp.useTabs(this, is));
 		addItem(getString(R.string.clear_cache), v -> clearCache());
 		
 		
 		addSection(getString(R.string.download));
-		textDownloadPath = addValueItem(getString(R.string.download_path),
-		v -> showDownloadPathDialog());
 		
-		addSection(getString(R.string.gesture));
-		switchPull = addSwitchItem(
-		getString(R.string.pull_refresh),
-		VieYApp.isPullRefresh(this),
-		(v, is) -> VieYApp.setPullRefresh(this, is));
-		
+		textDownloadPath = addValueItem(getString(R.string.download_path), v -> showDownloadPathDialog());
+textMaxConcurrent = addValueItem(getString(R.string.max_concurrent_tasks), v -> showMaxConcurrentDialog());
+textDefaultThreads = addValueItem(getString(R.string.default_threads), v -> showDefaultThreadsDialog());
+textMaxRetry = addValueItem(getString(R.string.max_retry_count), v -> showMaxRetryDialog());
+switchDownloadNotice = addSwitchItem(getString(R.string.show_download_notice), VieYApp.isDownloadNotice(this), (v, is) -> VieYApp.isDownloadNotice(this, is));
+switchApkAutoInstall = addSwitchItem(getString(R.string.auto_install_apk), VieYApp.downloadApkAZ(this), (v, is) -> VieYApp.downloadApkAZ(this, is));
+
+addSection(getString(R.string.gesture));
+
+switchPull = addSwitchItem(getString(R.string.pull_refresh), VieYApp.isPullRefresh(this), (v, is) -> VieYApp.setPullRefresh(this, is));
+switchVolumePage = addSwitchItem(getString(R.string.volume_key_page), VieYApp.isVolumeKeyPage(this), (v, is) -> VieYApp.setVolumeKeyPage(this, is));
+
 		addSection(getString(R.string.customize));
 		
-		textToolbarPosition = addValueItem(getString(R.string.toolbar_position),
-		v -> showToolbarPosDialog());
-		
+		textToolbarPosition = addValueItem(getString(R.string.toolbar_position), v -> showToolbarPosDialog());
 		textHomeMode = addValueItem(getString(R.string.home_mode), v -> showHomeModeDialog());
 		
 		View spacer = new View(this);
@@ -275,6 +264,10 @@ public class SettingsActivity extends BaseActivity {
 		textSearchEngine.setText(VieYApp.getSearchEngine(this));
 		textDownloadPath.setText(VieYApp.getDownloadPath(this));
 		textToolbarPosition.setText(VieYApp.getToolbarPositionDisplayName(this, VieYApp.getToolbarPosition(this)));
+		textMaxConcurrent.setText(String.valueOf(VieYApp.getDownloadMaxConcurrent(this)));
+		textDefaultThreads.setText(String.valueOf(VieYApp.getDownloadDefaultThreads(this)));
+		textMaxRetry.setText(String.valueOf(VieYApp.getDownloadMaxRetry(this)));
+		
 		updateCertStatus();
 		loadAppInfo();
 	}
@@ -355,6 +348,91 @@ public class SettingsActivity extends BaseActivity {
 		});
 	}
 	
+	private void showMaxConcurrentDialog() {
+		final int[] values = {1, 2, 3, 4, 5, 6, 7, 8};
+		final String[] names = {"1", "2", "3", "4", "5", "6", "7", "8"};
+		i.utw(R.string.max_concurrent_tasks, names, new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+			@Override public void onListClick(String nr, int num) {
+				VieYApp.setDownloadMaxConcurrent(SettingsActivity.this, values[num]);
+				textMaxConcurrent.setText(nr);
+				i.twi(R.string.saved);
+			}
+		});
+	}
+	
+	private void showDefaultThreadsDialog() {
+		final int[] values = {1, 2, 3, 4, 8, 16, 32};
+		final String[] names = {"1", "2", "3", "4", "8", "16", "32", i.getString(R.string.diy)};
+		i.utw(R.string.default_threads, names, new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+			@Override public void onListClick(String nr, int num) {
+				if(num==7)
+				{
+					final EditViey input = new EditViey(SettingsActivity.this);
+					input.setSingleLine(true);
+					input.setHeight(i.dp2px(56));
+					input.setInputType(InputType.TYPE_CLASS_NUMBER);
+					input.setKeyListener(DigitsKeyListener.getInstance("0123456789"));
+					
+					i.utw(getString(R.string.diy), input,
+					getString(R.string.cancel), getString(R.string.save), new mk.jk() {
+						@Override public void onButton1Click() {}
+						@Override public void onButton2Click() {}
+						@Override public void onDialogDismissed() {}
+						@Override public void onListClick(String nr, int num) {}
+						@Override public void onSelect(String content) {}
+						@Override public void onButton3Click() {
+							String path = input.getText().toString().trim();
+							if (path.isEmpty()) return;
+							int lin = 1;
+							try
+							{
+								lin = Integer.parseInt(path);
+							} catch(Exception e){}
+                            if(lin<=0) lin=1;
+                            if(lin>=32) lin=32;
+							VieYApp.setDownloadDefaultThreads(SettingsActivity.this, lin);
+							textDefaultThreads.setText(lin+"");
+							i.twi(R.string.saved);
+						}
+					});
+				}
+				else
+				{
+					VieYApp.setDownloadDefaultThreads(SettingsActivity.this, values[num]);
+					textDefaultThreads.setText(nr);
+					i.twi(R.string.saved);
+				}
+			}
+		});
+	}
+	
+	private void showMaxRetryDialog() {
+		final int[] values = {0, 1, 2, 3};
+		final String[] names = {"0", "1", "2", "3"};
+		i.utw(R.string.max_retry_count, names, new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+			@Override public void onListClick(String nr, int num) {
+				VieYApp.setDownloadMaxRetry(SettingsActivity.this, values[num]);
+				textMaxRetry.setText(nr);
+				i.twi(R.string.saved);
+			}
+		});
+	}
+	
 	private void showDownloadPathDialog() {
 		final EditViey input = new EditViey(this);
 		input.setSingleLine(true);
@@ -407,13 +485,14 @@ public class SettingsActivity extends BaseActivity {
 	}
 	
 	private void showHomeModeDialog() {
-		
 		final String[] langNames = i.setWhich(new String[]{
 			"list",
-			"grid"
+			"grid",
+			"card",
+			"dock"
 		}, VieYApp.getHomeMode(this));
 		
-		i.utw(getString(R.string.setting_language), langNames, new mk.jk() {
+		i.utw(getString(R.string.home_mode), langNames, new mk.jk() {
 			@Override public void onButton1Click() {}
 			@Override public void onButton2Click() {}
 			@Override public void onButton3Click() {}

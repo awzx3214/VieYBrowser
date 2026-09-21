@@ -505,9 +505,33 @@ public class MainActivity extends BaseActivity {
 		});
 		
 		btnDel.setOnClickListener(v -> {
-			deleteCurrentWindow();
-			bottomSheetDialog.dismiss();
-		});
+    bottomSheetDialog.dismiss();
+    i.utw(R.string.operation, new String[]{i.getString(R.string.close_now_win), i.getString(R.string.close_other_win)}, new mk.jk() {
+        @Override
+        public void onButton1Click() {}
+
+        @Override
+        public void onButton2Click() {}
+
+        @Override
+        public void onButton3Click() {}
+
+        @Override
+        public void onDialogDismissed() {}
+
+        @Override
+        public void onListClick(String nr, int num) {
+            if (num == 0) {
+                deleteCurrentWindow();
+            } else if (num == 1) {
+                closeOtherWindows();
+            }
+        }
+
+        @Override
+        public void onSelect(String content) {}
+    });
+});
 		
 		btnCopy.setOnClickListener(v -> {
 			copyCurrentWindow();
@@ -520,6 +544,33 @@ public class MainActivity extends BaseActivity {
 			designBottomSheet.setBackground(new ColorDrawable(Color.TRANSPARENT));
 		}
 	}
+    
+    private void closeOtherWindows() {
+    if (windowList.size() <= 1) return;
+
+    WebViey keepWeb = getCurrentWeb();
+
+    for (int idx = windowList.size() - 1; idx >= 0; idx--) {
+        WindowItem item = windowList.get(idx);
+        if (item.web == keepWeb) continue;
+
+        webContainer.removeView(item.web);
+        item.web.destroy();
+        item.web = null;
+
+        if (idx < nowIndex) {
+            nowIndex--;
+        }
+        windowList.remove(idx);
+    }
+
+    nowIndex = Math.max(0, Math.min(nowIndex, windowList.size() - 1));
+    if (!windowList.isEmpty()) {
+        selectWindowIndex(nowIndex);
+    }
+    updateWindowCountText();
+    updateColor();
+}
 	
 	private void copyCurrentWindow() {
 		WebViey curWeb = getCurrentWeb();
@@ -670,60 +721,7 @@ public class MainActivity extends BaseActivity {
 			
 			@Override
 			public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength, int webId) {
-				String fileName = "download_file";
-				if(contentDisposition!=null && contentDisposition.contains("filename=")){
-					fileName = contentDisposition.substring(contentDisposition.indexOf("filename=")+9);
-					fileName = fileName.replace("\"","").trim();
-				} else if(contentDisposition!=null && contentDisposition.contains("filename*=")){
-					fileName = contentDisposition.substring(contentDisposition.indexOf("filename*=")+10);
-					fileName = fileName.replace("\"","").trim();
-				} else {
-					if (url != null && !url.isEmpty()) {
-						int lastSlashIndex = url.lastIndexOf("/");
-						if (lastSlashIndex != -1 && lastSlashIndex < url.length() - 1) {
-							String pathPart = url.substring(lastSlashIndex + 1);
-							int queryIndex = pathPart.indexOf("?");
-							if (queryIndex != -1) {
-								pathPart = pathPart.substring(0, queryIndex);
-							}
-							int hashIndex = pathPart.indexOf("#");
-							if (hashIndex != -1) {
-								pathPart = pathPart.substring(0, hashIndex);
-							}
-							if (pathPart.contains(".")) {
-								fileName = pathPart;
-							}
-						}
-					}
-				}
-				fileName = fileName.replaceAll("[\\\\/:*?\"<>|]", "_");
-				
-				final EditViey edit = new EditViey(MainActivity.this);
-				edit.setText(fileName);
-				i.utw(getString(R.string.input_download_name),edit,getString(R.string.cancel),getString(R.string.start_download),new mk.jk() {
-					@Override
-					public void onButton1Click() {}
-					@Override
-					public void onButton2Click() {}
-					@Override
-					public void onButton3Click()
-					{
-						String name = edit.getText().toString().trim();
-						if(name.isEmpty()) name="download_file";
-						String downloadDirPath = VieYApp.getDownloadPath(MainActivity.this);
-						File downloadDir = new File(downloadDirPath);
-						if (!downloadDir.exists()) downloadDir.mkdirs();
-						DownloadManager.getInstance().startDownload(MainActivity.this, url, name, downloadDir.getAbsolutePath());
-						i.twi(R.string.download_task_start);
-					}
-					@Override
-					public void onDialogDismissed() {}
-					@Override
-					public void onListClick(String nr, int num) {}
-					@Override
-					public void onSelect(String content) {}
-				});
-				
+				WebUtil.download(url, userAgent, contentDisposition, mimetype, contentLength);
 			}
 			
 			@Override
@@ -1179,11 +1177,11 @@ public class MainActivity extends BaseActivity {
 			return true;
 		});
 		i.getParent(btnBack).setOnLongClickListener(v -> {
-			MainUtil.goWebTo(btnBack,MainActivity.this, getCurrentWeb(),"window.scrollTo({top:0,behavior:'smooth'});");
+			MainUtil.goWebTo(btnBack,MainActivity.this, getCurrentWeb(),"window.scrollTo({top:0,behavior:'smooth'});", R.string.go_top);
 			return true;
 		});
 		i.getParent(btnForward).setOnLongClickListener(v -> {
-			MainUtil.goWebTo(btnForward,MainActivity.this, getCurrentWeb(),"window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});");
+			MainUtil.goWebTo(btnForward,MainActivity.this, getCurrentWeb(),"window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});", R.string.go_dwn);
 			return true;
 		});
 	}
@@ -1713,6 +1711,31 @@ public class MainActivity extends BaseActivity {
 		if (designBottomSheet != null) {
 			designBottomSheet.setBackground(new ColorDrawable(Color.TRANSPARENT));
 		}
+	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (VieYApp.isVolumeKeyPage(this)) {
+			WebViey web = getCurrentWeb();
+			if (web != null) {
+				if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+					web.evaluateJavascript("javascript:window.scrollTo({top:window.scrollY+300,behavior:'smooth'});", null);
+					return true;
+				} else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+					web.evaluateJavascript("javascript:window.scrollTo({top:window.scrollY-300,behavior:'smooth'});", null);
+					return true;
+				}
+			}
+		}
+		return super.onKeyDown(keyCode, event);
+	}
+	
+	@Override
+	public boolean onKeyUp(int keyCode, KeyEvent event) {
+		if (VieYApp.isVolumeKeyPage(this) && (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)) {
+			return true;
+		}
+		return super.onKeyUp(keyCode, event);
 	}
 	
 	private WindowItem getItem(int id) {

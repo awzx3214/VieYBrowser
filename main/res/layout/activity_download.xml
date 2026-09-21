@@ -58,6 +58,39 @@
             android:src="@drawable/ic_menu" />
     </LinearLayout>
 
+    <EditText
+        android:id="@+id/editSearchDownload"
+        android:layout_height="56dp"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:hint="@string/search_download"
+        android:textSize="12sp"
+        android:singleLine="true"
+        android:textColorHint="@color/text_secondary"
+        android:layout_marginHorizontal="5dp"
+        android:imeOptions="actionSearch"/>
+
+    <HorizontalScrollView
+        android:id="@+id/scrollFilterDownload"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="6dp"
+        android:scrollbars="none"
+        android:requiresFadingEdge="horizontal"
+        android:fadingEdgeLength="12dp"
+        android:clipToPadding="false"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:id="@+id/layoutFilterDownload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical" />
+    </HorizontalScrollView>
+
     <kawaii.viey.browser.RecyclerViey
         android:id="@+id/recyclerDownload"
         android:requiresFadingEdge="vertical"

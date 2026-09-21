@@ -28,6 +28,11 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import java.util.List;
+import android.content.Context;
+import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
+import android.widget.TextView;
+import java.io.File;
 
 public class WebUtil {
 	
@@ -40,7 +45,7 @@ public class WebUtil {
 		{
 			String filesDir = "file://"+i.m().getFilesDir().getAbsolutePath() + "/";
 			url = filesDir + url.substring("viek://home/".length());
-            web.loadUrl(url);
+			web.loadUrl(url);
 		}
 		else
 		{
@@ -290,5 +295,118 @@ public class WebUtil {
 		.replace("文本",i.getString(R.string.text))
 		.replace("删除",i.getString(R.string.delete));
 	}
+	
+	
+	public static void download(String uu, String ua, String contentDisposition, String mime, long length) {
+		Context m = i.m();
+		if(uu==null) uu = "";
+		final String url = uu;
+        
+		String fileName = "download_file";
+		if (contentDisposition != null && contentDisposition.contains("filename=")) {
+			fileName = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9);
+			fileName = fileName.replace("\"", "").trim();
+		} else if (contentDisposition != null && contentDisposition.contains("filename*=")) {
+			fileName = contentDisposition.substring(contentDisposition.indexOf("filename*=") + 10);
+			fileName = fileName.replace("\"", "").trim();
+		} else {
+			if (url != null && !url.isEmpty()) {
+				int lastSlashIndex = url.lastIndexOf("/");
+				if (lastSlashIndex != -1 && lastSlashIndex < url.length() - 1) {
+					String pathPart = url.substring(lastSlashIndex + 1);
+					int queryIndex = pathPart.indexOf("?");
+					if (queryIndex != -1) pathPart = pathPart.substring(0, queryIndex);
+					int hashIndex = pathPart.indexOf("#");
+					if (hashIndex != -1) pathPart = pathPart.substring(0, hashIndex);
+					if (pathPart.contains(".")) fileName = pathPart;
+				}
+			}
+		}
+		fileName = fileName.replaceAll("[\\\\/:*?\"<>|]", "_");
+		
+		
+		boolean showUrl = !url.startsWith("data:") && !url.startsWith("blob:");
+		
+		int pad = i.dp2px(5);
+		LinearLayout container = new LinearLayout(m);
+		container.setOrientation(LinearLayout.VERTICAL);
+		container.setPadding(pad, pad, pad, pad);
+		
+		final EditViey edit = new EditViey(m);
+		edit.setSingleLine(true);
+		edit.setHeight(i.dp2px(56));
+		edit.setText(fileName);
+        edit.setHint(R.string.file_name);
+		LinearLayout.LayoutParams nameLp = new LinearLayout.LayoutParams(
+		LinearLayout.LayoutParams.MATCH_PARENT,
+		LinearLayout.LayoutParams.WRAP_CONTENT);
+		if (showUrl) nameLp.topMargin = i.dp2px(8);
+		container.addView(edit, nameLp);
+		
+		final EditViey urlEdit = new EditViey(m);
+		if (showUrl) {
+			urlEdit.setSingleLine(true);
+			urlEdit.setHeight(i.dp2px(56));
+            urlEdit.setHint(R.string.file_link);
+			urlEdit.setText(url);
+			urlEdit.setSelection(url.length());
+			container.addView(urlEdit, new LinearLayout.LayoutParams(
+			LinearLayout.LayoutParams.MATCH_PARENT,
+			LinearLayout.LayoutParams.WRAP_CONTENT));
+		}
+		
+		TextView infoView = new TextView(m);
+		infoView.setTextSize(12);
+		infoView.setTextColor(0xFF888888);
+		infoView.setPadding(0, i.dp2px(10), 0, 0);
+		infoView.setText(
+		i.getString(R.string.file_size) + "：" + DownloadTask.formatSize(length)
+		+ "\n"
+		+ i.getString(R.string.file_mime) + "：" + ((mime == null || mime.isEmpty()) ? i.getString(R.string.undefined) : mime)
+		);
+		container.addView(infoView, new LinearLayout.LayoutParams(
+		LinearLayout.LayoutParams.MATCH_PARENT,
+		LinearLayout.LayoutParams.WRAP_CONTENT));
+		
+		i.utw(R.string.download_file, container,
+		R.string.cancel, R.string.start_download,
+		new mk.jk() {
+			@Override
+			public void onButton1Click() {}
+			
+			@Override
+			public void onButton2Click() {}
+			
+			@Override
+			public void onButton3Click() {
+				String name = edit.getText().toString().trim();
+				if (name.isEmpty()) name = "download_file";
+				
+				String finalUrl = url;
+				if (urlEdit != null) {
+					String u = urlEdit.getText().toString().trim();
+					if (!u.isEmpty()) finalUrl = u;
+				}
+				
+				String downloadDirPath = VieYApp.getDownloadPath(m);
+				File downloadDir = new File(downloadDirPath);
+				if (!downloadDir.exists()) downloadDir.mkdirs();
+				
+				DownloadManager.getInstance().startDownload(
+				m, finalUrl, name, downloadDir.getAbsolutePath());
+				i.twi(R.string.download_task_start);
+			}
+			
+			@Override
+			public void onDialogDismissed() {}
+			
+			@Override
+			public void onListClick(String nr, int num) {}
+			
+			@Override
+			public void onSelect(String content) {}
+		});
+	}
+	
 	
 }

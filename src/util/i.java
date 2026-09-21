@@ -104,6 +104,10 @@ public class i {
 	public static String getString(int id) {
 		return m().getString(id);
 	}
+    
+    public static String getString(int id, Object obj) {
+		return m().getString(id, obj);
+	}
 	
 	public static int getColor(int id) {
 		return androidx.core.content.ContextCompat.getColor(m(), id);
@@ -554,6 +558,68 @@ public class i {
 			}
 		}
 		return me;
+	}
+	
+	public static String getMime(String str) {
+		int dot = str.lastIndexOf('.');
+		if (dot < 0) return "application/octet-stream";
+		
+		String ext = str.substring(dot).toLowerCase();
+		int q = ext.indexOf('?');
+		if (q > 0) ext = ext.substring(0, q);
+		int j = ext.indexOf('#');
+		if (j > 0) ext = ext.substring(0, j);
+		
+		switch (ext) {
+			case ".png": return "image/png";
+			case ".jpg":
+			case ".jpeg": return "image/jpeg";
+			case ".js": return "application/javascript";
+			case ".json": return "application/json";
+			case ".xml": return "text/xml";
+			case ".apk": return "application/vnd.android.package-archive";
+			case ".epub": return "application/epub+zip";
+			case ".wml": return "text/vnd.wap.wml";
+            case ".gemini": 
+            case ".gmi": return "text/gemini";
+            case ".scroll": return "text/scroll";
+			case ".wasm": return "application/wasm";
+			case ".bin": return "application/octet-stream";
+			case ".torrent": return "application/x-bittorrent";
+			case ".pdf": return "application/pdf";
+			case ".mid": return "audio/mid";
+			case ".mp3": return "audio/mpeg";
+			case ".zip": return "application/zip";
+			case ".tgz": return "application/x-compressed";
+			case ".flv": return "video/x-flv";
+			case ".gz": return "application/x-gzip";
+			case ".css": return "text/css";
+			case ".bmp": return "image/bmp";
+			case ".gif": return "image/gif";
+			case ".svg": return "image/svg+xml";
+			case ".mp4": return "video/mp4";
+			case ".m4a": return "audio/mp4a-latm";
+			case ".webp": return "image/webp";
+			case ".txt": return "text/plain";
+			case ".tiff":
+			case ".tif": return "image/tiff";
+			case ".oga":
+			case ".ogg": return "audio/ogg";
+			case ".m3u8": return "application/vnd.apple.mpegurl";
+			case ".woff": return "application/x-font-woff";
+			case ".woff2": return "application/x-font-woff2";
+			case ".ttf": return "application/x-font-ttf";
+			case ".eot": return "application/vnd.ms-fontobject";
+			case ".otf": return "application/x-font-opentype";
+			case ".ico": return "image/x-icon";
+			case ".swf": return "application/x-shockwave-flash";
+			default:
+			if (ext.contains(".m3u")) return "";
+			if (ext.contains(".htm")) return "text/html";
+			if (ext.contains(".mht")) return "multipart/related";
+			if (ext.contains(".webm")) return "video/webm";
+			return "application/octet-stream";
+		}
 	}
 	
 }

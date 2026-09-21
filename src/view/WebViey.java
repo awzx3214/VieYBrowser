@@ -418,6 +418,8 @@ public class WebViey extends WebView {
 		setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
 			if(listener != null){
 				listener.onDownloadStart(url, userAgent, contentDisposition, mimetype, contentLength, webId);
+                listener.onProgressChanged(100, webId);
+                listener.onPageFinished(getUrl(), webId);
 			}
 		});
 		

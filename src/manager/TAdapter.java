@@ -77,9 +77,17 @@ public class TAdapter<T> extends RecyclerView.Adapter<TAdapter.ViewHolder> {
     public void onBindViewHolder(ViewHolder holder, int position) {
         T item = data.get(position);
 
-        holder.tvTitle.setText(getHighlightText(binder.getTitle(item), searchKey));
-        holder.tvTime.setText(getHighlightText(binder.getTime(item), searchKey));
-        holder.tvUrl.setText(getHighlightText(binder.getUrl(item), searchKey));
+        String title = binder.getTitle(item);
+        String time = binder.getTime(item);
+        String url = binder.getUrl(item);
+
+        holder.tvTitle.setText(getHighlightText(title, searchKey));
+        holder.tvTime.setText(getHighlightText(time, searchKey));
+        holder.tvUrl.setText(getHighlightText(url, searchKey));
+
+        holder.tvTime.setVisibility(isEmpty(time) ? View.GONE : View.VISIBLE);
+        holder.tvUrl.setVisibility(isEmpty(url) ? View.GONE : View.VISIBLE);
+
         holder.ivIcon.setImageResource(binder.getIconRes(item));
 
         if (darkMode) {
@@ -104,6 +112,10 @@ public class TAdapter<T> extends RecyclerView.Adapter<TAdapter.ViewHolder> {
     @Override
     public int getItemCount() {
         return data.size();
+    }
+
+    private boolean isEmpty(String s) {
+        return s == null || s.length() == 0;
     }
 
     private SpannableString getHighlightText(String source, String keyword) {

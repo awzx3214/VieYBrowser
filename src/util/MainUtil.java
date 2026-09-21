@@ -86,15 +86,7 @@ public class MainUtil {
 		
 		((TextView) popupView.findViewById(R.id.title)).setText(currentWeb.getUrl());
 		((TextView) popupView.findViewById(R.id.url)).setText(currentWeb.getTitle());
-		/*
-		if(isDarkMode){
-			((TextView)popupView.findViewById(R.id.item_extract_cert)).setTextColor(Color.WHITE);
-			((TextView)popupView.findViewById(R.id.item_ssl_cert)).setTextColor(Color.WHITE);
-			((TextView)popupView.findViewById(R.id.item_cookie)).setTextColor(Color.WHITE);
-			((TextView)popupView.findViewById(R.id.item_ip)).setTextColor(Color.WHITE);
-			((TextView)popupView.findViewById(R.id.item_open_setting)).setTextColor(Color.WHITE);
-		}
-		*/
+		
 		popupView.findViewById(R.id.item_extract_cert).setOnClickListener(v->{
 			leftToolPopup.dismiss();
 			WebUtil.getCert(currentWeb);
@@ -113,6 +105,13 @@ public class MainUtil {
 		popupView.findViewById(R.id.item_ip).setOnClickListener(v->{
 			leftToolPopup.dismiss();
 			WebUtil.getIp(currentWeb.getUrl());
+		});
+		
+		popupView.findViewById(R.id.history).setOnClickListener(v->{
+			leftToolPopup.dismiss();
+			Intent intent = new Intent(activity, HistoryActivity.class);
+			intent.putExtra(HistoryActivity.EXTRA_SEARCH_KEY, kawaii.viey.browser.xy.mk.getUrl(currentWeb.getUrl()).host);
+			activity.startActivity(intent);
 		});
 		
 		popupView.findViewById(R.id.item_open_setting).setOnClickListener(v->{
@@ -149,7 +148,7 @@ public class MainUtil {
 		bar.setProgressDrawable(layerDrawable);
 	}
 	
-	public static void goWebTo(final View view, final Context context, final WebViey web, final String js) {
+	public static void goWebTo(final View view, final Context context, final WebViey web, final String js, final int intStr) {
 		RotateAnimation anim1 = new RotateAnimation(
 		0f,
 		90f,
@@ -179,7 +178,7 @@ public class MainUtil {
 					
 					@Override
 					public void onAnimationEnd(Animation animation) {
-						i.twi(R.string.go_top);
+						i.twi(intStr);
 						if (web != null) {
 							web.evaluateJavascript(js, null);
 						}

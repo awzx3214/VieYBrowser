@@ -179,10 +179,10 @@ If you know of any smolnet protocols not listed here, please contact me!
   - [ ] Available
     - Difficult to implement; may never be realized.
 - Inimeg://
-  - [ ] 可用
+  - [ ] Available
     - Has specification documents, but deprecated
 - Iapetus://
-  - [ ] 可用
+  - [ ] Available
     - Has specification documents, but deprecated
 - Mercury://
   - [ ] Available

@@ -53,11 +53,8 @@ public class nex {
 					while ((bytesRead = is.read(data, 0, data.length)) != -1) {
 						buffer.write(data, 0, bytesRead);
 					}
-					String mimeType = switch (ext) {
-						case "svg" -> "image/svg+xml";
-						case "jpeg" -> "image/jpeg";
-						default -> "image/" + ext;
-					};
+					String mimeType = i.getMime("."+ext);
+                    
 					String base64Data = android.util.Base64.encodeToString(buffer.toByteArray(), android.util.Base64.NO_WRAP);
 					String dataUrl = "data:" + mimeType + ";base64," + base64Data;
 					return "图片内容:\n" + dataUrl;

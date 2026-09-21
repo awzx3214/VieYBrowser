@@ -20,6 +20,7 @@ import android.widget.TextView;
 import android.app.ActivityOptions;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.cardview.widget.CardView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,7 +36,7 @@ public class CustomTabs extends BaseActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.custom_tabs);
+		setContentView(R.layout.custom_tab);
 		
 		mToolbar = findViewById(R.id.toolbar);
 		mBack    = findViewById(R.id.back_tool);
@@ -52,9 +53,9 @@ public class CustomTabs extends BaseActivity {
 			applyIntent(intent);
 		}
 		if(isDark()) {
-		    i.zs(findViewById(R.id.back_tool), "#ffffff");
-		    i.zs(findViewById(R.id.menu_tool), "#ffffff");
-		    i.zs(findViewById(R.id.sign_tool), "#ffffff");
+			i.zs(findViewById(R.id.back_tool), "#ffffff");
+			i.zs(findViewById(R.id.menu_tool), "#ffffff");
+			i.zs(findViewById(R.id.sign_tool), "#ffffff");
 		}
 	}
 	
@@ -93,7 +94,22 @@ public class CustomTabs extends BaseActivity {
 		}
 		
 		boolean showTitle = intent.getIntExtra("android.support.customtabs.extra.TITLE_VISIBILITY", 0) != 0;
-		mTitle.setVisibility(showTitle ? View.VISIBLE : View.GONE);
+		if (!showTitle) {
+			mToolbar.setVisibility(8);
+			findViewById(R.id.tip).setVisibility(8);
+			findViewById(R.id.down).setVisibility(8);
+			CardView findViewById = findViewById(R.id.card);
+			findViewById.setRadius(0.0f);
+			findViewById.setCardElevation(0.0f);
+			findViewById.setMaxCardElevation(0.0f);
+			findViewById.setPreventCornerOverlap(false);
+			findViewById.setUseCompatPadding(false);
+			LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) findViewById.getLayoutParams();
+			layoutParams.setMargins(0, 0, 0, 0);
+			findViewById.setLayoutParams(layoutParams);
+			findViewById.setContentPadding(0, 0, 0, 0);
+		}
+		
 		
 		Bitmap closeIcon = intent.getParcelableExtra("android.support.customtabs.extra.CLOSE_BUTTON_ICON");
 		if (closeIcon != null) {

@@ -53,10 +53,7 @@ public class CertActivity extends BaseActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_cert);
-		if(getSupportActionBar()!=null){
-			getSupportActionBar().setTitle(R.string.cert_settings);
-			getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-		}
+
 		initView();
 		refreshCertList();
 		Intent incomingIntent = getIntent();

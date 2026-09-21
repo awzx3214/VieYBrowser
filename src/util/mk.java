@@ -297,7 +297,6 @@ public class mk {
 						}
 					}
 				} else {
-                scrollView.setPadding(0, 0, 0, 0);
 					for (int i = 0; i < contentArray.length; i++) {
 						final int position = i;
 						String item = contentArray[i];
@@ -379,7 +378,7 @@ public class mk {
 							}
 						});
 						if (TextUtils.isEmpty(btn1Text) && TextUtils.isEmpty(btn2Text) && TextUtils.isEmpty(btn3Text)) {
-							scrollView.setPadding(0, dp2px(20), 0, dp2px(5));
+							scrollView.setPadding(0, dp2px(5), 0, dp2px(5));
 						}
 						
 						

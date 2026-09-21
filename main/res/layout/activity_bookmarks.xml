@@ -15,7 +15,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/ic_arrow_back" />
-            
+
         <LinearLayout
             android:gravity="center"
             android:layout_width="match_parent"
@@ -59,30 +59,27 @@
             android:src="@drawable/ic_menu" />
     </LinearLayout>
 
-    <androidx.cardview.widget.CardView
+    <EditText
+        android:id="@+id/etSearchBookmark"
+        android:layout_height="56dp"
+        android:layout_marginTop="10dp"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:layout_margin="10dp"
-        app:cardCornerRadius="10dp"
-        app:cardElevation="0dp">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/btn_bg">
-            <EditText
-                android:id="@+id/etSearchBookmark"
-                android:minHeight="0dp"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:hint="@string/search_bookmark"
-                android:background="#00000000"
-                android:textSize="12sp"
-                android:textColorHint="@color/text_secondary"
-                android:layout_marginHorizontal="5dp" />
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
+        android:hint="@string/search_bookmark"
+        android:textSize="12sp"
+        android:singleLine="true"
+        android:textColorHint="@color/text_secondary"
+        android:layout_marginHorizontal="5dp"
+        android:imeOptions="actionSearch" />
 
-    <TextView
+    <Button
+        android:id="@+id/backPath"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="15dp"
+        android:layout_marginBottom="5dp"
+        android:text="@string/back_folder" />
+        
+        <TextView
         android:id="@+id/tvPath"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -93,14 +90,6 @@
         android:textSize="12sp"
         android:textColor="@color/text_secondary"
         android:text="@string/root_folder" />
-
-    <Button
-        android:id="@+id/backPath"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="15dp"
-        android:layout_marginBottom="5dp"
-        android:text="@string/back_folder" />
 
     <kawaii.viey.browser.RecyclerViey
         android:id="@+id/recyclerBookmarks"

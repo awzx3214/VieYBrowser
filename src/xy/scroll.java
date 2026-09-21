@@ -82,10 +82,10 @@ public class scroll {
 			
 			OutputStream os = socket.getOutputStream();
 			String lang = i.getString(R.string.scroll_lang);
-			String metaLang = "zh‑Hans‑CN,en‑US";
-			if(lang.equals("en‑US")) {
+			String metaLang = "zh-Hans-CN,en-US";
+			if(lang.equals("en-US")) {
 				metaLang = lang;
-			} else if (!lang.equals("zh‑Hans‑CN")) {
+			} else if (!lang.equals("zh-Hans-CN")) {
 				metaLang = lang + "," + metaLang;
 			}
 			os.write((url + metaReq + metaLang + "\r\n").getBytes(StandardCharsets.UTF_8));

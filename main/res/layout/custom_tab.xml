@@ -42,7 +42,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:textColor="@color/text_primary"
-                        android:text="外部浏览页" />
+                        android:text="@string/custom_tab" />
                     <ImageView
                         android:padding="2dp"
                         android:layout_width="32dp"
@@ -68,6 +68,7 @@
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:id="@+id/card"
         android:layout_weight="1"
         android:layout_margin="10dp"
         android:layout_marginTop="5dp"
@@ -94,7 +95,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="标题"
+                        android:text="@string/title"
                         android:id="@+id/title"
                         android:textSize="20sp"
                         android:textColor="#000000"
@@ -104,7 +105,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="当前网址"
+                        android:text="@string/url"
                         android:id="@+id/url"
                         android:textSize="10sp"
                         android:textColor="#80000000"
@@ -141,7 +142,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="愛と奇跡の魔法物語"
+                    android:text="@string/magic"
                     android:textSize="18sp"
                     android:textColor="#000000"
                     android:gravity="center" />
@@ -157,13 +158,13 @@
         </RelativeLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- 底部提示 -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="外部应用调用 CustomTabs 时会默认打开这里..."
+        android:text="@string/custom_tab_tip"
         android:gravity="center"
         android:textSize="12sp"
+        android:id="@+id/tip"
         android:layout_margin="10dp"
         android:layout_marginTop="0dp"
         android:textColor="#000000" />

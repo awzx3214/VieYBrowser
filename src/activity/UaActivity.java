@@ -24,11 +24,6 @@ public class UaActivity extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_ua);
 		
-		if (getSupportActionBar() != null) {
-			getSupportActionBar().setTitle(R.string.ua);
-			getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-		}
-		
 		etCustomUA = findViewById(R.id.et_custom_ua);
 		layoutPreset = findViewById(R.id.layout_preset);
 		Button btnSave = findViewById(R.id.btn_save);
