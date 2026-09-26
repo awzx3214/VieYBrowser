@@ -69,8 +69,8 @@
                     android:textColor="@color/text_primary" />
 
                 <TextView
-                    android:id="@+id/menu_copy_link_url"
-                    android:text="@string/copy_link_url"
+                    android:id="@+id/menu_copy_link"
+                    android:text="@string/copy_link"
                     style="@style/BottomSheetMenuItemStyle"
                     android:textColor="@color/text_primary" />
 

@@ -10,11 +10,11 @@ import javax.net.ssl.KeyManagerFactory;
 import java.security.cert.X509Certificate;
 import kawaii.viey.browser.*;
 import java.net.Socket;
-import javax.net.ssl.SNIHostName;
 import java.util.List;
 import java.util.Collections;
 import java.util.ArrayList;
-
+import javax.net.ssl.SNIHostName;
+import android.os.Build;
 
 public class gemini {
 	public static String get(String url, String cpath, String cpwd, String type) {
@@ -69,23 +69,12 @@ public class gemini {
 			SSLSocketFactory factory = ssl.getSocketFactory();
 			socket = factory.createSocket();
 			SSLSocket sslSocket = (SSLSocket)socket;
-			try {
-				List<SNIServerName> sniList = Collections.singletonList(new SNIHostName(host));
-				SSLParameters sslParams = sslSocket.getSSLParameters();
-				sslParams.setServerNames(sniList);
-				sslSocket.setSSLParameters(sslParams);
-			} catch(Exception e){}
+			SSLParameters params = new SSLParameters();
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+				params.setServerNames(Collections.singletonList(new SNIHostName(host)));
+			}
+			sslSocket.setSSLParameters(params);
 			
-			List<String> enabledProtocols = new ArrayList<>();
-			for (String protocol : sslSocket.getSupportedProtocols()) {
-				if ("TLSv1.2".equals(protocol) || "TLSv1.3".equals(protocol)) {
-					enabledProtocols.add(protocol);
-				}
-			}
-			if (!enabledProtocols.isEmpty()) {
-				sslSocket.setEnabledProtocols(enabledProtocols.toArray(new String[0]));
-			}
-			// sslSocket.setEnabledProtocols(new String[]{"TLSv1.2", "TLSv1.3"});
 			sslSocket.connect(mk.getSocketAddress(host, port), 10000);
 			sslSocket.setSoTimeout(10000);
 			
@@ -128,6 +117,7 @@ public class gemini {
 				return i.getString(R.string.error_get) + "\nheader: "+header;
 			}
 			
+			
 			if (status == 20) {
 				String mimeType = "text/gemini";
 				if (header.length() > 3) {
@@ -136,33 +126,23 @@ public class gemini {
 						mimeType = parts[1].split(";")[0].trim();
 					}
 				}
-				if (mimeType.startsWith("image/")) {
-					ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-					byte[] data = new byte[4096];
-					int bytesRead;
-					while ((bytesRead = is.read(data, 0, data.length)) != -1) {
-						buffer.write(data, 0, bytesRead);
-					}
-					
-					String base64Data = android.util.Base64.encodeToString(buffer.toByteArray(), android.util.Base64.NO_WRAP);
-					String dataUrl = "data:" + mimeType + ";base64," + base64Data;
-					is.close();
+				if (mimeType.startsWith("text/")) {
+					String body = mk.outText(is);
+					socket.close();
+					return "响应:\n" + header + "\n\n内容:\n" + body;
+				} else if (mimeType.startsWith("image/")) {
+					String dataUrl = mk.outBase(is, mimeType);
 					socket.close();
 					return "响应:\n" + header + "\n\n图片内容:\n" + dataUrl;
 				} else {
-					BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-					StringBuilder body = new StringBuilder();
-					String line;
-					while ((line = br.readLine()) != null) {
-						body.append(line).append('\n');
-					}
-					br.close();
+					String ts = mk.outFile(is);
 					socket.close();
-					return "响应:\n" + header + "\n\n内容:\n" + body.toString();
+					return "响应:\n" + header + "\nsign:" + ts + "\n\n文件内容:\n" + i.getString(R.string.plz_save);
 				}
 			} else {
 				return "响应:\n" + status + "\n\n提示内容:\n" + meta;
 			}
+			
 		} catch (Exception e) {
 			return i.getString(R.string.error_get2) + e;
 		} finally {

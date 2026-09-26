@@ -4,7 +4,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -95,7 +94,7 @@ public class DownloadActivity extends BaseActivity implements DownloadManager.Do
 					DownloadManager.getInstance().resumeTask(DownloadActivity.this, task.id);
 					break;
 					case DownloadTask.STATUS_FINISHED:
-					showTaskOperateDialog(task);
+					i.fo(task.savePath);
 					break;
 				}
 			}
@@ -358,7 +357,9 @@ public class DownloadActivity extends BaseActivity implements DownloadManager.Do
 					break;
 					case 2:
 					ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-					ClipData clip = ClipData.newPlainText("download_url", task.url);
+                    String link = task.url;
+                    if(link.startsWith("viek://download/sign/")) link = i.sj(link, "?url=", null);
+					ClipData clip = ClipData.newPlainText("download_url", link);
 					cm.setPrimaryClip(clip);
 					i.twi(R.string.copied);
 					break;

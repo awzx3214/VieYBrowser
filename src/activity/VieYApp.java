@@ -4,25 +4,15 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.os.Build;
-import android.os.LocaleList;
+import android.os.*;
 import java.util.Locale;
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipEntry;
 import android.content.SharedPreferences;
-import android.os.Environment;
 import android.preference.PreferenceManager;
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.ArrayList;
+import java.util.*;
 
 public class VieYApp extends Application {
 	

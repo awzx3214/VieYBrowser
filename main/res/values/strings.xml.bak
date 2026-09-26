@@ -240,6 +240,8 @@
     <string name="cert_clear_active_toast">已清空生效证书</string>
     <string name="pem_read_fail">哎呀，读取 PEM 证书文件失败</string>
     <string name="pem_key_read_fail">哎呀，读取 PEM 私钥文件失败</string>
+    <string name="cert_export_success">导出成功</string>
+    <string name="cert_export_failed">导出失败</string>
     <string name="cert_file_already_exist">文件已存在</string>
     <string name="cert_active_tag">[已生效]</string>
     <string name="cert_set_active_toast">已设置为生效证书</string>

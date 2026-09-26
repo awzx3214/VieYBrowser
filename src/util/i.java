@@ -11,8 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import java.util.*;
 import android.widget.TextView;
 import com.google.android.material.snackbar.Snackbar;
 import android.net.Uri;
@@ -26,6 +25,11 @@ import android.content.Intent;
 import android.text.TextUtils;
 import android.content.res.ColorStateList;
 import android.app.AlertDialog;
+import android.os.Build;
+import androidx.core.content.FileProvider;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import android.view.inputmethod.InputMethodManager;
 
 public class i {
 	
@@ -93,8 +97,32 @@ public class i {
 		return ctx;
 	}
 	
+	public static List<String> getUrls(String text) {
+		Pattern pa = Pattern.compile("(?:https?|gemini|gophers?|keplers?|finger|titan|spartan|nex|nps|misfin|scorpions?|molerat|text|scroll):\\/\\/(?:(?:[A-Za-z0-9\\u4e00-\\u9fa5-]+\\.)+[A-Za-z\\u4e00-\\u9fa5]{2,}|localhost|\\d{1,3}(?:\\.\\d{1,3}){3})(?::\\d+)?(?:[\\/?#][^\\s\"]*)?",Pattern.CASE_INSENSITIVE);
+		List<String> result = new ArrayList<>();
+		if (TextUtils.isEmpty(text)) return result;
+		Matcher m = pa.matcher(text);
+		while (m.find()) {
+			String u = m.group();
+			if (!TextUtils.isEmpty(u) && !result.contains(u)) result.add(u);
+		}
+		return result;
+	}
+	
+	
 	public static String getSearchBy(Context ctx, String text) {
 		return VieYApp.getSearchEngine(ctx).replace("%s",text.replace(" ", "%20"));
+	}
+	
+	public static void endkeyboard(Activity act) {
+		View view = act.getCurrentFocus();
+		if (view == null) {
+			view = act.getWindow().getDecorView();
+		}
+		InputMethodManager imm = (InputMethodManager) act.getSystemService(Context.INPUT_METHOD_SERVICE);
+		if (imm != null) {
+			imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+		}
 	}
 	
 	public static View getParent(View v) {
@@ -104,8 +132,8 @@ public class i {
 	public static String getString(int id) {
 		return m().getString(id);
 	}
-    
-    public static String getString(int id, Object obj) {
+	
+	public static String getString(int id, Object obj) {
 		return m().getString(id, obj);
 	}
 	
@@ -389,6 +417,56 @@ public class i {
 		toast.show();
 	}
 	
+	public static void hw(String url) {
+		Intent srcIntent = new Intent();
+		srcIntent.setData(Uri.parse(url));
+		srcIntent.setClass(m(), CustomTabs.class);
+		m().startActivity(srcIntent);
+	}
+	
+	public static void fo(String filePath) {
+		Context m = i.m();
+		if (TextUtils.isEmpty(filePath)) {
+			i.twi(R.string.file_path_empty);
+			return;
+		}
+		File file = new File(filePath);
+		if (!file.exists() || !file.isFile()) {
+			i.twi(R.string.file_not_exist);
+			return;
+		}
+		
+		String mime = getMime(filePath);
+		if (mime.equals("application/octet-stream")) {
+			mime = "*/*";
+		}
+		
+		Uri uri;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+			uri = FileProvider.getUriForFile(m, m.getPackageName() + ".myFileProvider", file);
+		} else {
+			uri = Uri.fromFile(file);
+		}
+		
+		Intent intent = new Intent(Intent.ACTION_VIEW);
+		intent.setDataAndType(uri, mime);
+		intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		Intent chooser = Intent.createChooser(intent, getString(R.string.open_file_location));
+		try {
+			m.startActivity(chooser);
+		} catch (android.content.ActivityNotFoundException e) {
+			try {
+				intent.setDataAndType(uri, "*/*");
+				m.startActivity(Intent.createChooser(intent, getString(R.string.open_file_location)));
+			} catch (Exception e2) {
+				i.twi(R.string.no_file_manager);
+			}
+		} catch (Exception e) {
+			i.twi(R.string.no_file_manager);
+		}
+	}
+	
 	public static String fr(String filePath) {
 		return fr(new File(filePath));
 	}
@@ -447,9 +525,7 @@ public class i {
 		return bos.toString(StandardCharsets.UTF_8.name());
 	}
 	
-	public static boolean fc(String srcPath, String dstPath) {
-		File src = new File(srcPath);
-		File dst = new File(dstPath);
+	public static boolean fc(File src, File dst) {
 		if (!src.exists()) return false;
 		if (dst.getParentFile() != null && !dst.getParentFile().exists()) {
 			dst.getParentFile().mkdirs();
@@ -466,6 +542,12 @@ public class i {
 			e.printStackTrace();
 			return false;
 		}
+	}
+	
+	public static boolean fc(String srcPath, String dstPath) {
+		File src = new File(srcPath);
+		File dst = new File(dstPath);
+		return fc(src, dst);
 	}
 	
 	public static void zs(ImageView obj, Object color) {
@@ -561,6 +643,9 @@ public class i {
 	}
 	
 	public static String getMime(String str) {
+		
+		int xg = str.lastIndexOf('/');
+		if(xg > 0) str = str.substring(xg);
 		int dot = str.lastIndexOf('.');
 		if (dot < 0) return "application/octet-stream";
 		
@@ -580,9 +665,9 @@ public class i {
 			case ".apk": return "application/vnd.android.package-archive";
 			case ".epub": return "application/epub+zip";
 			case ".wml": return "text/vnd.wap.wml";
-            case ".gemini": 
-            case ".gmi": return "text/gemini";
-            case ".scroll": return "text/scroll";
+			case ".gemini":
+			case ".gmi": return "text/gemini";
+			case ".scroll": return "text/scroll";
 			case ".wasm": return "application/wasm";
 			case ".bin": return "application/octet-stream";
 			case ".torrent": return "application/x-bittorrent";
@@ -619,6 +704,72 @@ public class i {
 			if (ext.contains(".mht")) return "multipart/related";
 			if (ext.contains(".webm")) return "video/webm";
 			return "application/octet-stream";
+		}
+	}
+	
+	public static String getByMime(String mime) {
+		if (mime == null) return "";
+		int semi = mime.indexOf(';');
+		if (semi >= 0) mime = mime.substring(0, semi);
+		mime = mime.trim().toLowerCase();
+		switch (mime) {
+			case "image/png": return ".png";
+			case "image/jpeg":
+			case "image/jpg": return ".jpg";
+			case "application/javascript":
+			case "text/javascript":
+			case "application/x-javascript": return ".js";
+			case "application/json": return ".json";
+			case "text/xml":
+			case "application/xml": return ".xml";
+			case "application/vnd.android.package-archive": return ".apk";
+			case "application/epub+zip": return ".epub";
+			case "text/vnd.wap.wml": return ".wml";
+			case "text/gemini": return ".gmi";
+			case "text/scroll": return ".scroll";
+			case "application/wasm": return ".wasm";
+			case "application/octet-stream": return ".bin";
+			case "application/x-bittorrent": return ".torrent";
+			case "application/pdf": return ".pdf";
+			case "audio/mid":
+			case "audio/midi": return ".mid";
+			case "audio/mpeg": return ".mp3";
+			case "application/zip": return ".zip";
+			case "application/x-compressed": return ".tgz";
+			case "video/x-flv": return ".flv";
+			case "application/x-gzip": return ".gz";
+			case "text/css": return ".css";
+			case "image/bmp": return ".bmp";
+			case "image/gif": return ".gif";
+			case "image/svg+xml": return ".svg";
+			case "video/mp4": return ".mp4";
+			case "audio/mp4a-latm":
+			case "audio/mp4": return ".m4a";
+			case "image/webp": return ".webp";
+			case "text/plain": return ".txt";
+			case "image/tiff": return ".tiff";
+			case "audio/ogg": return ".ogg";
+			case "application/vnd.apple.mpegurl":
+			case "application/x-mpegurl":
+			case "audio/mpegurl": return ".m3u8";
+			case "application/x-font-woff":
+			case "application/font-woff":
+			case "font/woff": return ".woff";
+			case "application/x-font-woff2":
+			case "font/woff2": return ".woff2";
+			case "application/x-font-ttf":
+			case "font/ttf": return ".ttf";
+			case "application/vnd.ms-fontobject": return ".eot";
+			case "application/x-font-opentype":
+			case "font/otf": return ".otf";
+			case "image/x-icon":
+			case "image/vnd.microsoft.icon": return ".ico";
+			case "application/x-shockwave-flash": return ".swf";
+			case "text/html": return ".html";
+			case "multipart/related": return ".mht";
+			case "video/webm": return ".webm";
+			default:
+			return ".bin";
 		}
 	}
 	

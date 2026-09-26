@@ -425,10 +425,10 @@ public class CertActivity extends BaseActivity {
 					while((len = fis.read(buf)) != -1){
 						fos.write(buf,0,len);
 					}
-					i.twi(R.string.export_success);
+					i.twi(R.string.cert_export_success);
 				}catch (Exception e){
 					e.printStackTrace();
-					i.twi(R.string.export_failed);
+					i.twi(R.string.cert_export_failed);
 				}
 			}
 		}

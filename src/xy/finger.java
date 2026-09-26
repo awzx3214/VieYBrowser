@@ -35,7 +35,6 @@ public class finger {
 				sendData = extraPath;
 			}
 			
-			
 			socket = new Socket();
 			socket.connect(mk.getSocketAddress(host, port), 10000);
 			socket.setSoTimeout(10000);
@@ -45,13 +44,7 @@ public class finger {
 			os.flush();
 			
 			InputStream is = socket.getInputStream();
-			BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-			StringBuilder body = new StringBuilder();
-			String line;
-			while ((line = br.readLine()) != null) {
-				body.append(line).append('\n');
-			}
-			br.close();
+			String body = mk.outText(is);
 			socket.close();
 			return "内容:\n" + body;
 		} catch (Exception e) {

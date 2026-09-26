@@ -13,14 +13,11 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.io.File;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -213,8 +210,6 @@ public class DownloadManager {
 		task.category = DownloadTask.detectCategory(task.fileName);
 		task.status = DownloadTask.STATUS_WAIT;
 		task.downloadedSize = 0;
-		
-		i.log(task.savePath);
 		
 		List<DownloadTask> all = getDownloadList(ctx);
 		all.add(0, task);
@@ -557,7 +552,7 @@ public class DownloadManager {
 				it.setDataAndType(uri, "application/vnd.android.package-archive");
 				appContext.startActivity(it);
 			} catch (Exception e) {
-				Log.e("Download", "auto install failed", e);
+				i.log("Download", "auto install failed:"+e);
 			}
 		});
 	}
@@ -603,14 +598,18 @@ public class DownloadManager {
 					}
 				}
 				if (!acquired) return;
-				
-				if (task.url != null && (task.url.startsWith("gopher://") || task.url.startsWith("gophers://"))) {
-					handleGopher();
+				if (task.url != null && task.url.startsWith("viek://download/sign/")) {
+					String ts = i.sj(task.url, "/sign/", "?url=");
+					i.log(ts);
+					saveBySign(ts);
+					return;
+				}
+				if (task.url != null && i.canRun(task.url)) {
+					downloadSomlnet(task.url);
 					return;
 				}
 				doDownload();
 			} catch (Exception e) {
-				Log.e("Download", "run error", e);
 				task.status = DownloadTask.STATUS_ERROR;
 				task.errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
 				task.speed = 0;
@@ -622,19 +621,97 @@ public class DownloadManager {
 			}
 		}
 		
-		private void handleGopher() {
+		private void saveBySign(String ts)
+		{
+			Context ctx = i.m();
+			File dir = new File(ctx.getFilesDir(), "xy/file");
+			if (!dir.exists()) dir.mkdirs();
+			File f = new File(dir, ts);
+			File out = new File(task.savePath);
+			File parent = out.getParentFile();
+			if (parent != null && !parent.exists() && !parent.mkdirs() && !parent.exists()) {
+				task.status = DownloadTask.STATUS_ERROR;
+				task.errorMsg = "mkdirs failed: " + parent.getAbsolutePath();
+			}
+			if(i.fc(f, out)) {
+				task.totalSize = f.length();
+				task.downloadedSize = f.length();
+				task.status = DownloadTask.STATUS_FINISHED;
+				task.finishTime = System.currentTimeMillis();
+				task.speed = 0;
+				maybeAutoInstallApk(task);
+			} else
+			{
+				task.status = DownloadTask.STATUS_ERROR;
+				task.errorMsg = "nocache, download again";
+			}
+		}
+		
+		private void downloadSomlnet(String url) {
+			
 			task.status = DownloadTask.STATUS_DOWNLOADING;
 			task.speed = 0;
 			notifyUpdate(true);
 			
-			String result = gopher.get(task.url, true);
-			if (result != null && (result.startsWith("f内容:\n文件已保存:") || result.startsWith("i内容:\n图片已保存:"))) {
-				task.status = DownloadTask.STATUS_FINISHED;
-				task.finishTime = System.currentTimeMillis();
-				maybeAutoInstallApk(task);
-			} else {
+			String result = kawaii.viey.browser.xy.mk.getDownload(url);
+			if(result.contains("数据内容:\n") || result.contains("图片内容:\n"))
+			{
+				try {
+					if (result == null || result.isEmpty()) {
+						throw new Exception("empty base64 result");
+					}
+					String b64 = i.sj(result.trim(), "base64,", null);
+					b64 = b64.replaceAll("\\s+", "");
+					byte[] data;
+					try {
+						data = android.util.Base64.decode(b64, android.util.Base64.DEFAULT);
+					} catch (IllegalArgumentException iae) {
+						data = android.util.Base64.decode(
+						b64.replace('-', '+').replace('_', '/'),
+						android.util.Base64.DEFAULT);
+					}
+					
+					File out = new File(task.savePath);
+					File parent = out.getParentFile();
+					if (parent != null && !parent.exists() && !parent.mkdirs() && !parent.exists()) {
+						throw new Exception("mkdirs failed: " + parent.getAbsolutePath());
+					}
+					
+					java.io.FileOutputStream fos = null;
+					try {
+						fos = new java.io.FileOutputStream(out);
+						fos.write(data);
+						fos.flush();
+					} finally {
+						if (fos != null) {
+							try { fos.close(); } catch (Exception ignored) {}
+						}
+					}
+					
+					task.totalSize = data.length;
+					task.downloadedSize = data.length;
+					task.status = DownloadTask.STATUS_FINISHED;
+					task.finishTime = System.currentTimeMillis();
+					task.speed = 0;
+					maybeAutoInstallApk(task);
+					
+				} catch (Exception e) {
+					task.status = DownloadTask.STATUS_ERROR;
+					task.errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+					task.speed = 0;
+				}
+			} else if(result.contains("文件内容:\n"))
+			{
+				String ts = i.sj(result, "sign:", "\n");
+				saveBySign(ts);
+			} else if(result.contains("提示内容:\n"))
+			{
 				task.status = DownloadTask.STATUS_ERROR;
-				task.errorMsg = "gopher error";
+				task.errorMsg = i.sj(result, "内容:\n", null);
+			} else
+			{
+				task.status = DownloadTask.STATUS_ERROR;
+				task.errorMsg = i.sj(result, "\n", null);
 			}
 			task.speed = 0;
 			notifyUpdate(true);
@@ -862,7 +939,7 @@ public class DownloadManager {
 				}
 				return true;
 			} catch (Exception e) {
-				Log.e("Download", "probe failed", e);
+				i.log("Download", "probe failed:"+e);
 				return false;
 			} finally {
 				if (conn != null) conn.disconnect();
@@ -963,7 +1040,7 @@ public class DownloadManager {
 						if (isCancel || degradeToSingle) return;
 						retry++;
 						task.retryCount++;
-						Log.e("Download", "seg " + index + " retry " + retry, e);
+						i.log("Download", "seg " + index + " retry " + retry+":"+e);
 						if (retry > task.maxRetry) {
 							errorMsg.compareAndSet(null, i.getString(R.string.net_fail));
 							return;

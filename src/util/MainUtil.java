@@ -8,24 +8,20 @@ import android.view.*;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
-import android.animation.Animator;
-import android.animation.Keyframe;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ObjectAnimator;
-import android.animation.PropertyValuesHolder;
-import android.animation.ValueAnimator;
-import android.content.ClipData;
-import android.content.Context;
-import android.content.Intent;
+import android.animation.*;
+import android.content.*;
 import android.content.res.TypedArray;
-import android.app.Activity;
 import android.graphics.Color;
 import kawaii.viey.browser.*;
-import android.content.Context;
+import android.app.Activity;
+import android.text.*;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
 
 public class MainUtil {
+	
+	private static PopupWindow mPageSearchPopup;
+	
 	public static void setDrag(View view, EditText et) {
 		et.setOnDragListener(new View.OnDragListener() {
 			@Override
@@ -63,6 +59,102 @@ public class MainUtil {
 			}
 		});
 	}
+	
+	public static void openToc(WebViey web) {
+		WebToc.showToc(web, i.isDark());
+	}
+	
+	public static void closePageSearch(Activity act, WebViey web){
+		if(mPageSearchPopup != null && mPageSearchPopup.isShowing()){
+			mPageSearchPopup.dismiss();
+		}
+		if(web != null){
+			web.findAllAsync("");
+		}
+		i.endkeyboard(act);
+	}
+	
+	public static void openPageSearch(Activity act, boolean isDarkMode, WebViey w, String str) {
+    
+        if(mPageSearchPopup != null && mPageSearchPopup.isShowing()){
+			mPageSearchPopup.dismiss();
+		}
+        
+		View popupView = LayoutInflater.from(act).inflate(R.layout.popup_left_search, null);
+		EditText etPageSearch = popupView.findViewById(R.id.et_page_search);
+		ImageView btnSearchPrev  = popupView.findViewById(R.id.btn_search_prev);
+		ImageView btnSearchNext  = popupView.findViewById(R.id.btn_search_next);
+		ImageView btnSearchClose = popupView.findViewById(R.id.btn_search_close);
+		View card = popupView.findViewById(R.id.card);
+		
+		mPageSearchPopup = new PopupWindow(
+		popupView,
+		ViewGroup.LayoutParams.MATCH_PARENT,
+		ViewGroup.LayoutParams.WRAP_CONTENT);
+		
+		mPageSearchPopup.setFocusable(true);
+		
+		mPageSearchPopup.setOutsideTouchable(false);
+		
+		mPageSearchPopup.setTouchModal(false);
+		
+		mPageSearchPopup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+		mPageSearchPopup.setAnimationStyle(R.style.LeftSlideAnim);
+		
+		mPageSearchPopup.setOnDismissListener(()->{
+			if(w!=null) w.findAllAsync("");
+		});
+		
+		mPageSearchPopup.showAtLocation(act.findViewById(android.R.id.content), Gravity.LEFT | Gravity.TOP, 0, 0);
+		
+		if(isDarkMode){
+			((androidx.cardview.widget.CardView)card).setCardBackgroundColor(Color.parseColor("#cc000000"));
+			etPageSearch.setTextColor(Color.WHITE);
+			etPageSearch.setHintTextColor(Color.GRAY);
+		}else{
+			((androidx.cardview.widget.CardView)card).setCardBackgroundColor(Color.parseColor("#f0ffffff"));
+			etPageSearch.setTextColor(Color.BLACK);
+			etPageSearch.setHintTextColor(Color.GRAY);
+		}
+		
+		card.setOnClickListener(v -> {});
+		
+		etPageSearch.addTextChangedListener(new TextWatcher() {
+			@Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+			@Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+			@Override public void afterTextChanged(Editable s) {
+				w.findAllAsync(s.toString());
+			}
+		});
+		
+		btnSearchPrev.setOnClickListener(v->{
+			if(w!=null) w.findNext(false);
+		});
+		
+		btnSearchNext.setOnClickListener(v->{
+			if(w!=null) w.findNext(true);
+		});
+		
+		btnSearchClose.setOnClickListener(v-> mPageSearchPopup.dismiss());
+		
+		etPageSearch.setOnEditorActionListener((v, actionId, event) -> {
+			if(actionId == EditorInfo.IME_ACTION_SEARCH){
+				if(w!=null) w.findNext(true);
+				return true;
+			}
+			return false;
+		});
+		
+		etPageSearch.setText("");
+        if(!TextUtils.isEmpty(str)) etPageSearch.setText(str);
+		etPageSearch.requestFocus();
+		etPageSearch.postDelayed(() -> {
+			InputMethodManager imm = (InputMethodManager) act.getSystemService(Context.INPUT_METHOD_SERVICE);
+			if (imm != null) imm.showSoftInput(etPageSearch, InputMethodManager.SHOW_FORCED);
+		}, 100);
+	}
+	
+	
 	
 	public static void showLeftToolPanel(Activity activity, View anchorView, boolean isDarkMode, WebViey currentWeb) {
 		
@@ -118,6 +210,11 @@ public class MainUtil {
 			leftToolPopup.dismiss();
 			Intent intent = new Intent(activity,SettingsActivity.class);
 			activity.startActivity(intent);
+		});
+		
+		popupView.findViewById(R.id.item_toc).setOnClickListener(v->{
+			leftToolPopup.dismiss();
+			openToc(currentWeb);
 		});
 		
 		leftToolPopup.setAnimationStyle(R.style.LeftSlideAnim);

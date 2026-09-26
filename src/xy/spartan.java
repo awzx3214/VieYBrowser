@@ -53,13 +53,13 @@ public class spartan {
 				if (b == '\n') break;
 				headerBuffer.write(b);
 			}
-            
-            String header = new String(headerBuffer.toByteArray(), StandardCharsets.UTF_8);
-					
-            if (header.length() < 1) {
+			
+			String header = new String(headerBuffer.toByteArray(), StandardCharsets.UTF_8);
+			
+			if (header.length() < 1) {
 				return i.getString(R.string.error_get) + "\nheader: "+header;
 			}
-            int status=0;
+			int status=0;
 			String meta;
 			if(header.contains(" "))
 			{
@@ -74,8 +74,8 @@ public class spartan {
 			} else {
 				return i.getString(R.string.error_get) + "\nheader: "+header;
 			}
-            
-            if (status == 2) {
+			
+			if (status == 2) {
 				String mimeType = "text/gemini";
 				if (header.length() > 2) {
 					String[] parts = header.split("\\s+", 2);
@@ -84,29 +84,20 @@ public class spartan {
 					}
 				}
 				
-				if (mimeType.startsWith("image/")) {
-					ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-					byte[] data = new byte[4096];
-					int bytesRead;
-					while ((bytesRead = is.read(data, 0, data.length)) != -1) {
-						buffer.write(data, 0, bytesRead);
-					}
-					String base64Data = android.util.Base64.encodeToString(buffer.toByteArray(), android.util.Base64.NO_WRAP);
-					String dataUrl = "data:" + mimeType + ";base64," + base64Data;
+				if (mimeType.startsWith("text/")) {
+					String str = mk.outText(is);
+					socket.close();
+					return "响应:\n" + header + "\n\n内容:\n" + str;
+				} else if(mimeType.startsWith("image/")) {
+					String dataUrl = mk.outBase(is, mimeType);
 					is.close();
 					socket.close();
 					return "响应:\n" + header + "\n\n图片内容:\n" + dataUrl;
 				} else {
-					BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-					StringBuilder str = new StringBuilder();
-					String line;
-					while ((line = br.readLine()) != null) {
-						str.append(line).append('\n');
-					}
-					br.close();
+                String ts = mk.outFile(is);
 					socket.close();
-					return "响应:\n" + header + "\n\n内容:\n" + str.toString();
-				}
+					return "响应:\n" + header + "\nsign:" + ts + "\n\n文件内容:\n" + i.getString(R.string.plz_save);
+                }
 			} else {
 				return "响应:\n" + status + "\n\n提示内容:\n" + meta;
 			}

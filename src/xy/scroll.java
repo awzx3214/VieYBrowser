@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Collections;
 import javax.net.ssl.SNIHostName;
 import java.net.Socket;
+import android.os.Build;
 
 public class scroll {
 	
@@ -21,10 +22,10 @@ public class scroll {
 		KeyManagerFactory kmf = null;
 		Socket socket = null;
 		String metaReq = " ";
-        boolean isMeta = false;
+		boolean isMeta = false;
 		if ("scrollMeta".equals(open)) {
 			metaReq = " +";
-            isMeta = true;
+			isMeta = true;
 		}
 		
 		try {
@@ -73,9 +74,10 @@ public class scroll {
 			SSLSocketFactory factory = ssl.getSocketFactory();
 			socket = factory.createSocket();
 			SSLSocket sslSocket = (SSLSocket)socket;
-			List<SNIServerName> sniList = Collections.singletonList(new SNIHostName(host));
 			SSLParameters sslParams = sslSocket.getSSLParameters();
-			sslParams.setServerNames(sniList);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+				sslParams.setServerNames(Collections.singletonList(new SNIHostName(host)));
+			}
 			sslSocket.setSSLParameters(sslParams);
 			socket.connect(mk.getSocketAddress(host, port), 10000);
 			socket.setSoTimeout(10000);
@@ -100,10 +102,11 @@ public class scroll {
 				headerBuffer.write(b);
 			}
 			
-			String header = headerBuffer.toString(StandardCharsets.UTF_8);
+            String header = new String(headerBuffer.toByteArray(), StandardCharsets.UTF_8);
 			if (header.length() < 2) return i.getString(R.string.error_get);
 			int status = Integer.parseInt(header.substring(0, 2));
 			String meta = header.length() > 3 ? header.substring(3).trim() : "";
+			
 			
 			if (status>=20 && status<=29) {
 				String mimeType = "text/scroll";
@@ -113,37 +116,33 @@ public class scroll {
 						mimeType = parts[1].split(";")[0].trim();
 					}
 				}
-				if (mimeType.startsWith("image/")) {
-					ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-					byte[] data = new byte[4096];
-					int bytesRead;
-					while ((bytesRead = is.read(data, 0, data.length)) != -1) {
-						buffer.write(data, 0, bytesRead);
+				
+				if (mimeType.startsWith("text/")) {
+					String fullText = mk.outText(is);
+					String[] allLines = fullText.split("\n", -1);
+					StringBuilder metaData = new StringBuilder();
+					for (int metaLine = 0; metaLine < 3 && metaLine < allLines.length; metaLine++) {
+						metaData.append(allLines[metaLine]).append('\n');
 					}
-					String base64Data = android.util.Base64.encodeToString(buffer.toByteArray(), android.util.Base64.NO_WRAP);
-					String dataUrl = "data:" + mimeType + ";base64," + base64Data;
-					is.close();
+					StringBuilder body = new StringBuilder();
+					int start = Math.min(3, allLines.length);
+					for (int k = start; k < allLines.length; k++) {
+						body.append(allLines[k]).append('\n');
+					}
+					socket.close();
+					String bodyStr = body.toString();
+					if (isMeta) bodyStr = metaData.toString() + bodyStr;
+					return "响应:\n" + header + "\n\n元数据" + metaReq.trim() + ":\n" + metaData.toString() + "\n\n内容:\n" + bodyStr;
+				} else if (mimeType.startsWith("image/")) {
+					String dataUrl = mk.outBase(is, mimeType);
 					socket.close();
 					return "响应:\n" + header + "\n\n图片内容:\n" + dataUrl;
 				} else {
-					BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-					
-					StringBuilder metaData = new StringBuilder();
-					for (int metaLine = 0; metaLine < 3; metaLine++) {
-						metaData.append(br.readLine()).append('\n');
-					}
-					
-					StringBuilder body = new StringBuilder();
-					String line;
-					while ((line = br.readLine()) != null) {
-						body.append(line).append('\n');
-					}
-					br.close();
+					String ts = mk.outFile(is);
 					socket.close();
-                    String bodyStr = body.toString();
-                    if(isMeta) bodyStr = metaData.toString() + bodyStr;
-					return "响应:\n" + header + "\n\n元数据" + metaReq.trim() + ":\n" + metaData.toString() + "\n\n内容:\n" + bodyStr;
+					return "响应:\n" + header + "\nsign:" + ts + "\n\n文件内容:\n" + i.getString(R.string.plz_save);
 				}
+				
 			} else {
 				return "响应:\n" + status + "\n\n提示内容:\n" + meta;
 			}

@@ -2,15 +2,10 @@ package kawaii.viey.browser;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.LinearGradient;
-import android.graphics.Paint;
-import android.graphics.RectF;
-import android.graphics.Shader;
+import android.graphics.*;
 import android.util.AttributeSet;
 import android.view.animation.LinearInterpolator;
 import android.widget.ProgressBar;
-
 import java.util.Arrays;
 
 public class ProgressViey extends ProgressBar {

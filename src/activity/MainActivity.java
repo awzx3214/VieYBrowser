@@ -19,9 +19,7 @@ import com.google.android.material.bottomsheet.*;
 import android.content.res.ColorStateList;
 import com.google.android.material.snackbar.Snackbar;
 import android.graphics.drawable.ColorDrawable;
-import android.view.LayoutInflater;
 import android.database.Cursor;
-import android.net.Uri;
 import android.provider.OpenableColumns;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import android.webkit.ValueCallback;
@@ -54,11 +52,11 @@ public class MainActivity extends BaseActivity {
 	private TextView titleView, tvWindowCount, tip, barUrl;
 	private EditText urlEditText, etPageSearch;
 	private ProgressBar progressBar, bar;
-	private ImageView btnWindow, btnMenu2, btnSearchPrev, btnSearchNext, btnSearchClose, btnBack, btnTool, btnForward, btnHome, btnRefresh;
+	private ImageView btnWindow, btnMenu2, btnBack, btnTool, btnForward, btnHome, btnRefresh;
 	private LinearLayout loadLayout, toolbarLayout, toolbarBg, btnMenu, bottomNav;
 	private boolean isDarkMode = false;
 	private long lastBackPressTime = 0;
-	private PopupWindow mLeftToolPopup, mPageSearchPopup;
+	private PopupWindow mLeftToolPopup;
 	private WebViey mFileSelectWeb;
 	private ValueCallback<Uri[]> mFileArrayCallback;
 	private ValueCallback<Uri> mFileSingleCallback;
@@ -169,7 +167,7 @@ public class MainActivity extends BaseActivity {
 	}
 	
 	private void selectWindowIndex(int index){
-		closePageSearch();
+		MainUtil.closePageSearch(this, getCurrentWeb());
 		if(index<0||index>=windowList.size())return;
 		
 		if (nowIndex >=0 && nowIndex < windowList.size()) {
@@ -195,7 +193,7 @@ public class MainActivity extends BaseActivity {
 	}
 	
 	private void deleteWindowIndex(int index){
-		closePageSearch();
+		MainUtil.closePageSearch(this, getCurrentWeb());
 		if(windowList.size() <=1) return;
 		WindowItem removeItem = windowList.get(index);
 		webContainer.removeView(removeItem.web);
@@ -227,98 +225,6 @@ public class MainActivity extends BaseActivity {
 			i.zs(findViewById(id), color);
 		}
 	}
-	
-	private void openPageSearch(){
-		WebViey web = getCurrentWeb();
-		if(web == null) return;
-		if(mPageSearchPopup != null && mPageSearchPopup.isShowing()) return;
-		
-		View popupView = LayoutInflater.from(this).inflate(R.layout.popup_left_search, null);
-		
-		etPageSearch   = popupView.findViewById(R.id.et_page_search);
-		btnSearchPrev  = popupView.findViewById(R.id.btn_search_prev);
-		btnSearchNext  = popupView.findViewById(R.id.btn_search_next);
-		btnSearchClose = popupView.findViewById(R.id.btn_search_close);
-		View card      = popupView.findViewById(R.id.card);
-		
-		if(isDarkMode){
-			((androidx.cardview.widget.CardView)card).setCardBackgroundColor(Color.parseColor("#cc000000"));
-			etPageSearch.setTextColor(Color.WHITE);
-			etPageSearch.setHintTextColor(Color.GRAY);
-		}else{
-			((androidx.cardview.widget.CardView)card).setCardBackgroundColor(Color.parseColor("#f0ffffff"));
-			etPageSearch.setTextColor(Color.BLACK);
-			etPageSearch.setHintTextColor(Color.GRAY);
-		}
-		
-		card.setOnClickListener(v -> {});
-		
-		etPageSearch.addTextChangedListener(new TextWatcher() {
-			@Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
-			@Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
-			@Override public void afterTextChanged(Editable s) {
-				WebViey w = getCurrentWeb();
-				if(w == null) return;
-				w.findAllAsync(s.toString().trim());
-			}
-		});
-		
-		btnSearchPrev.setOnClickListener(v->{
-			WebViey w = getCurrentWeb();
-			if(w!=null) w.findNext(false);
-		});
-		
-		btnSearchNext.setOnClickListener(v->{
-			WebViey w = getCurrentWeb();
-			if(w!=null) w.findNext(true);
-		});
-		
-		btnSearchClose.setOnClickListener(v-> closePageSearch());
-		
-		etPageSearch.setOnEditorActionListener((v, actionId, event) -> {
-			if(actionId == EditorInfo.IME_ACTION_SEARCH){
-				WebViey w = getCurrentWeb();
-				if(w!=null) w.findNext(true);
-				return true;
-			}
-			return false;
-		});
-		
-		
-		mPageSearchPopup = new PopupWindow(
-		popupView,
-		ViewGroup.LayoutParams.MATCH_PARENT,
-		ViewGroup.LayoutParams.WRAP_CONTENT);
-		
-		mPageSearchPopup.setFocusable(true);
-		
-		mPageSearchPopup.setOutsideTouchable(false);
-		
-		mPageSearchPopup.setTouchModal(false);
-		
-		mPageSearchPopup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-		mPageSearchPopup.setAnimationStyle(R.style.LeftSlideAnim);
-		
-		mPageSearchPopup.setOnDismissListener(()->{
-			WebViey w = getCurrentWeb();
-			if(w!=null) w.findAllAsync("");
-			etPageSearch = null;
-			btnSearchPrev = null;
-			btnSearchNext = null;
-			btnSearchClose = null;
-		});
-		
-		mPageSearchPopup.showAtLocation(findViewById(android.R.id.content),
-		Gravity.LEFT | Gravity.TOP, 0, 0);
-		
-		etPageSearch.setText("");
-		etPageSearch.requestFocus();
-		etPageSearch.postDelayed(() -> {
-			InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-			if (imm != null) imm.showSoftInput(etPageSearch, InputMethodManager.SHOW_FORCED);
-		}, 100);
-	}
-	
 	
 	private void applyToolbarLayoutMode(){
 		String mode = VieYApp.getToolbarPosition(this);
@@ -425,19 +331,7 @@ public class MainActivity extends BaseActivity {
 	}
 	
 	
-	private void closePageSearch(){
-		if(mPageSearchPopup != null && mPageSearchPopup.isShowing()){
-			mPageSearchPopup.dismiss();
-		}
-		WebViey web = getCurrentWeb();
-		if(web != null){
-			web.findAllAsync("");
-		}
-		if(etPageSearch != null) {
-			InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-			imm.hideSoftInputFromWindow(etPageSearch.getWindowToken(),0);
-		}
-	}
+	
 	
 	private void showWindowBottomSheet() {
 		BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
@@ -505,33 +399,29 @@ public class MainActivity extends BaseActivity {
 		});
 		
 		btnDel.setOnClickListener(v -> {
-    bottomSheetDialog.dismiss();
-    i.utw(R.string.operation, new String[]{i.getString(R.string.close_now_win), i.getString(R.string.close_other_win)}, new mk.jk() {
-        @Override
-        public void onButton1Click() {}
-
-        @Override
-        public void onButton2Click() {}
-
-        @Override
-        public void onButton3Click() {}
-
-        @Override
-        public void onDialogDismissed() {}
-
-        @Override
-        public void onListClick(String nr, int num) {
-            if (num == 0) {
-                deleteCurrentWindow();
-            } else if (num == 1) {
-                closeOtherWindows();
-            }
-        }
-
-        @Override
-        public void onSelect(String content) {}
-    });
-});
+			bottomSheetDialog.dismiss();
+			i.utw(R.string.operation, new String[]{i.getString(R.string.close_now_win), i.getString(R.string.close_other_win)}, new mk.jk() {
+				@Override
+				public void onButton1Click() {}
+				@Override
+				public void onButton2Click() {}
+				@Override
+				public void onButton3Click() {}
+				@Override
+				public void onDialogDismissed() {}
+				@Override
+				public void onListClick(String nr, int num) {
+					if (num == 0) {
+						deleteCurrentWindow();
+					} else if (num == 1) {
+						closeOtherWindows();
+					}
+				}
+				
+				@Override
+				public void onSelect(String content) {}
+			});
+		});
 		
 		btnCopy.setOnClickListener(v -> {
 			copyCurrentWindow();
@@ -544,33 +434,33 @@ public class MainActivity extends BaseActivity {
 			designBottomSheet.setBackground(new ColorDrawable(Color.TRANSPARENT));
 		}
 	}
-    
-    private void closeOtherWindows() {
-    if (windowList.size() <= 1) return;
-
-    WebViey keepWeb = getCurrentWeb();
-
-    for (int idx = windowList.size() - 1; idx >= 0; idx--) {
-        WindowItem item = windowList.get(idx);
-        if (item.web == keepWeb) continue;
-
-        webContainer.removeView(item.web);
-        item.web.destroy();
-        item.web = null;
-
-        if (idx < nowIndex) {
-            nowIndex--;
-        }
-        windowList.remove(idx);
-    }
-
-    nowIndex = Math.max(0, Math.min(nowIndex, windowList.size() - 1));
-    if (!windowList.isEmpty()) {
-        selectWindowIndex(nowIndex);
-    }
-    updateWindowCountText();
-    updateColor();
-}
+	
+	private void closeOtherWindows() {
+		if (windowList.size() <= 1) return;
+		
+		WebViey keepWeb = getCurrentWeb();
+		
+		for (int idx = windowList.size() - 1; idx >= 0; idx--) {
+			WindowItem item = windowList.get(idx);
+			if (item.web == keepWeb) continue;
+			
+			webContainer.removeView(item.web);
+			item.web.destroy();
+			item.web = null;
+			
+			if (idx < nowIndex) {
+				nowIndex--;
+			}
+			windowList.remove(idx);
+		}
+		
+		nowIndex = Math.max(0, Math.min(nowIndex, windowList.size() - 1));
+		if (!windowList.isEmpty()) {
+			selectWindowIndex(nowIndex);
+		}
+		updateWindowCountText();
+		updateColor();
+	}
 	
 	private void copyCurrentWindow() {
 		WebViey curWeb = getCurrentWeb();
@@ -595,17 +485,18 @@ public class MainActivity extends BaseActivity {
 			int r = Color.red(pixelColor);
 			int g = Color.green(pixelColor);
 			int b = Color.blue(pixelColor);
+            pixelColor = Color.argb(255, r, g, b);
 			
 			float gray = r * 0.299f + g * 0.587f + b * 0.114f;
 			int targetColor;
 			int color;
 			if (gray < 200) {
 				targetColor = pixelColor;
-				color = Color.parseColor("#ffffff");
+				color = Color.WHITE;
 				turnDark(true);
 			} else {
 				targetColor = Color.parseColor("#cccccc");
-				color = Color.parseColor("#000000");
+				color = Color.BLACK;
 				turnDark(false);
 			}
 			tip.setTextColor(color);
@@ -1221,7 +1112,7 @@ public class MainActivity extends BaseActivity {
 			toggleNightMode();
 			bottomSheetDialog.dismiss();
 		}));
-		menuList.add(new MenuGridItem(R.drawable.ic_bookmark_filled, getString(R.string.bookmarks), ()->{
+		menuList.add(new MenuGridItem(R.drawable.ic_bookmark_filled, getString(R.string.bookmark), ()->{
 			Intent intent = new Intent(MainActivity.this, BookmarksActivity.class);
 			startActivityForResult(intent, 1001);
 			bottomSheetDialog.dismiss();
@@ -1241,7 +1132,7 @@ public class MainActivity extends BaseActivity {
 			bottomSheetDialog.dismiss();
 		}));
 		
-		menuList.add(new MenuGridItem(R.drawable.ic_share, getString(R.string.share), ()->{
+		menuList.add(new MenuGridItem(R.drawable.ic_share, getString(R.string.share_page), ()->{
 			shareCurrentPage();
 			bottomSheetDialog.dismiss();
 		}));
@@ -1258,7 +1149,7 @@ public class MainActivity extends BaseActivity {
 		}));
 		menuList.add(new MenuGridItem(R.drawable.ic_search, getString(R.string.page_search), ()->{
 			bottomSheetDialog.dismiss();
-			openPageSearch();
+			MainUtil.openPageSearch(MainActivity.this, isDarkMode, getCurrentWeb(), "");
 		}));
 		menuList.add(new MenuGridItem(R.drawable.ic_exit, getString(R.string.exit), ()->{
 			finish();
@@ -1305,12 +1196,7 @@ public class MainActivity extends BaseActivity {
 	
 	@Override
 	public void onBackPressed() {
-		
-		if(mPageSearchPopup != null && mPageSearchPopup.isShowing()){
-			closePageSearch();
-			return;
-		}
-		
+    
 		WebViey currentWeb = getCurrentWeb();
 		if(currentWeb != null && currentWeb.canGoBack()){
 			currentWeb.goBack();
@@ -1352,10 +1238,6 @@ public class MainActivity extends BaseActivity {
 	
 	@Override
 	protected void onDestroy() {
-		if(mPageSearchPopup != null){
-			if(mPageSearchPopup.isShowing()) mPageSearchPopup.dismiss();
-			mPageSearchPopup = null;
-		}
 		List<String> saveUrls = new ArrayList<>();
 		for(WindowItem wi:windowList){
 			String u = wi.url;
@@ -1365,7 +1247,7 @@ public class MainActivity extends BaseActivity {
 		}
 		VieYApp.saveWindowUrls(this, saveUrls);
 		
-		closePageSearch();
+		MainUtil.closePageSearch(this, getCurrentWeb());
 		super.onDestroy();
 		for(WindowItem wi:windowList){
 			wi.web.destroy();
@@ -1501,6 +1383,7 @@ public class MainActivity extends BaseActivity {
 	}
 	
 	private String initUrl(String url) {
+		if(TextUtils.isEmpty(url)) return "";
 		String key = "?vieimgurl=";
 		if(!TextUtils.isEmpty(url) && url.startsWith("file://") && url.contains("kawaii.viey.browser") && url.contains(key)) url = url.substring(url.indexOf(key) + key.length());
 		String dir = "file://"+ i.m().getFilesDir().getAbsolutePath() + "/";
@@ -1533,7 +1416,7 @@ public class MainActivity extends BaseActivity {
 		((TextView)sheetView.findViewById(R.id.url)).setText(url.substring(0, Math.min(url.length(), 100)));
 		
 		TextView menuOpenLink = sheetView.findViewById(R.id.menu_open_link);
-		TextView menuCopyLinkUrl = sheetView.findViewById(R.id.menu_copy_link_url);
+		TextView menuCopyLinkUrl = sheetView.findViewById(R.id.menu_copy_link);
 		TextView menuCopyLinkText = sheetView.findViewById(R.id.menu_copy_link_text);
 		TextView menuBackgroundOpen = sheetView.findViewById(R.id.menu_background_open);
 		TextView menuNewWindowOpen = sheetView.findViewById(R.id.menu_new_window_open);

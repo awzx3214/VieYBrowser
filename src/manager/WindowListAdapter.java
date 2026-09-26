@@ -10,9 +10,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 import android.graphics.*;
 import android.content.res.ColorStateList;
-import androidx.recyclerview.widget.RecyclerView;
-import android.view.View;
-import android.widget.ImageView;
 
 public class WindowListAdapter extends RecyclerView.Adapter<WindowListAdapter.ViewHolder> {
 	

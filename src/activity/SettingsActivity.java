@@ -9,11 +9,7 @@ import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.CompoundButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.Switch;
-import android.widget.TextView;
+import android.widget.*;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import java.io.File;
@@ -54,11 +50,7 @@ public class SettingsActivity extends BaseActivity {
 		
 		addItem(getString(R.string.about_info), v -> i.utw(getString(R.string.about), getString(R.string.about_text)));
 		
-		addItem(getString(R.string.open_source_license), v -> i.utw(R.string.open_source_license,
-		"Vie 浏览器 - 呆毛飘啊飘 (Apache License 2.0)\n" +
-		"https://gitee.com/awzx3214/VieBrowser\n\n" +
-		"Bouncy Castle Java - Bouncy Castle (MIT License)\n" +
-		"https://github.com/bcgit/bc-java\n\n"));
+		addItem(getString(R.string.open_source_license), v -> i.hw("https://github.com/awzx3214/VieYBrowser/blob/main/md/license.html"));
 		
 		addItem(getString(R.string.official_website), v -> openUrlAndFinish("https://palhube666.wodemo.com/"));
 		
@@ -380,6 +372,7 @@ switchVolumePage = addSwitchItem(getString(R.string.volume_key_page), VieYApp.is
 					final EditViey input = new EditViey(SettingsActivity.this);
 					input.setSingleLine(true);
 					input.setHeight(i.dp2px(56));
+                    input.setHint("1~32");
 					input.setInputType(InputType.TYPE_CLASS_NUMBER);
 					input.setKeyListener(DigitsKeyListener.getInstance("0123456789"));
 					

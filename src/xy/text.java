@@ -83,24 +83,10 @@ public class text {
 						}
 					}
 					contentType = mime + " ;charset=" + charset;
-					if (mime.startsWith("image/")) {
-						ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-						byte[] data = new byte[4096];
-						int bytesRead;
-						while ((bytesRead = is.read(data, 0, data.length)) != -1) {
-							buffer.write(data, 0, bytesRead);
-						}
-						String base64Data = android.util.Base64.encodeToString(buffer.toByteArray(), android.util.Base64.NO_WRAP);
-						String dataUrl = "data:" + mime + ";base64," + base64Data;
-						responseBody = "图片内容:\n" + dataUrl;
+					if (mime.startsWith("text/")) {
+						responseBody = "内容:\n" + mk.outText(is);
 					} else {
-						br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-						StringBuilder body = new StringBuilder();
-						String line;
-						while ((line = br.readLine()) != null) {
-							body.append(line).append('\n');
-						}
-						responseBody = "内容:\n" + body.toString();
+						responseBody = "数据内容:\n" + mk.outBase(is, mime);
 					}
 					
 				} else if (statusLine.startsWith("30 ")) {
@@ -114,7 +100,7 @@ public class text {
 				}
 			}
 		} catch (Exception e) {
-            return i.getString(R.string.error_get2) + e;
+			return i.getString(R.string.error_get2) + e;
 		} finally {
 			try {
 				if (br != null) br.close();

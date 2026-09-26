@@ -2,11 +2,54 @@ package kawaii.viey.browser.xy;
 
 import java.net.*;
 import kawaii.viey.browser.*;
-import java.io.File;
 import android.text.TextUtils;
+import java.nio.charset.StandardCharsets;
+import java.io.*;
+import android.content.Context;
 
 public class mk {
-	
+
+    public static String outText(InputStream is) throws Exception {
+        BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+        StringBuilder body = new StringBuilder();
+        String line;
+        while ((line = br.readLine()) != null) {
+            body.append(line).append('\n');
+        }
+        br.close();
+        return body.toString();
+    }
+
+    public static String outBase(InputStream is, String mimeType) throws Exception {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] data = new byte[4096];
+        int n;
+        while ((n = is.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, n);
+        }
+        String base64Data = android.util.Base64.encodeToString(buffer.toByteArray(), android.util.Base64.NO_WRAP);
+        return "data:" + mimeType + ";base64," + base64Data;
+    }
+
+    public static String outFile(InputStream is) throws Exception {
+        Context ctx = i.m();
+        File dir = new File(ctx.getFilesDir(), "xy/file");
+        if (!dir.exists()) dir.mkdirs();
+        String ts = String.valueOf(System.currentTimeMillis());
+        File f = new File(dir, ts);
+        FileOutputStream fos = new FileOutputStream(f);
+        byte[] data = new byte[4096];
+        int n;
+        try {
+            while ((n = is.read(data, 0, data.length)) != -1) {
+                fos.write(data, 0, n);
+            }
+        } finally {
+            fos.close();
+        }
+        return ts;
+    }
+    
 	public static String getData(String url, String smolnetIs, String smolnetTxt, String smolnetMime, String smolnetToken, String certPath, String certPwd, String certType) {
 		String dat = "";
 		if (url.startsWith("gemini://")) {
@@ -16,7 +59,9 @@ public class mk {
 		} else if (url.startsWith("nps://")) {
 			dat = nps.get(url,smolnetIs);
 		} else if (url.startsWith("gopher://") || url.startsWith("gophers://")) {
-			dat = gopher.get(url, false).replace("	","%09");
+			boolean isDownload = false;
+			if(smolnetIs.equals("true")) isDownload = true;
+			dat = gopher.get(url, isDownload).replace("	","%09");
 		} else if (url.startsWith("kepler://") || url.startsWith("keplers://")) {
 			dat = kepler.get(url,certPath,certPwd,certType);
 		} else if(url.startsWith("nex://")) {
@@ -36,6 +81,63 @@ public class mk {
 			dat = titan.get(url, smolnetIs, smolnetTxt, smolnetMime, smolnetToken, certPath,certPwd,certType);
 		} else if(url.startsWith("misfin://")) {
 			dat = misfin.get(url, smolnetIs, smolnetTxt, smolnetMime, certPath,certPwd,certType);
+		}
+		return dat;
+	}
+    
+    public static String getDownload(String url) {
+		String dat = "";
+        String certPath = "";
+        String certPwd = "";
+        String certType = "defeat";
+        
+        String activeCertName = VieYApp.getActiveCertName(i.m());
+		if (!TextUtils.isEmpty(activeCertName)) {
+			File certDir = VieYApp.getCertDir(i.m());
+			File certFile = new File(certDir, activeCertName);
+			String baseName = "";
+			if (activeCertName.endsWith(".p12") || activeCertName.endsWith(".pfx")) {
+				baseName = activeCertName.substring(0, activeCertName.length() - 4);
+				certType = "PKCS12";
+			} else if (activeCertName.endsWith(".bks")) {
+				baseName = activeCertName.substring(0, activeCertName.length() - 4);
+				certType = "BKS";
+			}
+			File pwdFile = new File(certDir, baseName + ".pwd");
+			if (pwdFile.exists()) {
+				try {
+					FileInputStream fis = new FileInputStream(pwdFile);
+					byte[] buf = new byte[(int) pwdFile.length()];
+					fis.read(buf);
+					fis.close();
+					certPwd = new String(buf, StandardCharsets.UTF_8).trim();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			certPath = certFile.getAbsolutePath();
+		}
+        
+		if (url.startsWith("gemini://")) {
+			dat = gemini.get(url,certPath,certPwd,certType);
+		} else if (url.startsWith("scroll://")) {
+			dat = scroll.get(url,"meta",certPath,certPwd,certType);
+		} else if (url.startsWith("gopher://") || url.startsWith("gophers://")) {
+			dat = gopher.get(url, true).replace("	","%09");
+		} else if (url.startsWith("kepler://") || url.startsWith("keplers://")) {
+			dat = kepler.get(url,certPath,certPwd,certType);
+		} else if(url.startsWith("nex://")) {
+			dat = nex.get(url);
+		} else if(url.startsWith("spartan://")) {
+			dat = spartan.get(url);
+		} else if(url.startsWith("molerat://")) {
+			dat = molerat.get(url,"get","",certPath,certPwd,certType);
+		} else if(url.startsWith("scorpion://") || url.startsWith("scorpions://")) {
+			dat = scorpion.get(url,certPath,certPwd,certType);
+		} else if(url.startsWith("finger://")) {
+			dat = finger.get(url);
+		} else if(url.startsWith("text://")) {
+			dat = text.get(url);
 		}
 		return dat;
 	}

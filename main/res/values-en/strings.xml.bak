@@ -240,6 +240,8 @@
     <string name="cert_clear_active_toast">Active certificate cleared</string>
     <string name="pem_read_fail">Failed to read PEM certificate file</string>
     <string name="pem_key_read_fail">Failed to read PEM private key file</string>
+    <string name="cert_export_success">Export successful</string>
+    <string name="cert_export_failed">Export failed</string>
     <string name="cert_file_already_exist">File already exists</string>
     <string name="cert_active_tag">[Active]</string>
     <string name="cert_set_active_toast">Set as active certificate</string>

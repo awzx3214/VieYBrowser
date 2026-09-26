@@ -47,6 +47,28 @@ public class WebUtil {
 			url = filesDir + url.substring("viek://home/".length());
 			web.loadUrl(url);
 		}
+		else  if(url.toLowerCase().startsWith("viek://search/"))
+		{
+			url = url.substring("viek://search/".length());
+			web.loadUrl(i.getSearchBy(i.m(), url));
+		}
+		else  if(url.toLowerCase().startsWith("viek://history/"))
+		{
+			url = url.substring("viek://history/".length());
+			Intent intent = new Intent(i.m(), HistoryActivity.class);
+			if(!TextUtils.isEmpty(url)) intent.putExtra(HistoryActivity.EXTRA_SEARCH_KEY,  url);
+			i.m().startActivity(intent);
+		}
+		else  if(url.toLowerCase().startsWith("viek://bookmark/"))
+		{
+			Intent intent = new Intent(i.m(), BookmarksActivity.class);
+			i.m().startActivity(intent);
+		}
+		else  if(url.toLowerCase().startsWith("viek://download/"))
+		{
+			if(!url.startsWith("viek://download/sign/")) url = url.substring("viek://download/".length());
+			WebUtil.download(url, null, null, null, -1);
+		}
 		else
 		{
 			i.tw("unfinished");
@@ -288,10 +310,12 @@ public class WebUtil {
 		.replace("提交",i.getString(R.string.submit))
 		.replace("图片加载失败",i.getString(R.string.img_load_fail))
 		.replace("正在加载中...",i.getString(R.string.loading))
+        .replace("已复制",i.getString(R.string.copied))
 		.replace("嵌入",i.getString(R.string.embed))
 		.replace("文件",i.getString(R.string.file))
 		.replace("打开",i.getString(R.string.open))
 		.replace("错误",i.getString(R.string.error))
+        .replace("全屏",i.getString(R.string.fullscreen))
 		.replace("文本",i.getString(R.string.text))
 		.replace("删除",i.getString(R.string.delete));
 	}
@@ -301,7 +325,7 @@ public class WebUtil {
 		Context m = i.m();
 		if(uu==null) uu = "";
 		final String url = uu;
-        
+		
 		String fileName = "download_file";
 		if (contentDisposition != null && contentDisposition.contains("filename=")) {
 			fileName = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9);
@@ -324,8 +348,7 @@ public class WebUtil {
 		}
 		fileName = fileName.replaceAll("[\\\\/:*?\"<>|]", "_");
 		
-		
-		boolean showUrl = !url.startsWith("data:") && !url.startsWith("blob:");
+		boolean showUrl = !url.startsWith("data:") && !url.startsWith("blob:") && !url.startsWith("viek://download/sign/");
 		
 		int pad = i.dp2px(5);
 		LinearLayout container = new LinearLayout(m);
@@ -336,7 +359,7 @@ public class WebUtil {
 		edit.setSingleLine(true);
 		edit.setHeight(i.dp2px(56));
 		edit.setText(fileName);
-        edit.setHint(R.string.file_name);
+		edit.setHint(R.string.file_name);
 		LinearLayout.LayoutParams nameLp = new LinearLayout.LayoutParams(
 		LinearLayout.LayoutParams.MATCH_PARENT,
 		LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -347,7 +370,7 @@ public class WebUtil {
 		if (showUrl) {
 			urlEdit.setSingleLine(true);
 			urlEdit.setHeight(i.dp2px(56));
-            urlEdit.setHint(R.string.file_link);
+			urlEdit.setHint(R.string.file_link);
 			urlEdit.setText(url);
 			urlEdit.setSelection(url.length());
 			container.addView(urlEdit, new LinearLayout.LayoutParams(

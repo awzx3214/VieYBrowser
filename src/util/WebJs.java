@@ -5,11 +5,11 @@ import android.content.Intent;
 import java.util.concurrent.CountDownLatch;
 import android.text.TextUtils;
 
-public class WebVieyJs {
+public class WebJs {
 	
 	private final WebViey mWeb;
 	
-	public WebVieyJs(WebViey webViey) {
+	public WebJs(WebViey webViey) {
 		this.mWeb = webViey;
 	}
 	

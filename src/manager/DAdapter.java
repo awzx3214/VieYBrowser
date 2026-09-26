@@ -5,12 +5,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
-
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 public class DAdapter extends RecyclerView.Adapter<DAdapter.ViewHolder> {
 	
@@ -99,7 +95,7 @@ public class DAdapter extends RecyclerView.Adapter<DAdapter.ViewHolder> {
 			DownloadTask t = data.get(position);
 			holder.tvStatus.setText(callbacks.getStatusText(t));
 			updateProgress(holder, t);
-updateStatusBackground(holder.tvStatus, t);  
+			updateStatusBackground(holder.tvStatus, t);
 			holder.tvUrl.setText(buildDetailText(t));
 			return;
 		}
@@ -113,7 +109,7 @@ updateStatusBackground(holder.tvStatus, t);
 		holder.tvName.setText(t.fileName);
 		holder.tvStatus.setText(callbacks.getStatusText(t));
 		updateProgress(holder, t);
-        updateStatusBackground(holder.tvStatus, t);
+		updateStatusBackground(holder.tvStatus, t);
 		holder.tvUrl.setText(buildDetailText(t));
 		
 		holder.itemView.setOnClickListener(v -> {
@@ -132,25 +128,25 @@ updateStatusBackground(holder.tvStatus, t);
 		});
 	}
 	
-    private void updateStatusBackground(TextView tv, DownloadTask t) {
-    int color;
-    switch (t.status) {
-        case DownloadTask.STATUS_ERROR:
-            color = 0x50ff0000; 
-            break;
-        case DownloadTask.STATUS_FINISHED:
-            color = 0x5000ff00;  
-            break;
-        case DownloadTask.STATUS_PAUSE:
-            color = 0x50ddffff;  
-            break;
-        default:
-            color = 0x5000ffdd; 
-            break;
-    }
-    tv.setBackgroundColor(color);
-}
-
+	private void updateStatusBackground(TextView tv, DownloadTask t) {
+		int color;
+		switch (t.status) {
+			case DownloadTask.STATUS_ERROR:
+			color = 0x50ff0000;
+			break;
+			case DownloadTask.STATUS_FINISHED:
+			color = 0x5000ff00;
+			break;
+			case DownloadTask.STATUS_PAUSE:
+			color = 0x50ddffff;
+			break;
+			default:
+			color = 0x5000ffdd;
+			break;
+		}
+		tv.setBackgroundColor(color);
+	}
+	
 	private void updateProgress(ViewHolder holder, DownloadTask t) {
 		ProgressViey pb = holder.pb;
 		
@@ -163,6 +159,13 @@ updateStatusBackground(holder.tvStatus, t);
 			if (pb.getVisibility() != View.VISIBLE) {
 				pb.setVisibility(View.VISIBLE);
 			}
+		}
+		
+		if (t.url != null && i.canRun(t.url)) {
+			if (pb.getMode() != ProgressViey.MODE_INDETERMINATE) {
+				pb.setMode(ProgressViey.MODE_INDETERMINATE);
+			}
+			return;
 		}
 		
 		int segCount = t.getSegmentCount();
@@ -199,16 +202,16 @@ updateStatusBackground(holder.tvStatus, t);
 			+ " · " + DownloadTask.formatSpeed(t.speed)
 			+ " · " + DownloadTask.formatEta(t);
 			break;
-            case DownloadTask.STATUS_WAIT:
-    base = DownloadTask.formatSize(t.downloadedSize) + "/" + DownloadTask.formatSize(t.totalSize)
-    + " · " + i.getString(R.string.download_wait)
-    + " · " + t.threadCount + " " + i.getString(R.string.download_threads);
-    break;
-case DownloadTask.STATUS_PAUSE:
-    base = DownloadTask.formatSize(t.downloadedSize) + "/" + DownloadTask.formatSize(t.totalSize)
-    + " · " + i.getString(R.string.download_pause)
-    + " · " + t.threadCount + " " + i.getString(R.string.download_threads);
-    break;
+			case DownloadTask.STATUS_WAIT:
+			base = DownloadTask.formatSize(t.downloadedSize) + "/" + DownloadTask.formatSize(t.totalSize)
+			+ " · " + i.getString(R.string.download_wait)
+			+ " · " + t.threadCount + " " + i.getString(R.string.download_threads);
+			break;
+			case DownloadTask.STATUS_PAUSE:
+			base = DownloadTask.formatSize(t.downloadedSize) + "/" + DownloadTask.formatSize(t.totalSize)
+			+ " · " + i.getString(R.string.download_pause)
+			+ " · " + t.threadCount + " " + i.getString(R.string.download_threads);
+			break;
 			case DownloadTask.STATUS_FINISHED:
 			base = formatTime(t.finishTime) + " · " + DownloadTask.formatSize(t.totalSize);
 			break;

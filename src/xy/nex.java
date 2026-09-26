@@ -44,29 +44,12 @@ public class nex {
 				
 				os.write((path + "\r\n").getBytes(StandardCharsets.UTF_8));
 				os.flush();
-				
+                
 				if (isImage) {
-					
-					ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-					byte[] data = new byte[4096];
-					int bytesRead;
-					while ((bytesRead = is.read(data, 0, data.length)) != -1) {
-						buffer.write(data, 0, bytesRead);
-					}
-					String mimeType = i.getMime("."+ext);
-                    
-					String base64Data = android.util.Base64.encodeToString(buffer.toByteArray(), android.util.Base64.NO_WRAP);
-					String dataUrl = "data:" + mimeType + ";base64," + base64Data;
-					return "图片内容:\n" + dataUrl;
+					String mimeType = i.getMime("." + ext);
+					return "数据内容:\n" + mk.outBase(is, mimeType);
 				} else {
-					
-					BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-					StringBuilder body = new StringBuilder();
-					String line;
-					while ((line = br.readLine()) != null) {
-						body.append(line).append('\n');
-					}
-					return "内容:\n" + body;
+					return "内容:\n" + mk.outText(is);
 				}
 			}
 		} catch (Exception e) {

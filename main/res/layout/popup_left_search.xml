@@ -65,6 +65,7 @@
                     android:layout_height="30dp"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_close"
+                    android:layout_marginRight="5dp"
                     android:background="?attr/selectableItemBackgroundBorderless" />
             </LinearLayout>
         </LinearLayout>

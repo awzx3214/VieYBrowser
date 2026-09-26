@@ -114,7 +114,8 @@ public class kepler {
 					headerBuf.write(b);
 				}
 			}
-			String header = headerBuf.toString(StandardCharsets.UTF_8).trim();
+            
+            String header = new String(headerBuf.toByteArray(), StandardCharsets.UTF_8);
 			if (header.length() < 2) {
 				return i.getString(R.string.error_get) + "\nheader: "+header;
 			}
@@ -152,24 +153,18 @@ public class kepler {
 					mimeType = "text/plain";
 				}
 				
-				if (mimeType.startsWith("image/")) {
-					ByteArrayOutputStream bodyBuf = new ByteArrayOutputStream();
-					byte[] buf = new byte[4096];
-					int rd;
-					while ((rd = is.read(buf)) != -1) {
-						bodyBuf.write(buf, 0, rd);
-					}
-					String base64Img = Base64.encodeToString(bodyBuf.toByteArray(), Base64.NO_WRAP);
-					String dataUrl = "data:" + mimeType + ";base64," + base64Img;
+				if (mimeType.contains("text/")) {
+					String body = mk.outText(is);
+					socket.close();
+					return "响应:\n" + header + "\n\n内容:\n" + body;
+				} else if (mimeType.contains("image/")) {
+					String dataUrl = mk.outBase(is, mimeType);
+					socket.close();
 					return "响应:\n" + header + "\n\n图片内容:\n" + dataUrl;
 				} else {
-					BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-					StringBuilder sb = new StringBuilder();
-					String readLine;
-					while ((readLine = br.readLine()) != null) {
-						sb.append(readLine).append('\n');
-					}
-					return "响应:\n" + header + "\n\n内容:\n" + sb;
+					String ts = mk.outFile(is);
+					socket.close();
+					return "响应:\n" + header + "\nsign:" + ts + "\n\n文件内容:\n" + i.getString(R.string.plz_save);
 				}
 			} else {
 				return "响应:\n" + statusCode + "\n\n提示内容:\n" + meta;

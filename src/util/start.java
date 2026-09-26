@@ -6,9 +6,7 @@ import android.os.*;
 import android.view.*;
 import android.app.SearchManager;
 import android.net.Uri;
-import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
-import android.nfc.NfcAdapter;
+import android.nfc.*;
 import java.nio.charset.StandardCharsets;
 import kawaii.viey.browser.*;
 import android.widget.*;
@@ -146,16 +144,10 @@ public class start extends Activity {
 		findViewById(R.id.btn_cancel).setOnClickListener(v -> finish());
 		
 		findViewById(R.id.open_agree).setOnClickListener(v -> {
-			Intent srcIntent = new Intent();
-			srcIntent.setData(Uri.parse("https://github.com/awzx3214/VieYBrowser/blob/main/md/Privacy_Policy.md"));
-			srcIntent.setClass(start.this, CustomTabs.class);
-			startActivity(srcIntent);
+			i.hw("https://github.com/awzx3214/VieYBrowser/blob/main/md/Privacy_Policy.md");
 		});
 		findViewById(R.id.open_privacy).setOnClickListener(v -> {
-			Intent srcIntent = new Intent();
-			srcIntent.setData(Uri.parse("https://github.com/awzx3214/VieYBrowser/blob/main/md/Terms_of_Use.md"));
-			srcIntent.setClass(start.this, CustomTabs.class);
-			startActivity(srcIntent);
+			i.hw("https://github.com/awzx3214/VieYBrowser/blob/main/md/Terms_of_Use.md");
 		});
 		
 		findViewById(R.id.open).setOnClickListener(v -> {

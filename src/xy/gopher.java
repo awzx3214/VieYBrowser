@@ -47,11 +47,13 @@ public class gopher {
 					}
 				}
 			}
-			if(!isDownload) 
+			
+			if(!isDownload)
 			{
-				if(type == 'g' || type == 'I' || type == 'p' || type == ':' || type == '9' || type == '4' || type == 'd' || type == '5' || type == 's' || type == '<' || type == ';') {
+				if(type == '9' || type == '4' || type == 'd' || type == '5' || type == 's' || type == '<' || type == ';') {
 					return "open viey download";
 				}
+				
 			}
 			
 			if (isGophers) {
@@ -67,35 +69,53 @@ public class gopher {
 			String result;
 			os.print(selector + "\r\n");
 			os.flush();
-			InputStream inputStream = socket.getInputStream();
-			byte[] data = new byte[4096];
 			
-			String dirPath = VieYApp.getDownloadPath(i.m());
+			InputStream inputStream = socket.getInputStream();
+			
+			if (type == '9' || type == '4' || type == 'd' || type == '5' || type == 's' || type == '<' || type == ';') {
+				String ts = mk.outFile(inputStream);
+				return "\nsign:" + ts + "\n\n文件内容:\n" + i.getString(R.string.plz_save);
+			} else if (type == 'g' || type == 'I' || type == 'p' || type == ':') {
+				String hz = "";
+				if (type == 'g') hz = "gif";
+				else if (type == 'p') hz = "png";
+				else hz = "jpg";
+				String dataUrl = mk.outBase(inputStream, "image/" + hz);
+				result = "\n\n图片内容:\n" + dataUrl;
+			} else {
+				result = type + "内容:\n" + i.sj(mk.outBase(inputStream, "application/octet-stream"), "base64,", null);
+			}
+			
+			 
+            
+			/*
+            byte[] data = new byte[4096];
+			
+            String dirPath = VieYApp.getDownloadPath(i.m());
 			File dir = new File(dirPath);
 			if (!dir.exists()) {
-				dir.mkdirs();
+			dir.mkdirs();
 			}
 			
 			String fileName = "";
 			if (selector.contains("/")) {
-				String[] parts = selector.split("/");
-				if (parts.length > 0) {
-					fileName = parts[parts.length - 1];
-					if (!fileName.contains(".")) {
-						fileName += ".bin";
-					}
-				}
+			String[] parts = selector.split("/");
+			if (parts.length > 0) {
+			fileName = parts[parts.length - 1];
+			if (!fileName.contains(".")) {
+			fileName += ".bin";
+			}
+			}
 			}
 			if (fileName.isEmpty() || fileName.equals(selector)) {
-				fileName = "file_" + System.currentTimeMillis() + ".bin";
+			fileName = "file_" + System.currentTimeMillis() + ".bin";
 			} else {
-				File existingFile = new File(dir, fileName);
-				if (existingFile.exists()) {
-					fileName = System.currentTimeMillis() + "_" + fileName;
-				}
+			File existingFile = new File(dir, fileName);
+			if (existingFile.exists()) {
+			fileName = System.currentTimeMillis() + "_" + fileName;
+			}
 			}
 			File saveFile = new File(dir, fileName);
-			
 			if (type == '9' || type == '4' || type == 'd' || type == '5' || type == 's' || type == '<' || type == ';') {
 				FileOutputStream fos = null;
 				try {
@@ -107,7 +127,6 @@ public class gopher {
 						totalBytes += bytesRead;
 					}
 					fos.flush();
-					
 					
 					result = "f内容:\n文件已保存: " + saveFile.getAbsolutePath();
 				} catch (Exception e) {
@@ -148,6 +167,8 @@ public class gopher {
 					result = type + "内容:\n" + android.util.Base64.encodeToString(binaryData, android.util.Base64.NO_WRAP);
 				}
 			}
+            */
+            
 			os.close();
 			socket.close();
 			return result;

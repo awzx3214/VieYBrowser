@@ -1,39 +1,26 @@
 package kawaii.viey.browser;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.os.Handler;
-import android.os.Looper;
+import android.os.*;
 import android.util.AttributeSet;
 import android.text.TextUtils;
 import android.net.Uri;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import kawaii.viey.browser.xy.*;
 import android.app.Activity;
-import android.os.Message;
 import android.webkit.*;
 import java.util.*;
 import android.content.pm.ResolveInfo;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.view.View;
-import android.view.ViewGroup;
 import android.util.Base64;
-import android.view.MotionEvent;
 import android.webkit.WebChromeClient.CustomViewCallback;
 import android.content.pm.ActivityInfo;
 import android.graphics.Canvas;
 import java.net.URLDecoder;
-import android.webkit.PermissionRequest;
-import android.webkit.GeolocationPermissions;
-import android.os.Build;
-import android.os.Bundle;
-import android.view.ViewTreeObserver;
+import android.view.*;
 
 public class WebViey extends WebView {
 	
@@ -62,6 +49,7 @@ public class WebViey extends WebView {
 	private boolean mMultiTouch = false;
 	private boolean mIsPullTouch = false;
 	private final ScrollbarHelper mScrollbar;
+	private WebSelect mSelectionMenu;
 	private ViewGroup mRootLayout;
 	private static String certPath = "";
 	private static String certPwd = "";
@@ -74,11 +62,11 @@ public class WebViey extends WebView {
 	
 	private volatile Thread mThread;
 	private volatile String murl;
-	private WebVieyJs mJsBridge;
+	private WebJs mJsBridge;
 	
-	public WebVieyJs getJsBridge() {
+	public WebJs getJsBridge() {
 		if (mJsBridge == null) {
-			mJsBridge = new WebVieyJs(this);
+			mJsBridge = new WebJs(this);
 		}
 		return mJsBridge;
 	}
@@ -216,7 +204,10 @@ public class WebViey extends WebView {
 					return;
 				}
 				
+				if(url.startsWith("gopher://") || url.startsWith("gophers://")) smolnetIs = "true";
 				String content = getSmolnetData(url);
+				smolnetIs = "";
+				
 				if (content == null) {
 					setSmolnetImg("get fail", backId, 0L);
 					return;
@@ -418,8 +409,8 @@ public class WebViey extends WebView {
 		setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
 			if(listener != null){
 				listener.onDownloadStart(url, userAgent, contentDisposition, mimetype, contentLength, webId);
-                listener.onProgressChanged(100, webId);
-                listener.onPageFinished(getUrl(), webId);
+				listener.onProgressChanged(100, webId);
+				listener.onPageFinished(getUrl(), webId);
 			}
 		});
 		
@@ -801,6 +792,7 @@ public class WebViey extends WebView {
 	
 	@Override
 	public void destroy() {
+		mSelectionMenu = null;
 		if(mCustomView != null){
 			mCustomViewCallback.onCustomViewHidden();
 			mCustomView = null;
@@ -836,6 +828,22 @@ public class WebViey extends WebView {
 		invalidate();
 	}
 	
+	
+	@Override
+	public ActionMode startActionMode(ActionMode.Callback callback) {
+		return startActionMode(callback, ActionMode.TYPE_FLOATING);
+	}
+	
+	@Override
+	public ActionMode startActionMode(final ActionMode.Callback callback, int type) {
+		if (mSelectionMenu == null) mSelectionMenu = new WebSelect(this);
+		final ActionMode.Callback wrapper = mSelectionMenu.wrap(callback);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			return super.startActionMode(wrapper, type);
+		} else {
+			return super.startActionMode(wrapper);
+		}
+	}
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {

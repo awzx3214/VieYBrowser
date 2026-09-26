@@ -9,7 +9,8 @@ import java.util.Collections;
 import javax.net.ssl.*;
 import kawaii.viey.browser.*;
 import android.util.Base64;
- 
+import android.os.Build;
+
 public class molerat {
 	
 	public static final String CRLF = "\r\n";
@@ -24,7 +25,7 @@ public class molerat {
 		String host = info.host;
 		int port = info.port;
 		String path = info.rest;
-        String hash = mk.getCacheH("molerat", url);
+		String hash = mk.getCacheH("molerat", url);
 		url = info.base + path;
 		
 		if("get".equals(method)){
@@ -93,11 +94,13 @@ public class molerat {
 			}
 			
 			SSLSocketFactory factory = ssl.getSocketFactory();
-		    socket = (SSLSocket) factory.createSocket();
+			socket = (SSLSocket) factory.createSocket();
 			socket.connect(mk.getSocketAddress(host, port), 10000);
 			socket.setSoTimeout(10000);
 			SSLParameters sslParams = socket.getSSLParameters();
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 			sslParams.setServerNames(Collections.singletonList(new SNIHostName(host)));
+		}
 			socket.setSSLParameters(sslParams);
 			socket.setEnabledProtocols(new String[]{"TLSv1.2", "TLSv1.3"});
 			socket.startHandshake();
@@ -117,6 +120,7 @@ public class molerat {
 				if (p3 == '\r' && p2 == '\n' && p1 == '\r' && ch == '\n') break;
 				p3 = p2; p2 = p1; p1 = ch;
 			}
+            
 			String[] headerLines = new String(headerBuffer.toByteArray(), StandardCharsets.UTF_8).split("\r\n");
 			
 			if (headerLines.length == 0 || headerLines[0].trim().length() < 2) {
@@ -137,7 +141,7 @@ public class molerat {
 			String message = "";
 			int contentLength = -1;
 			String mimeType = "text/molerat";
-            
+			
 			for (int i = 1; i < headerLines.length; i++) {
 				String line = headerLines[i].trim();
 				if (line.isEmpty()) break;
@@ -151,7 +155,7 @@ public class molerat {
 				} else if (line.startsWith("type:")) {
 					mimeType = line.substring(5).trim();
 				} else if (line.startsWith("hash:")) {
-                    mk.setCacheH("molerat", "molerat://"+url, line.substring(5).trim());
+					mk.setCacheH("molerat", "molerat://"+url, line.substring(5).trim());
 				}
 			}
 			ByteArrayOutputStream bodyBuf = new ByteArrayOutputStream();
@@ -171,20 +175,21 @@ public class molerat {
 			byte[] bodyBytes = bodyBuf.toByteArray();
 			socket.close();
 			String back = "";
+			
+			
 			if (status == 10) {
-				if (mimeType.startsWith("image/")) {
-					String dataUrl = "data:" + mimeType + ";base64," + Base64.encodeToString(bodyBytes, Base64.NO_WRAP);
-					
-					back = "响应:\n" + statusLine + "\n\n元数据:\n" + headers + "\n\n图片内容:\n" + dataUrl;
+				if (mimeType.startsWith("text/")) {
+					back = "响应:\n" + statusLine + "\n\n元数据:\n" + headers + "\n\n内容:\n" + new String(bodyBytes, StandardCharsets.UTF_8);
 				}
-				back = "响应:\n" + statusLine + "\n\n元数据:\n" + headers + "\n\n内容:\n" + new String(bodyBytes, StandardCharsets.UTF_8);
+				String dataUrl = "data:" + mimeType + ";base64," + Base64.encodeToString(bodyBytes, Base64.NO_WRAP);
+				back = "响应:\n" + statusLine + "\n\n元数据:\n" + headers + "\n\n数据内容:\n" + dataUrl;
 			} else if(status == 11) {
 				return mk.readCacheH("molerat", hash);
 			}else {
 				String display = !message.isEmpty() ? message : headers.toString();
 				back = "响应:\n" + status + "\n\n提示内容:\n" + display;
 			}
-            mk.putCacheH("molerat", hash, back);
+			mk.putCacheH("molerat", hash, back);
 			return back;
 		} catch (Exception e) {
 			return i.getString(R.string.error_get2) + e;

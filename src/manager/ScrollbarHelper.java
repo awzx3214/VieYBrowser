@@ -1,14 +1,10 @@
 package kawaii.viey.browser;
 
 import android.animation.ValueAnimator;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.RectF;
+import android.graphics.*;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewParent;
+import android.view.*;
 import android.view.animation.DecelerateInterpolator;
 
 public class ScrollbarHelper {
@@ -22,12 +18,16 @@ public class ScrollbarHelper {
 	
 	private static final int THUMB_COLOR_NORMAL = 0x40000000;
 	private static final int THUMB_COLOR_ACTIVE = 0x6000FFDD;
+	private static final int TOUCH_COLOR_NORMAL = 0x6600AAFF;
 	
 	private final View mView;
 	private final ScrollMetrics mMetrics;
 	
 	private final Paint mThumbPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private final Paint mTouchPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+	
+	private int mThumbBaseColor = THUMB_COLOR_NORMAL;
+	private int mTouchBaseColor = TOUCH_COLOR_NORMAL;
 	
 	private final RectF mThumbRect = new RectF();
 	private final RectF mTouchRect = new RectF();
@@ -55,8 +55,8 @@ public class ScrollbarHelper {
 		mThumbWidth = 6 * density;
 		mThumbHeight = 65 * density;
 		mMetrics = metrics;
-		mThumbPaint.setColor(THUMB_COLOR_NORMAL);
-		mTouchPaint.setColor(0x6600AAFF);
+		mThumbPaint.setColor(mThumbBaseColor);
+		mTouchPaint.setColor(mTouchBaseColor);
 	}
 	
 	public void updateThumbPosition() {
@@ -109,26 +109,39 @@ public class ScrollbarHelper {
 	public void draw(Canvas canvas, boolean resetMatrix) {
 		updateThumbPosition();
 		
-		
 		if (!mCanShowThumb || mThumbAlpha <= 0f) return;
 		
 		int saveCount = canvas.save();
+		
+		RectF thumbRect = new RectF(mThumbRect);
+		RectF touchRect = new RectF(mTouchRect);
+		
 		if (resetMatrix) {
-			canvas.setMatrix(null);
+			Matrix cm = new Matrix();
+			canvas.getMatrix(cm);
+			Matrix inv = new Matrix();
+			if (cm.invert(inv)) {
+				inv.mapRect(thumbRect);
+				inv.mapRect(touchRect);
+			}
 		}
 		
-		int layer = canvas.saveLayerAlpha(
-		0, 0, mView.getWidth(), mView.getHeight(),
-		(int) (mThumbAlpha * 255f));
+		int thumbAlpha = (int) (Color.alpha(mThumbBaseColor) * mThumbAlpha);
+		int touchAlpha = (int) (Color.alpha(mTouchBaseColor) * mThumbAlpha);
 		
-		if (!mThumbRect.isEmpty()) {
-			canvas.drawRoundRect(mThumbRect, mThumbWidth, mThumbWidth, mThumbPaint);
+		mThumbPaint.setColor(mThumbBaseColor);
+		mThumbPaint.setAlpha(thumbAlpha);
+		
+		mTouchPaint.setColor(mTouchBaseColor);
+		mTouchPaint.setAlpha(touchAlpha);
+		
+		if (!thumbRect.isEmpty()) {
+			canvas.drawRoundRect(thumbRect, mThumbWidth, mThumbWidth, mThumbPaint);
 		}
-		if (mShowTouchArea && !mTouchRect.isEmpty()) {
-			canvas.drawRoundRect(mTouchRect, mThumbWidth, mThumbWidth, mTouchPaint);
+		if (mShowTouchArea && !touchRect.isEmpty()) {
+			canvas.drawRoundRect(touchRect, mThumbWidth, mThumbWidth, mTouchPaint);
 		}
 		
-		canvas.restoreToCount(layer);
 		canvas.restoreToCount(saveCount);
 	}
 	
@@ -246,14 +259,14 @@ public class ScrollbarHelper {
 	}
 	
 	private void setThumbPaintColor(int color) {
-		if (mThumbPaint.getColor() != color) {
-			mThumbPaint.setColor(color);
+		if (mThumbBaseColor != color) {
+			mThumbBaseColor = color;
 			mView.invalidate();
 		}
 	}
 	
 	public void setThumbColor(int color) {
-		mThumbPaint.setColor(color);
+		mThumbBaseColor = color;
 		mView.invalidate();
 	}
 	
@@ -283,6 +296,7 @@ public class ScrollbarHelper {
 	public void detach() {
 		mHandler.removeCallbacks(mHideRunnable);
 		cancelAlphaAnimator();
-		mThumbPaint.setColor(THUMB_COLOR_NORMAL);
+		mThumbBaseColor = THUMB_COLOR_NORMAL;
+		mView.invalidate();
 	}
 }
