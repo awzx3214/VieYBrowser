@@ -25,6 +25,17 @@ public class WebJs {
 	}
 	
 	@JavascriptInterface
+	public void loadHtml(String html) {
+		mWeb.post(() -> {
+			try {
+				mWeb.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
+	}
+	
+	@JavascriptInterface
 	public void function(String data) {
 		mWeb.post(() -> {
 			Tools.function(data, null);

@@ -30,7 +30,7 @@
     <string name="auto_install_apk">Auto-install after download</string>
     <string name="volume_key_page">Volume key page turning</string>
     <string name="search_download">Search file name / URL</string>
-    <string name="custom_tab">External browser page</string>
+    <string name="custom_tab">Custom Tab</string>
     <string name="net_fail">Network error</string>
     <string name="close_other_win">Close other windows</string>
     <string name="close_now_win">Close current window</string>

@@ -5,7 +5,7 @@
 
 > In the event of any discrepancy between the Chinese and English versions, the Chinese version shall prevail.
 
-[简体中文](/Privacy_Policy_zh.md) | English
+[简体中文](./Privacy_Policy_zh.md) | English
 
 
 ## 1. Information Collection and Processing

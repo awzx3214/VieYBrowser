@@ -11,14 +11,17 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.*;
 import android.widget.*;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.*;
 import android.app.ActivityOptions;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.cardview.widget.CardView;
 import java.util.ArrayList;
 import java.util.HashMap;
+import android.os.Message;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
+import android.webkit.WebView;
 
 public class CustomTabs extends BaseActivity {
 	
@@ -26,20 +29,22 @@ public class CustomTabs extends BaseActivity {
 	private LinearLayout mToolbar;
 	private ImageView mBack, mMore, mMenu;
 	private TextView mTitle, mUrl;
-	private WebViey      mWeb;
-	
+	private WebViey mWeb;
+	private String js="";
+    private String theUrl;
+    
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.custom_tab);
 		
 		mToolbar = findViewById(R.id.toolbar);
-		mBack    = findViewById(R.id.back_tool);
-		mMore    = findViewById(R.id.menu_more);
-		mMenu    = findViewById(R.id.menu_tool);
-		mTitle   = findViewById(R.id.title);
-		mUrl     = findViewById(R.id.url);
-		mWeb     = findViewById(R.id.web);
+		mBack = findViewById(R.id.back_tool);
+		mMore = findViewById(R.id.menu_more);
+		mMenu = findViewById(R.id.menu_tool);
+		mTitle = findViewById(R.id.title);
+		mUrl = findViewById(R.id.url);
+		mWeb = findViewById(R.id.web);
 		
 		mBack.setOnClickListener(v -> finish());
 		
@@ -52,6 +57,80 @@ public class CustomTabs extends BaseActivity {
 			i.zs(findViewById(R.id.menu_tool), "#ffffff");
 			i.zs(findViewById(R.id.sign_tool), "#ffffff");
 		}
+		
+		mWeb.webId = 0;
+		
+		mWeb.getSettings().setSupportMultipleWindows(false);
+		mWeb.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
+		mWeb.setOnWebViewListener(new WebViey.OnWebViewListener() {
+			@Override
+			public void onPageStarted(String url, int webId) {
+				if (!TextUtils.isEmpty(url)) {
+					mUrl.setText(url);
+				}
+			}
+			
+			@Override
+			public void onPageFinished(String url, int webId) {
+				if (!TextUtils.isEmpty(url)) {
+					mUrl.setText(url);
+				}
+                
+				if(url.equals(theUrl)) mWeb.evaluateJavascript(js, null);
+			}
+			
+			@Override
+			public void onProgressChanged(int progress, int webId) {
+			}
+			@Override
+			public void onReceivedTitle(String title, int webId) {
+				if (!TextUtils.isEmpty(title)) {
+					mTitle.setText(title);
+				}
+			}
+			
+			@Override
+			public void onCreateWindow(Message resultMsg) {
+				if (resultMsg != null) {
+					WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+					transport.setWebView(null);
+					resultMsg.sendToTarget();
+				}
+			}
+			
+			@Override
+			public void onConsoleMessage(String logStr, int level) {
+			}
+			
+			@Override
+			public void onReceivedIcon(Bitmap icon, int webId) {
+			}
+			
+			@Override
+			public void onSmolnetFileSelect(WebViey web) {
+			}
+			
+			@Override
+			public void onLongClick(int hitType, String extra, String hrefUrl, String linkText, int webId) {
+			}
+			
+			@Override
+			public void onShowFileChooser(WebView webView,
+			ValueCallback<Uri[]> filePathCallback,
+			WebChromeClient.FileChooserParams fileChooserParams) {
+				if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+			}
+			
+			@Override
+			public void openFileChooser(ValueCallback<Uri> filePathCallback, String acceptType) {
+				if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+			}
+			
+			@Override
+			public boolean onDispatchTouchEvent(MotionEvent event) {
+				return false;
+			}
+		});
 	}
 	
 	
@@ -62,6 +141,10 @@ public class CustomTabs extends BaseActivity {
 		if (!TextUtils.isEmpty(url)) {
 			mUrl.setText(url);
 			mWeb.loadUrl(url);
+		}
+		theUrl = url;
+        if (intent.hasExtra("js")) {
+			js = intent.getStringExtra("js");
 		}
 		
 		if (!intent.hasExtra("android.support.customtabs.extra.SESSION")) {

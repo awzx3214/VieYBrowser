@@ -50,7 +50,7 @@ public class SettingsActivity extends BaseActivity {
 		
 		addItem(getString(R.string.about_info), v -> i.utw(getString(R.string.about), getString(R.string.about_text)));
 		
-		addItem(getString(R.string.open_source_license), v -> i.hw("https://github.com/awzx3214/VieYBrowser/blob/main/md/license.html"));
+		addItem(getString(R.string.open_source_license), v -> i.hw("https://awzx3214.github.io/VieYBrowser/md/license.html"));
 		
 		addItem(getString(R.string.official_website), v -> openUrlAndFinish("https://palhube666.wodemo.com/"));
 		

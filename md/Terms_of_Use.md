@@ -6,7 +6,7 @@
 
 > In the event of any discrepancy between the Chinese and English versions, the Chinese version shall prevail.
 
-[简体中文](/Terms_of_Use_zh.md) | English
+[简体中文](./Terms_of_Use_zh.md) | English
 
 
 ## 1. Service Description

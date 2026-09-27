@@ -528,7 +528,7 @@ div.appendChild(span);
 document.getElementById('warp').appendChild(div);
 let info = obj.info;
 let url1 = obj.url;
-div.onclick = function(){showSnackbar(info,url1);window.location.href = 'viek://aa/'+info+"%0a"+url1.replace('://','%3a//');}
+div.onclick = function(){showSnackbar(info,url1);}
 }
 
 
@@ -2458,37 +2458,24 @@ SOFTWARE.
 `
 };
 
-// 页面加载完成后执行
 document.addEventListener('DOMContentLoaded', function() {
 const fileSelect = document.getElementById('license-select');
 const codeBlock = document.getElementById('license-text');
 const copyButton = document.querySelector('.copy-button');
 
-// 显示选中的许可证内容
 function showLicense(licenseId) {
 codeBlock.textContent = licenses[licenseId] || '未找到该许可证内容';
 }
 
-// 初始加载默认许可证
 showLicense(fileSelect.value);
-
-// 监听下拉框变化，显示选中的许可证
 fileSelect.addEventListener('change', function() {
 showLicense(this.value);
 });
-
-// 复制功能
 copyButton.addEventListener('click', function() {
-// 获取要复制的文本
 const textToCopy = codeBlock.textContent;
-
-// 复制到剪贴板
 navigator.clipboard.writeText(textToCopy).then(() => {
-// 显示复制成功状态
 copyButton.textContent = '已复制!';
 copyButton.classList.add('copied');
-
-// 2秒后恢复原状
 setTimeout(() => {
 copyButton.textContent = '复制';
 copyButton.classList.remove('copied');

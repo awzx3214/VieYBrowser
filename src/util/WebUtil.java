@@ -52,6 +52,11 @@ public class WebUtil {
 			url = url.substring("viek://search/".length());
 			web.loadUrl(i.getSearchBy(i.m(), url));
 		}
+        else  if(url.toLowerCase().startsWith("viek://toast/"))
+		{
+			url = url.substring("viek://toast/".length());
+			i.tw(url);
+		}
 		else  if(url.toLowerCase().startsWith("viek://history/"))
 		{
 			url = url.substring("viek://history/".length());
@@ -71,7 +76,7 @@ public class WebUtil {
 		}
 		else
 		{
-			i.tw("unfinished");
+			i.tw("unfinished: "+url);
 		}
 	}
 	
@@ -91,7 +96,7 @@ public class WebUtil {
 	
 	public static void getIp(String url) {
 		final String host = kawaii.viey.browser.xy.mk.getUrl(url).host;
-		if (!TextUtils.isEmpty(host)) {
+		if (!TextUtils.isEmpty(host) && !host.contains(".")) {
 			new Thread(new Runnable() {
 				@Override
 				public void run() {

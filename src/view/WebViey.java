@@ -288,7 +288,7 @@ public class WebViey extends WebView {
 				if(listener != null)
 				{
 					mainHandler.post(() -> {
-						listener.onDownloadStart(url,"","","",0,webId);
+						WebUtil.download(url,"","","",0);
 					});
 				}
 				return;
@@ -408,7 +408,7 @@ public class WebViey extends WebView {
 		
 		setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
 			if(listener != null){
-				listener.onDownloadStart(url, userAgent, contentDisposition, mimetype, contentLength, webId);
+				WebUtil.download(url, userAgent, contentDisposition, mimetype, contentLength);
 				listener.onProgressChanged(100, webId);
 				listener.onPageFinished(getUrl(), webId);
 			}
@@ -918,7 +918,6 @@ public class WebViey extends WebView {
 		void onLongClick(int hitType, String extra, String hrefUrl, String linkText, int webId);
 		void onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, android.webkit.WebChromeClient.FileChooserParams fileChooserParams);
 		void openFileChooser(ValueCallback<Uri> filePathCallback, String acceptType);
-		void onDownloadStart(String url,String userAgent,String contentDisposition,String mimetype,long contentLength,int webId);
 		boolean onDispatchTouchEvent(MotionEvent event);
 	}
 }

@@ -5,7 +5,7 @@
 
 > 如果有翻译错误导致的条款冲突，以中文版为准，所有条款以中文版为准
 
-简体中文 | [English](/Privacy_Policy.md)
+简体中文 | [English](./Privacy_Policy.md)
 
 
 ## 一、信息收集与处理

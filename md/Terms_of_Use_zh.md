@@ -6,7 +6,7 @@
 
 > 如果有翻译错误导致的条款冲突，以中文版为准，所有条款以中文版为准
 
-简体中文 | [English](/Terms_of_Use.md)
+简体中文 | [English](./Terms_of_Use.md)
 
 
 ## 第一条 服务说明

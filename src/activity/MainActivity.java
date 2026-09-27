@@ -609,12 +609,12 @@ public class MainActivity extends BaseActivity {
 	private void initWebView(WebViey webView) {
 		
 		webView.setOnWebViewListener(new WebViey.OnWebViewListener() {
-			
+			/*
 			@Override
 			public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength, int webId) {
 				WebUtil.download(url, userAgent, contentDisposition, mimetype, contentLength);
 			}
-			
+			*/
 			@Override
 			public void onPageStarted(String url, int id) {
 				if (!urlEditText.hasFocus() && windowList.get(nowIndex).id == id) {

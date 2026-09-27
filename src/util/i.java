@@ -418,8 +418,13 @@ public class i {
 	}
 	
 	public static void hw(String url) {
+		hw(url,"");
+	}
+    
+	public static void hw(String url, String js) {
 		Intent srcIntent = new Intent();
 		srcIntent.setData(Uri.parse(url));
+        srcIntent.putExtra("js", js);
 		srcIntent.setClass(m(), CustomTabs.class);
 		m().startActivity(srcIntent);
 	}
