@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class HistoryManager {
@@ -25,8 +24,7 @@ public class HistoryManager {
 		
 		
 		public String getFormatTime() {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
-			return sdf.format(new Date(timeStamp));
+			return i.formatTime(timeStamp);
 		}
 		
 		public JSONObject toJson() {

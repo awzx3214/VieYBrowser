@@ -3,25 +3,21 @@ package kawaii.viey.browser;
 import java.io.*;
 import android.graphics.*;
 import android.view.*;
-import android.widget.ImageView;
-import android.content.Context;
+import android.content.*;
 import android.graphics.drawable.Drawable;
 import java.nio.charset.StandardCharsets;
 import android.os.Handler;
 import android.os.Looper;
-import android.widget.Toast;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import android.widget.TextView;
+import android.widget.*;
 import com.google.android.material.snackbar.Snackbar;
 import android.net.Uri;
 import android.app.Activity;
-import android.widget.LinearLayout;
 import androidx.cardview.widget.CardView;
 import android.util.ArrayMap;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import android.content.Intent;
 import android.text.TextUtils;
 import android.content.res.ColorStateList;
 import android.app.AlertDialog;
@@ -97,6 +93,36 @@ public class i {
 		return ctx;
 	}
 	
+	public static void copytext(String text) {
+		try {
+			if (text == null) text = "";
+			ClipboardManager cm = (ClipboardManager) m().getSystemService(Context.CLIPBOARD_SERVICE);
+			if (cm != null) {
+				cm.setPrimaryClip(ClipData.newPlainText("VieYcopytext", text));
+				i.twi(R.string.copied);
+			}
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static String copytext() {
+		try {
+			ClipboardManager cm = (ClipboardManager) m().getSystemService(Context.CLIPBOARD_SERVICE);
+			if (cm != null && cm.hasPrimaryClip() && cm.getPrimaryClip() != null) {
+				ClipData clip = cm.getPrimaryClip();
+				if (clip.getItemCount() > 0) {
+					CharSequence cs = clip.getItemAt(0).coerceToText(m());
+					return cs == null ? "" : cs.toString();
+				}
+			}
+			i.tw(R.string.clip_null);
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+		return "";
+	}
+	
 	public static List<String> getUrls(String text) {
 		Pattern pa = Pattern.compile("(?:https?|gemini|gophers?|keplers?|finger|titan|spartan|nex|nps|misfin|scorpions?|molerat|text|scroll):\\/\\/(?:(?:[A-Za-z0-9\\u4e00-\\u9fa5-]+\\.)+[A-Za-z\\u4e00-\\u9fa5]{2,}|localhost|\\d{1,3}(?:\\.\\d{1,3}){3})(?::\\d+)?(?:[\\/?#][^\\s\"]*)?",Pattern.CASE_INSENSITIVE);
 		List<String> result = new ArrayList<>();
@@ -170,6 +196,20 @@ public class i {
 		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		m().startActivity(intent);
 		android.os.Process.killProcess(android.os.Process.myPid());
+	}
+	
+	public static String formatTime(long millis) {
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+			return sdf.format(new Date(millis));
+		} catch (Exception e) {
+			return "";
+		}
+	}
+	
+	public static String formatTime(Date date) {
+		if(date == null) return "";
+		return formatTime(date.getTime());
 	}
 	
 	public static String e(Exception e) {
@@ -420,11 +460,11 @@ public class i {
 	public static void hw(String url) {
 		hw(url,"");
 	}
-    
+	
 	public static void hw(String url, String js) {
 		Intent srcIntent = new Intent();
 		srcIntent.setData(Uri.parse(url));
-        srcIntent.putExtra("js", js);
+		srcIntent.putExtra("js", js);
 		srcIntent.setClass(m(), CustomTabs.class);
 		m().startActivity(srcIntent);
 	}

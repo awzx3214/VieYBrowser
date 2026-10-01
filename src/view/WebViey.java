@@ -407,13 +407,12 @@ public class WebViey extends WebView {
 	private void setupClient() {
 		
 		setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
-			if(listener != null){
-				WebUtil.download(url, userAgent, contentDisposition, mimetype, contentLength);
+			if (listener != null) {
+				WebUtil.download(url, userAgent, contentDisposition, mimetype, contentLength, getUrl());
 				listener.onProgressChanged(100, webId);
 				listener.onPageFinished(getUrl(), webId);
 			}
 		});
-		
 		setWebViewClient(new WebViewClient() {
 			@Override
 			public void onPageStarted(WebView view, String url, Bitmap favicon) {

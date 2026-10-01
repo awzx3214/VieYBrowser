@@ -9,7 +9,6 @@ import android.os.Looper;
 import android.util.Log;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class CrashHandler implements Thread.UncaughtExceptionHandler {
@@ -17,7 +16,6 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
     private static CrashHandler instance;
     private Thread.UncaughtExceptionHandler defaultHandler;
     private Context context;
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
     private Map<String, String> deviceInfoMap = new HashMap<>();
 
     private CrashHandler() {
@@ -99,14 +97,14 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
 
     private void saveCrashInfo(Throwable throwable) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Time: ").append(dateFormat.format(new Date())).append("\n");
+        sb.append("Time: ").append(i.formatTime(new Date())).append("\n");
         for (Map.Entry<String, String> entry : deviceInfoMap.entrySet()) {
             sb.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
         }
         sb.append("Crash Log:\n").append(getCrashInfo(throwable)).append("\n");
 
         try {
-            String fileName = "crash_" + dateFormat.format(new Date()).replace(":", "-") + ".txt";
+            String fileName = "crash_" + i.formatTime(new Date()).replace(":", "-") + ".txt";
             File dir = context.getExternalFilesDir("crash_logs");
             if (dir != null && !dir.exists()) {
                 dir.mkdirs();

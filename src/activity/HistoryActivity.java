@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
+import android.content.Context;
 
 public class HistoryActivity extends BaseActivity {
 	
@@ -58,16 +59,13 @@ public class HistoryActivity extends BaseActivity {
 		historyAdapter.setOnItemClickListener(position -> {
 			if (position < historyData.size()) {
 				HistoryManager.HistoryItem item = historyData.get(position);
-				Intent resultIntent = new Intent();
-				resultIntent.putExtra("url", item.url);
-				setResult(RESULT_OK, resultIntent);
-				finish();
+				openLink("url", item.url);
 			}
 		});
 		
 		historyAdapter.setOnItemLongClickListener(position -> {
 			if (position < historyData.size()) {
-				showDeleteDialog(position);
+				showItemMenu(position);
 			}
 		});
 		
@@ -96,6 +94,59 @@ public class HistoryActivity extends BaseActivity {
 			i.zs(findViewById(R.id.menu_tool), "#ffffff");
 			i.zs(findViewById(R.id.sign_tool), "#ffffff");
 		}
+	}
+	
+	private void openLink(String a, String url) {
+		Intent resultIntent = new Intent();
+		resultIntent.putExtra(a, url);
+		setResult(RESULT_OK, resultIntent);
+		finish();
+	}
+	
+	private void showItemMenu(final int pos) {
+		if (pos < 0 || pos >= historyData.size()) return;
+		final HistoryManager.HistoryItem item = historyData.get(pos);
+		
+		final String[] items = new String[] {
+			getString(R.string.delete),
+			getString(R.string.copy_link),
+			getString(R.string.copy_title),
+			getString(R.string.open),
+            getString(R.string.new_window_open),
+            getString(R.string.background_open)
+		};
+		
+		i.utw(R.string.operation, items, new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+			
+			@Override
+			public void onListClick(String nr, int num) {
+				switch (num) {
+					case 0:
+					showDeleteDialog(item.url);
+					break;
+					case 1:
+					i.copytext(item.url);
+					break;
+					case 2:
+					i.copytext(item.title);
+					break;
+					case 3:
+					openLink("url", item.url);
+					break;
+					case 4:
+					openLink("newurl", item.url);
+					break;
+					case 5:
+					openLink("backurl", item.url);
+					break;
+				}
+			}
+		});
 	}
 	
 	@Override
@@ -152,7 +203,7 @@ public class HistoryActivity extends BaseActivity {
 		}
 	}
 	
-	private void showDeleteDialog(final int pos) {
+	private void showDeleteDialog(final String url) {
 		i.utw(R.string.delete_history,
 		R.string.confirm_delete_history,
 		R.string.cancel,
@@ -161,8 +212,7 @@ public class HistoryActivity extends BaseActivity {
 			@Override public void onButton1Click() {}
 			@Override public void onButton2Click() {}
 			@Override public void onButton3Click() {
-				HistoryManager.HistoryItem item = historyData.get(pos);
-				HistoryManager.deleteHistoryItem(HistoryActivity.this, item.url);
+				HistoryManager.deleteHistoryItem(HistoryActivity.this, url);
 				loadHistoryData();
 			}
 			@Override public void onDialogDismissed() {}

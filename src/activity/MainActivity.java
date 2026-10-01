@@ -485,7 +485,7 @@ public class MainActivity extends BaseActivity {
 			int r = Color.red(pixelColor);
 			int g = Color.green(pixelColor);
 			int b = Color.blue(pixelColor);
-            pixelColor = Color.argb(255, r, g, b);
+			pixelColor = Color.argb(255, r, g, b);
 			
 			float gray = r * 0.299f + g * 0.587f + b * 0.114f;
 			int targetColor;
@@ -532,14 +532,15 @@ public class MainActivity extends BaseActivity {
 		return createNewWindow(webViey ,webViey.getUrl() , true);
 	}
 	
-	public WebViey createNewWindow(String url, boolean ht){
+	public WebViey createNewWindow(String url, boolean noHt){
 		WebViey webViey = new WebViey(MainActivity.this);
-		createNewWindow(webViey, url, ht);
+		createNewWindow(webViey, url, noHt);
 		if(!"".equals(url)) webViey.loadUrl(url);
 		return webViey;
 	}
 	
 	public WebViey createNewWindow(WebViey webViey, String url, boolean noHt){
+		if(TextUtils.isEmpty(url)) url = "about:blank;";
 		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
 		ViewGroup.LayoutParams.MATCH_PARENT,
 		ViewGroup.LayoutParams.MATCH_PARENT
@@ -612,7 +613,7 @@ public class MainActivity extends BaseActivity {
 			/*
 			@Override
 			public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength, int webId) {
-				WebUtil.download(url, userAgent, contentDisposition, mimetype, contentLength);
+			WebUtil.download(url, userAgent, contentDisposition, mimetype, contentLength);
 			}
 			*/
 			@Override
@@ -820,6 +821,7 @@ public class MainActivity extends BaseActivity {
 						String pathInput = etAbsPath.getText().toString().trim();
 						if (TextUtils.isEmpty(pathInput)) {
 							if (mFilePathCallback != null) {
+								i.twi(R.string.file_path_empty);
 								mFilePathCallback.onReceiveValue(null);
 							}
 							return;
@@ -832,9 +834,12 @@ public class MainActivity extends BaseActivity {
 							if (TextUtils.isEmpty(realPath)) {
 								continue;
 							}
-							File file = new File(realPath);
-							Uri uri = Uri.fromFile(file);
-							uriList.add(uri);
+							File f = new File(realPath);
+							if (!f.exists()) {
+								i.tw(getString(R.string.file_not_exist) + ": " + realPath);
+								return;
+							}
+							uriList.add(Uri.fromFile(f));
 						}
 						Uri[] uris = uriList.toArray(new Uri[0]);
 						if (mFilePathCallback != null) {
@@ -882,6 +887,7 @@ public class MainActivity extends BaseActivity {
 						String pathInput = etAbsPath.getText().toString().trim();
 						if(TextUtils.isEmpty(pathInput)){
 							if(mUriCallback != null){
+								i.twi(R.string.file_path_empty);
 								mUriCallback.onReceiveValue(null);
 							}
 							return;
@@ -889,9 +895,13 @@ public class MainActivity extends BaseActivity {
 						if (pathInput.contains("\n")) {
 							pathInput = pathInput.split("\n")[0].trim();
 						}
-						Uri uri = Uri.fromFile(new File(pathInput));
 						if(mUriCallback != null){
-							mUriCallback.onReceiveValue(uri);
+							File f = new File(pathInput);
+							if (!f.exists()) {
+								i.tw(getString(R.string.file_not_exist) + ": " + pathInput);
+								return;
+							}
+							mUriCallback.onReceiveValue(Uri.fromFile(f));
 						}
 					}
 					@Override
@@ -930,7 +940,8 @@ public class MainActivity extends BaseActivity {
 					{
 						mFileSelectWeb = null;
 						String pathInput = etAbsPath.getText().toString().trim();
-						if(TextUtils.isEmpty(pathInput)){
+						if(TextUtils.isEmpty(pathInput)) {
+							i.twi(R.string.file_path_empty);
 							return;
 						}
 						if (pathInput.contains("\n")) {
@@ -1196,7 +1207,7 @@ public class MainActivity extends BaseActivity {
 	
 	@Override
 	public void onBackPressed() {
-    
+		
 		WebViey currentWeb = getCurrentWeb();
 		if(currentWeb != null && currentWeb.canGoBack()){
 			currentWeb.goBack();
@@ -1262,8 +1273,26 @@ public class MainActivity extends BaseActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == 1001 && resultCode == RESULT_OK && data != null) {
 			String url = data.getStringExtra("url");
-			if (url != null && !url.isEmpty()) {
+			if (!TextUtils.isEmpty(url)) {
 				getCurrentWeb().loadUrl(url);
+				return;
+			}
+			url = data.getStringExtra("newurl");
+			if (!TextUtils.isEmpty(url)) {
+				createNewWindow(url);
+				return;
+			}
+			url = data.getStringExtra("backurl");
+			if (!TextUtils.isEmpty(url)) {
+				createNewWindow(url, false);
+				return;
+			}
+			
+			ArrayList<String> urls = data.getStringArrayListExtra("urls");
+			if (urls != null && !urls.isEmpty()) {
+				for (String u : urls) {
+					createNewWindow(u);
+				}
 			}
 		}
 		
@@ -1465,16 +1494,12 @@ public class MainActivity extends BaseActivity {
 				return;
 			}
 			disDia.run();
-			android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-			cm.setPrimaryClip(android.content.ClipData.newPlainText("url", linkUrl));
-			i.twi(R.string.copied);
+			i.copytext(linkUrl);
 		});
 		
 		menuCopyLinkText.setOnClickListener(v -> {
 			disDia.run();
-			android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-			cm.setPrimaryClip(android.content.ClipData.newPlainText("text", linkShowText));
-			i.twi(R.string.copied);
+			i.copytext(linkShowText);
 		});
 		
 		menuBackgroundOpen.setOnClickListener(v -> {

@@ -13,9 +13,11 @@ public class ProgressViey extends ProgressBar {
 	public static final int MODE_INDETERMINATE = 0;
 	public static final int MODE_DETERMINATE = 1;
 	public static final int MODE_SEGMENT = 2;
+	public static final int MODE_BIDIRECTIONAL = 3;
 	
 	private static final long INDETERMINATE_DURATION = 1100L;
 	private static final float INDETERMINATE_BAR_RATIO = 0.32f;
+	private static final long BIDIRECTIONAL_DURATION = 1400L;
 	
 	private static final int[] DEFAULT_GRADIENT_COLORS = new int[]{
 		0xff00ffdd,
@@ -40,6 +42,8 @@ public class ProgressViey extends ProgressBar {
 	
 	private ValueAnimator mIndeterminateAnimator;
 	private float mIndeterminatePos = 0f;
+	private ValueAnimator mBidirectionalAnimator;
+	private float mBidirectionalPos = 0f;
 	
 	public ProgressViey(Context context) {
 		this(context, null);
@@ -79,6 +83,7 @@ public class ProgressViey extends ProgressBar {
 				if ("indeterminate".equals(mode)) mMode = MODE_INDETERMINATE;
 				else if ("determinate".equals(mode)) mMode = MODE_DETERMINATE;
 				else if ("segment".equals(mode)) mMode = MODE_SEGMENT;
+				else if ("bidirectional".equals(mode)) mMode = MODE_BIDIRECTIONAL;
 				else {
 					try { mMode = Integer.parseInt(mode); } catch (Exception ignored) {}
 				}
@@ -134,17 +139,16 @@ public class ProgressViey extends ProgressBar {
 	public void setMode(int mode) {
 		if (mMode == mode) return;
 		mMode = mode;
-		if (mode == MODE_INDETERMINATE) {
-			startIndeterminateAnim();
-		} else {
-			stopIndeterminateAnim();
-		}
+		stopIndeterminateAnim();
+		stopBidirectionalAnim();
+		startCurrentAnimation();
 		invalidate();
 	}
 	
 	public void setIndeterminateMode() { setMode(MODE_INDETERMINATE); }
 	public void setDeterminateMode() { setMode(MODE_DETERMINATE); }
 	public void setSegmentMode() { setMode(MODE_SEGMENT); }
+	public void setBidirectionalMode() { setMode(MODE_BIDIRECTIONAL); }
 	
 	@Override
 	public void setIndeterminate(boolean indeterminate) {
@@ -273,6 +277,9 @@ public class ProgressViey extends ProgressBar {
 			case MODE_SEGMENT:
 			drawSegments(canvas, l, t, r, b);
 			break;
+			case MODE_BIDIRECTIONAL:
+			drawBidirectional(canvas, l, t, r, b);
+			break;
 			case MODE_DETERMINATE:
 			default:
 			drawDeterminate(canvas, l, t, r, b);
@@ -327,10 +334,49 @@ public class ProgressViey extends ProgressBar {
 		canvas.restore();
 	}
 	
+	private void drawBidirectional(Canvas canvas, float l, float t, float r, float b) {
+		drawBar(canvas, l, t, r, b, mTrackPaint);
+		
+		final float mid = (l + r) * 0.5f;
+		final float half = (r - l) * 0.5f;
+		if (half <= 0f) return;
+		
+		float leftL, leftR, rightL, rightR;
+		
+		if (mBidirectionalPos <= 1f) {
+			final float fill = half * mBidirectionalPos;
+			leftL = l;
+			leftR = l + fill;
+			rightL = r - fill;
+			rightR = r;
+		} else {
+			final float cut = half * (mBidirectionalPos - 1f);
+			leftL = l + cut;
+			leftR = mid;
+			rightL = mid;
+			rightR = r - cut;
+		}
+		
+		if (leftR - leftL > 0f) {
+			drawBar(canvas, leftL, t, leftR, b, mBarPaint);
+		}
+		if (rightR - rightL > 0f) {
+			drawBar(canvas, rightL, t, rightR, b, mBarPaint);
+		}
+	}
+	
 	private void drawBar(Canvas canvas, float l, float t, float r, float b, Paint paint) {
 		if (r - l <= 0 || b - t <= 0) return;
 		mRect.set(l, t, r, b);
 		canvas.drawRect(mRect, paint);
+	}
+	
+	private void startCurrentAnimation() {
+		if (mMode == MODE_INDETERMINATE) {
+			startIndeterminateAnim();
+		} else if (mMode == MODE_BIDIRECTIONAL) {
+			startBidirectionalAnim();
+		}
 	}
 	
 	private void startIndeterminateAnim() {
@@ -357,16 +403,41 @@ public class ProgressViey extends ProgressBar {
 		mIndeterminatePos = 0f;
 	}
 	
+	private void startBidirectionalAnim() {
+		if (mBidirectionalAnimator == null) {
+			mBidirectionalAnimator = ValueAnimator.ofFloat(0f, 2f);
+			mBidirectionalAnimator.setDuration(BIDIRECTIONAL_DURATION);
+			mBidirectionalAnimator.setInterpolator(new LinearInterpolator());
+			mBidirectionalAnimator.setRepeatCount(ValueAnimator.INFINITE);
+			mBidirectionalAnimator.setRepeatMode(ValueAnimator.RESTART);
+			mBidirectionalAnimator.addUpdateListener(a -> {
+				mBidirectionalPos = (float) a.getAnimatedValue();
+				invalidate();
+			});
+		}
+		if (!mBidirectionalAnimator.isStarted()) {
+			mBidirectionalAnimator.start();
+		}
+	}
+	
+	private void stopBidirectionalAnim() {
+		if (mBidirectionalAnimator != null) {
+			mBidirectionalAnimator.cancel();
+		}
+		mBidirectionalPos = 0f;
+	}
+	
 	@Override
 	protected void onAttachedToWindow() {
 		super.onAttachedToWindow();
-		if (mMode == MODE_INDETERMINATE) startIndeterminateAnim();
+		startCurrentAnimation();
 	}
 	
 	@Override
 	protected void onDetachedFromWindow() {
 		super.onDetachedFromWindow();
 		stopIndeterminateAnim();
+		stopBidirectionalAnim();
 	}
 	
 	@Override
@@ -374,8 +445,9 @@ public class ProgressViey extends ProgressBar {
 		super.onWindowFocusChanged(hasWindowFocus);
 		if (!hasWindowFocus) {
 			stopIndeterminateAnim();
-		} else if (mMode == MODE_INDETERMINATE) {
-			startIndeterminateAnim();
+			stopBidirectionalAnim();
+		} else {
+			startCurrentAnimation();
 		}
 	}
 }

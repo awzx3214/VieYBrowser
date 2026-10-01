@@ -1,5 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+    <string name="im_bookmark_text">*.html: 绝大部分浏览器使用的格式，推荐使用\n*.bf: Vie 浏览器使用的格式，方便用户从 Vie 迁移到 VieY\n*.mbak: M 浏览器及衍生软件使用的格式，推荐在导出书签时用 *.html 而不是 *.mbak\n*.xbel: Linux 桌面浏览器和部分同步插件使用的格式\n*.txt 部分浏览器使用的格式，可其 设置-备份 中进行导出\n*.ini: Lagrange 使用的格式，在其设置-导出用户数据后，获取一个压缩包文件，解压这个压缩包即可找到 bookmarks.ini</string>
+    <string name="im_bookmark_tips">特殊格式及对应导出方式</string>
+    <string name="import_empty">哎呀，没有新增内容呢</string>
+    <string name="task_id">任务ID</string>
+    <string name="status">状态</string>
+    <string name="file_size_unkonw">文件大小未知</string>
+    <string name="category">分类</string>
+    <string name="downloaded">已下载</string>
+    <string name="progress">进度</string>
+    <string name="download_speed">下载速度</string>
+    <string name="thread_count">线程数</string>
+    <string name="segment_count">分段数</string>
+    <string name="save_path">保存路径</string>
+    <string name="download_link">下载链接</string>
+    <string name="finish_time">完成时间</string>
+    <string name="note">备注</string>
+    <string name="error_msg">错误信息</string>
+    <string name="properties">属性</string>
+    <string name="no_bookmark">书签不存在</string>
+    <string name="edit">编辑</string>
+    <string name="batch_open">批量打开</string>
+    <string name="other_offer">调用者提供</string>
+    <string name="viey_offer">VieY 提供</string>
+    <string name="exit_page">退出页面</string>
+    <string name="other_open">其他打开</string>
+    <string name="refresh">刷新页面</string>
+    <string name="go_back">后退一步</string>
+    <string name="go_forward">前进一步</string>
     <string name="clip_null">剪贴板为空</string>
     <string name="no_app_open">哎呀，没有对应的应用呢</string>
     <string name="url_null">哎呀，未找到链接</string>
@@ -156,7 +184,6 @@
     <string name="extract_page_cert">提取页面证书</string>
     <string name="data_blob_url">哎呀，这是数据流链接，暂时不支持这个操作</string>
     <string name="web_permission_request">网页权限申请</string>
-    <string name="form_date">yyyy 年 MM 月 dd 日 HH:mm:ss</string>
     <string name="request_camera_mic">请求使用【摄像头拍照】和【麦克风录音】</string>
     <string name="request_camera">请求使用【摄像头拍照】</string>
     <string name="request_mic">请求使用【麦克风录音】</string>
@@ -314,8 +341,6 @@
     <string name="cert_password_hint">证书密码</string>
     <string name="cert_file_support">只支持 PKCS12 / BKS / PEM 证书文件</string>
     <string name="cert_password_error">证书密码错误</string>
-    <string name="cert_import_success">证书导入成功</string>
-    <string name="cert_import_fail">证书导入失败</string>
     <string name="add_bookmark">添加书签</string>
     <string name="rwindow">你想恢复上次会话未关闭的标签页吗？</string>
     <string name="setting_language">语言</string>
@@ -345,8 +370,8 @@
     <string name="delete_history">删除历史</string>
     <string name="confirm_delete_history">确定要删除这条历史记录吗？</string>
     <string name="enter_url">这是一个互联网云时代，我们应该不断的创造新型便利</string>
-    <string name="cannot_go_back">无法后退</string>
-    <string name="cannot_go_forward">无法前进</string>
+    <string name="cannot_go_back">哎呀，无法后退了</string>
+    <string name="cannot_go_forward">哎呀，无法前进了</string>
     <string name="no_bookmarks">暂无书签</string>
     <string name="delete_bookmark">删除书签</string>
     <string name="confirm_delete_bookmark">确定要删除此书签吗？</string>

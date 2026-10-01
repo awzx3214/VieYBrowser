@@ -1,7 +1,7 @@
 package kawaii.viey.browser;
 
-import android.app.PendingIntent;
-import android.content.Intent;
+import android.app.*;
+import android.content.*;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -12,27 +12,38 @@ import android.os.Bundle;
 import android.text.*;
 import android.widget.*;
 import android.view.*;
-import android.app.ActivityOptions;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.cardview.widget.CardView;
-import java.util.ArrayList;
-import java.util.HashMap;
 import android.os.Message;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import java.util.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import android.database.Cursor;
+import android.provider.OpenableColumns;
 
 public class CustomTabs extends BaseActivity {
 	
 	private final HashMap<String, PendingIntent> inner = new HashMap<>();
 	private LinearLayout mToolbar;
 	private ImageView mBack, mMore, mMenu;
-	private TextView mTitle, mUrl;
+	private TextView mTitle, mUrl, mTip;
+	private SharedPreferences mPrefs;
 	private WebViey mWeb;
 	private String js="";
-    private String theUrl;
-    
+	private String theUrl;
+	private WebViey mFileSelectWeb;
+	private ValueCallback<Uri[]> mFileArrayCallback;
+	private ValueCallback<Uri> mFileSingleCallback;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -45,8 +56,24 @@ public class CustomTabs extends BaseActivity {
 		mTitle = findViewById(R.id.title);
 		mUrl = findViewById(R.id.url);
 		mWeb = findViewById(R.id.web);
+		mPrefs = getPrefs(this);
+		mTip = findViewById(R.id.tip);
 		
-		mBack.setOnClickListener(v -> finish());
+		if (mPrefs.getBoolean("tip_hidden", false)) {
+			mTip.setVisibility(View.GONE);
+		}
+		mTip.setOnClickListener(v -> {
+			v.setVisibility(View.GONE);
+			mPrefs.edit().putBoolean("tip_hidden", true).apply();
+		});
+		
+		mBack.setOnClickListener(v -> {
+			if (mWeb != null && mWeb.canGoBack()) {
+				mWeb.goBack();
+			} else {
+				finish();
+			}
+		});
 		
 		Intent intent = getIntent();
 		if (intent != null) {
@@ -75,7 +102,7 @@ public class CustomTabs extends BaseActivity {
 				if (!TextUtils.isEmpty(url)) {
 					mUrl.setText(url);
 				}
-                
+				
 				if(url.equals(theUrl)) mWeb.evaluateJavascript(js, null);
 			}
 			
@@ -108,6 +135,53 @@ public class CustomTabs extends BaseActivity {
 			
 			@Override
 			public void onSmolnetFileSelect(WebViey web) {
+				mFileSelectWeb = web;
+				View dialogView = LayoutInflater.from(CustomTabs.this).inflate(R.layout.dialog_file_path_input, null);
+				final EditText etAbsPath = dialogView.findViewById(R.id.et_file_abs_path);
+				i.utw(getString(R.string.file_choose), dialogView,
+				getString(R.string.cancel),
+				getString(R.string.system_chooser),
+				getString(R.string.use_input_path),
+				new mk.jk() {
+					@Override public void onButton1Click() {
+						mFileSelectWeb = null;
+					}
+					@Override public void onButton2Click() {
+						Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+						intent.setType("*/*");
+						intent.addCategory(Intent.CATEGORY_OPENABLE);
+						CustomTabs.this.startActivityForResult(
+						Intent.createChooser(intent, getString(R.string.file_choose)), 2000);
+					}
+					@Override public void onButton3Click() {
+						mFileSelectWeb = null;
+						String pathInput = etAbsPath.getText().toString().trim();
+						if (TextUtils.isEmpty(pathInput))
+						{
+							i.twi(R.string.file_path_empty);
+							return;
+						}
+						if (pathInput.contains("\n")) {
+							pathInput = pathInput.split("\n")[0].trim();
+						}
+						File f = new File(pathInput);
+						if (!f.exists()) {
+							i.tw(getString(R.string.file_not_exist) + ": " + pathInput);
+							return;
+						}
+						String fileName = f.getName();
+						long fileSize = f.length();
+						String mime = getContentResolver().getType(Uri.fromFile(f));
+						if (TextUtils.isEmpty(mime)) mime = "application/octet-stream";
+						if (mFileSelectWeb != null) {
+							mFileSelectWeb.getJsBridge().callbackFileResult(
+							f.getAbsolutePath(), fileName, fileSize, mime);
+						}
+					}
+					@Override public void onDialogDismissed() {}
+					@Override public void onListClick(String nr, int num) {}
+					@Override public void onSelect(String content) {}
+				});
 			}
 			
 			@Override
@@ -118,14 +192,99 @@ public class CustomTabs extends BaseActivity {
 			public void onShowFileChooser(WebView webView,
 			ValueCallback<Uri[]> filePathCallback,
 			WebChromeClient.FileChooserParams fileChooserParams) {
-				if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+				final ValueCallback<Uri[]> mFilePathCallback = filePathCallback;
+				View dialogView = LayoutInflater.from(CustomTabs.this).inflate(R.layout.dialog_file_path_input, null);
+				final EditText etAbsPath = dialogView.findViewById(R.id.et_file_abs_path);
+				i.utw(getString(R.string.file_choose), dialogView,
+				getString(R.string.cancel),
+				getString(R.string.system_chooser),
+				getString(R.string.use_input_path),
+				new mk.jk() {
+					@Override public void onButton1Click() {
+						if (mFilePathCallback != null) mFilePathCallback.onReceiveValue(null);
+					}
+					@Override public void onButton2Click() {
+						Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+						intent.setType("*/*");
+						intent.addCategory(Intent.CATEGORY_OPENABLE);
+						mFileArrayCallback = mFilePathCallback;
+						CustomTabs.this.startActivityForResult(
+						Intent.createChooser(intent, getString(R.string.file_choose)), 2000);
+					}
+					@Override public void onButton3Click() {
+						String pathInput = etAbsPath.getText().toString().trim();
+						if (TextUtils.isEmpty(pathInput)) {
+							i.twi(R.string.file_path_empty);
+							if (mFilePathCallback != null) mFilePathCallback.onReceiveValue(null);
+							return;
+						}
+						String[] lines = pathInput.split("\n");
+						List<Uri> uriList = new ArrayList<>();
+						for (String line : lines) {
+							String realPath = line.trim();
+							if (TextUtils.isEmpty(realPath)) continue;
+							File f = new File(realPath);
+							if (!f.exists()) {
+								i.tw(getString(R.string.file_not_exist) + ": " + realPath);
+								return;
+							}
+							uriList.add(Uri.fromFile(f));
+						}
+						if (mFilePathCallback != null) {
+							mFilePathCallback.onReceiveValue(uriList.toArray(new Uri[0]));
+						}
+					}
+					@Override public void onDialogDismissed() {}
+					@Override public void onListClick(String nr, int num) {}
+					@Override public void onSelect(String content) {}
+				});
 			}
 			
 			@Override
 			public void openFileChooser(ValueCallback<Uri> filePathCallback, String acceptType) {
-				if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+				final ValueCallback<Uri> mUriCallback = filePathCallback;
+				View dialogView = LayoutInflater.from(CustomTabs.this).inflate(R.layout.dialog_file_path_input, null);
+				final EditText etAbsPath = dialogView.findViewById(R.id.et_file_abs_path);
+				i.utw(getString(R.string.file_choose), dialogView,
+				getString(R.string.cancel),
+				getString(R.string.system_chooser),
+				getString(R.string.use_input_path),
+				new mk.jk() {
+					@Override public void onButton1Click() {
+						if (mUriCallback != null) mUriCallback.onReceiveValue(null);
+					}
+					@Override public void onButton2Click() {
+						mFileSingleCallback = mUriCallback;
+						Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+						intent.setType("*/*");
+						intent.addCategory(Intent.CATEGORY_OPENABLE);
+						CustomTabs.this.startActivityForResult(
+						Intent.createChooser(intent, getString(R.string.file_choose)), 2000);
+					}
+					@Override public void onButton3Click() {
+						String pathInput = etAbsPath.getText().toString().trim();
+						if (TextUtils.isEmpty(pathInput)) {
+							i.twi(R.string.file_path_empty);
+							if (mUriCallback != null) mUriCallback.onReceiveValue(null);
+							return;
+						}
+						if (pathInput.contains("\n")) {
+							pathInput = pathInput.split("\n")[0].trim();
+						}
+						if (mUriCallback != null) {
+							File f = new File(pathInput);
+							if (!f.exists()) {
+								i.tw(getString(R.string.file_not_exist) + ": " + pathInput);
+								return;
+							}
+							mUriCallback.onReceiveValue(Uri.fromFile(f));
+						}
+					}
+					@Override public void onDialogDismissed() {}
+					@Override public void onListClick(String nr, int num) {}
+					@Override public void onSelect(String content) {}
+				});
 			}
-			
 			@Override
 			public boolean onDispatchTouchEvent(MotionEvent event) {
 				return false;
@@ -143,11 +302,12 @@ public class CustomTabs extends BaseActivity {
 			mWeb.loadUrl(url);
 		}
 		theUrl = url;
-        if (intent.hasExtra("js")) {
+		if (intent.hasExtra("js")) {
 			js = intent.getStringExtra("js");
 		}
 		
 		if (!intent.hasExtra("android.support.customtabs.extra.SESSION")) {
+			setupMenu(null);
 			return;
 		}
 		
@@ -173,19 +333,20 @@ public class CustomTabs extends BaseActivity {
 		
 		boolean showTitle = intent.getIntExtra("android.support.customtabs.extra.TITLE_VISIBILITY", 0) != 0;
 		if (!showTitle) {
-			mToolbar.setVisibility(8);
-			findViewById(R.id.tip).setVisibility(8);
-			findViewById(R.id.down).setVisibility(8);
-			CardView findViewById = findViewById(R.id.card);
-			findViewById.setRadius(0.0f);
-			findViewById.setCardElevation(0.0f);
-			findViewById.setMaxCardElevation(0.0f);
-			findViewById.setPreventCornerOverlap(false);
-			findViewById.setUseCompatPadding(false);
-			LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) findViewById.getLayoutParams();
+			mToolbar.setVisibility(View.GONE);
+			findViewById(R.id.tip).setVisibility(View.GONE);
+			findViewById(R.id.down).setVisibility(View.GONE);
+			
+			CardView cardView = findViewById(R.id.card);
+			cardView.setRadius(0.0f);
+			cardView.setCardElevation(0.0f);
+			cardView.setMaxCardElevation(0.0f);
+			cardView.setPreventCornerOverlap(false);
+			cardView.setUseCompatPadding(false);
+			LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) cardView.getLayoutParams();
 			layoutParams.setMargins(0, 0, 0, 0);
-			findViewById.setLayoutParams(layoutParams);
-			findViewById.setContentPadding(0, 0, 0, 0);
+			cardView.setLayoutParams(layoutParams);
+			cardView.setContentPadding(0, 0, 0, 0);
 		}
 		
 		
@@ -217,42 +378,113 @@ public class CustomTabs extends BaseActivity {
 			}
 		}
 		
-		ArrayList<Bundle> menuItems =
-		intent.getParcelableArrayListExtra("android.support.customtabs.extra.MENU_ITEMS");
-		if (menuItems != null && !menuItems.isEmpty()) {
-			setupMenu(menuItems);
-		}
+		ArrayList<Bundle> menuItems = intent.getParcelableArrayListExtra("android.support.customtabs.extra.MENU_ITEMS");
+		setupMenu(menuItems);
 	}
 	
 	
-	private void setupMenu(ArrayList<Bundle> items) {
-		final int size = items.size();
-		final String[] titles = new String[size];
+	private void setupMenu(ArrayList<Bundle> menuItems) {
+		final String[] baseTitles = new String[] {
+			"分类你好Vie浏览器#" + getString(R.string.viey_offer),
+			getString(R.string.go_back),
+			getString(R.string.go_forward),
+			getString(R.string.refresh),
+			getString(R.string.copy_link),
+			getString(R.string.share_link),
+			getString(R.string.other_open),
+			getString(R.string.exit_page)
+		};
 		
-		for (int i = 0; i < size; i++) {
-			Bundle b = items.get(i);
-			String t = b.getString("android.support.customtabs.customaction.MENU_ITEM_TITLE");
-			titles[i] = (t == null ? "" : t);
-			
-			PendingIntent pi = b.getParcelable("android.support.customtabs.customaction.PENDING_INTENT");
-			if (pi != null) {
-				inner.put("#vieMenu_" + i, pi);
+		final int baseLen = baseTitles.length;
+		final int size = (menuItems != null) ? menuItems.size() : 0;
+		final String[] titles;
+		final PendingIntent[] pis = new PendingIntent[size];
+		
+		if (size > 0) {
+			titles = new String[baseLen + size + 1];
+			System.arraycopy(baseTitles, 0, titles, 0, baseLen);
+			titles[baseLen] = "分类你好Vie浏览器#" + i.getString(R.string.other_offer);
+			for (int i = 0; i < size; i++) {
+				Bundle b = menuItems.get(i);
+				String t = b.getString("android.support.customtabs.customaction.MENU_ITEM_TITLE");
+				titles[baseLen + i + 1] = (t == null ? "" : t);
+				pis[i] = b.getParcelable("android.support.customtabs.customaction.PENDING_INTENT");
 			}
+		} else {
+			titles = baseTitles;
 		}
 		
 		mMenu.setOnClickListener(v -> {
-			PopupMenu popup = new PopupMenu(this, v);
-			Menu menu = popup.getMenu();
-			for (int i = 0; i < size; i++) {
-				MenuItem item = menu.add(Menu.NONE, i, i, titles[i]);
-				item.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
-			}
-			popup.setOnMenuItemClickListener(item -> {
-				PendingIntent pi = inner.get("#vieMenu_" + item.getItemId());
-				run(pi);
-				return true;
+			i.utw(R.string.operation, titles, new mk.jk() {
+				@Override public void onButton1Click() {}
+				@Override public void onButton2Click() {}
+				@Override public void onButton3Click() {}
+				@Override public void onDialogDismissed() {}
+				@Override public void onSelect(String content) {}
+				
+				@Override
+				public void onListClick(String nr, int num) {
+					if (size > 0 && num > baseLen && num <= baseLen + size) {
+						PendingIntent pi = pis[num - baseLen - 1];
+						if (pi != null) run(pi);
+					} else {
+						switch (num) {
+							case 1:
+							if (mWeb != null && mWeb.canGoBack()) {
+								mWeb.goBack();
+							} else {
+								i.twi(R.string.cannot_go_back);
+							}
+							break;
+							case 2:
+							if (mWeb != null && mWeb.canGoForward()) {
+								mWeb.goForward();
+							} else {
+								i.twi(R.string.cannot_go_forward);
+							}
+							break;
+							case 3:
+							if (mWeb != null) mWeb.loadUrl(mWeb.getUrl());
+							break;
+							case 4:
+							if (mWeb != null && mWeb.getUrl() != null) {
+								i.copytext(mWeb.getUrl());
+							}
+							break;
+							case 5:
+							if (mWeb != null && mWeb.getUrl() != null) {
+								Intent share = new Intent(Intent.ACTION_SEND);
+								share.setType("text/plain");
+								share.putExtra(Intent.EXTRA_TEXT, mWeb.getUrl());
+								try {
+									startActivity(Intent.createChooser(share,
+									getString(R.string.share_link)));
+								} catch (Exception e) {
+									i.twi(R.string.share_fail);
+								}
+							}
+							break;
+							case 6:
+							if (mWeb != null && mWeb.getUrl() != null) {
+								try {
+									Intent browser = new Intent(Intent.ACTION_VIEW, Uri.parse(mWeb.getUrl()));
+									browser.addCategory(Intent.CATEGORY_BROWSABLE);
+									browser.setComponent(null);
+									startActivity(browser);
+								} catch (Exception e) {
+									i.twi(R.string.no_app_open);
+								}
+							}
+							break;
+							case 7:
+							finish();
+							break;
+							default:
+							break;
+						}
+					}
+				}
 			});
-			popup.show();
 		});
 	}
 	
@@ -296,6 +528,114 @@ public class CustomTabs extends BaseActivity {
 			
 		} catch (Exception e) {
 			i.log(e);
+		}
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode != 2000) return;
+		
+		if (mFileArrayCallback != null) {
+			ValueCallback<Uri[]> callback = mFileArrayCallback;
+			mFileArrayCallback = null;
+			if (resultCode == RESULT_OK && data != null) {
+				callback.onReceiveValue(new Uri[]{data.getData()});
+			} else {
+				callback.onReceiveValue(null);
+			}
+			return;
+		}
+		
+		if (mFileSingleCallback != null) {
+			ValueCallback<Uri> callback = mFileSingleCallback;
+			mFileSingleCallback = null;
+			if (resultCode == RESULT_OK && data != null) {
+				callback.onReceiveValue(data.getData());
+			} else {
+				callback.onReceiveValue(null);
+			}
+			return;
+		}
+		
+		if (mFileSelectWeb == null) return;
+		WebViey web = mFileSelectWeb;
+		mFileSelectWeb = null;
+		
+		if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+			web.getJsBridge().callbackFileResult(null, null, 0, null);
+			return;
+		}
+		Uri uri = data.getData();
+		try {
+			String fileName = null;
+			Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+			if (cursor != null) {
+				if (cursor.moveToFirst()) {
+					int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+					if (nameIndex >= 0) fileName = cursor.getString(nameIndex);
+				}
+				cursor.close();
+			}
+			if (TextUtils.isEmpty(fileName)) fileName = "unknown_file";
+			
+			long fileSize = 0;
+			Cursor sizeCursor = getContentResolver().query(uri, null, null, null, null);
+			if (sizeCursor != null) {
+				if (sizeCursor.moveToFirst()) {
+					int sizeIdx = sizeCursor.getColumnIndex(OpenableColumns.SIZE);
+					if (sizeIdx >= 0) fileSize = sizeCursor.getLong(sizeIdx);
+				}
+				sizeCursor.close();
+			}
+			
+			String mimeType = getContentResolver().getType(uri);
+			if (TextUtils.isEmpty(mimeType)) mimeType = "application/octet-stream";
+			
+			File cacheFile = copyUriToCacheFile(uri, fileName);
+			if (cacheFile != null && cacheFile.exists()) {
+				web.getJsBridge().callbackFileResult(
+				cacheFile.getAbsolutePath(), fileName, fileSize, mimeType);
+			} else {
+				web.getJsBridge().callbackFileResult(null, fileName, fileSize, mimeType);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			web.getJsBridge().callbackFileResult(null, null, 0, null);
+		}
+	}
+	
+	private File copyUriToCacheFile(Uri uri, String fileName) {
+		File outFile = new File(getCacheDir(), fileName);
+		InputStream is = null;
+		OutputStream os = null;
+		try {
+			is = getContentResolver().openInputStream(uri);
+			if (is == null) return null;
+			os = new FileOutputStream(outFile);
+			byte[] buffer = new byte[8192];
+			int len;
+			while ((len = is.read(buffer)) != -1) {
+				os.write(buffer, 0, len);
+			}
+			return outFile;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			try {
+				if (is != null) is.close();
+				if (os != null) os.close();
+			} catch (IOException ignored) {}
+		}
+	}
+	
+	@Override
+	public void onBackPressed() {
+		if (mWeb != null && mWeb.canGoBack()) {
+			mWeb.goBack();
+		} else {
+			super.onBackPressed();
 		}
 	}
 }

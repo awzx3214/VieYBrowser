@@ -3,20 +3,16 @@ package kawaii.viey.browser;
 import android.os.*;
 import android.app.AlertDialog;
 import android.webkit.*;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.security.MessageDigest;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.text.SimpleDateFormat;
-import java.util.Formatter;
-import java.util.Locale;
+import java.util.*;
 import java.util.zip.CRC32;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import android.net.http.SslCertificate;
-import java.util.Date;
 import java.security.NoSuchAlgorithmException;
 import android.text.TextUtils;
 import kawaii.viey.browser.*;
@@ -27,12 +23,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
-import java.util.List;
 import android.content.Context;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
-import java.io.File;
+import java.net.URLDecoder;
+import org.json.JSONObject;
 
 public class WebUtil {
 	
@@ -52,7 +48,7 @@ public class WebUtil {
 			url = url.substring("viek://search/".length());
 			web.loadUrl(i.getSearchBy(i.m(), url));
 		}
-        else  if(url.toLowerCase().startsWith("viek://toast/"))
+		else  if(url.toLowerCase().startsWith("viek://toast/"))
 		{
 			url = url.substring("viek://toast/".length());
 			i.tw(url);
@@ -72,7 +68,7 @@ public class WebUtil {
 		else  if(url.toLowerCase().startsWith("viek://download/"))
 		{
 			if(!url.startsWith("viek://download/sign/")) url = url.substring("viek://download/".length());
-			WebUtil.download(url, null, null, null, -1);
+			download(url, null, null, null, -1);
 		}
 		else
 		{
@@ -136,9 +132,8 @@ public class WebUtil {
 		Date ida = cert.getValidNotBeforeDate();
 		Date eda = cert.getValidNotAfterDate();
 		
-		SimpleDateFormat sdf = new SimpleDateFormat(i.getString(R.string.form_date), Locale.getDefault());
-		String issueDate = sdf.format(ida);
-		String expireDate = sdf.format(eda);
+		String issueDate = i.formatTime(ida);
+		String expireDate = i.formatTime(eda);
 		
 		String back;
 		if (Build.VERSION.SDK_INT >= 29) {
@@ -315,29 +310,58 @@ public class WebUtil {
 		.replace("提交",i.getString(R.string.submit))
 		.replace("图片加载失败",i.getString(R.string.img_load_fail))
 		.replace("正在加载中...",i.getString(R.string.loading))
-        .replace("已复制",i.getString(R.string.copied))
+		.replace("已复制",i.getString(R.string.copied))
 		.replace("嵌入",i.getString(R.string.embed))
 		.replace("文件",i.getString(R.string.file))
 		.replace("打开",i.getString(R.string.open))
 		.replace("错误",i.getString(R.string.error))
-        .replace("全屏",i.getString(R.string.fullscreen))
+		.replace("全屏",i.getString(R.string.fullscreen))
 		.replace("文本",i.getString(R.string.text))
 		.replace("删除",i.getString(R.string.delete));
 	}
 	
 	
 	public static void download(String uu, String ua, String contentDisposition, String mime, long length) {
+		download(uu, ua, contentDisposition, mime, length, null);
+	}
+	
+	public static void download(String uu, String ua, String contentDisposition,
+	String mime, long length, String referer) {
 		Context m = i.m();
-		if(uu==null) uu = "";
+		if (uu == null) uu = "";
 		final String url = uu;
+		final String userAgent = ua;
+		final String refererUrl = referer;
 		
 		String fileName = "download_file";
-		if (contentDisposition != null && contentDisposition.contains("filename=")) {
+		
+		if (contentDisposition != null && contentDisposition.contains("filename*=")) {
+			String raw = contentDisposition.substring(contentDisposition.indexOf("filename*=") + 10);
+			raw = raw.replace("\"", "").trim();
+			int idx1 = raw.indexOf('\'');
+			int idx2 = -1;
+			String charset = null;
+			String encodedPart = null;
+			if (idx1 > 0) {
+				charset = raw.substring(0, idx1).trim();
+				idx2 = raw.indexOf('\'', idx1 + 1);
+				if (idx2 != -1) {
+					encodedPart = raw.substring(idx2 + 1);
+				}
+			}
+			if (charset != null && !TextUtils.isEmpty(encodedPart)) {
+				try {
+					fileName = URLDecoder.decode(encodedPart, charset);
+				} catch (Exception e) {
+					fileName = encodedPart;
+				}
+			}
+		} else if (contentDisposition != null && contentDisposition.contains("filename=")) {
 			fileName = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9);
 			fileName = fileName.replace("\"", "").trim();
-		} else if (contentDisposition != null && contentDisposition.contains("filename*=")) {
-			fileName = contentDisposition.substring(contentDisposition.indexOf("filename*=") + 10);
-			fileName = fileName.replace("\"", "").trim();
+			try {
+				fileName = URLDecoder.decode(fileName, "UTF-8");
+			} catch (Exception e) {}
 		} else {
 			if (url != null && !url.isEmpty()) {
 				int lastSlashIndex = url.lastIndexOf("/");
@@ -353,8 +377,8 @@ public class WebUtil {
 		}
 		fileName = fileName.replaceAll("[\\\\/:*?\"<>|]", "_");
 		
-		boolean showUrl = !url.startsWith("data:") && !url.startsWith("blob:") && !url.startsWith("viek://download/sign/");
-		
+		boolean showUrl = !(url.startsWith("data:") || url.startsWith("blob:")
+		|| url.startsWith("viek://download/sign/"));
 		int pad = i.dp2px(5);
 		LinearLayout container = new LinearLayout(m);
 		container.setOrientation(LinearLayout.VERTICAL);
@@ -387,11 +411,7 @@ public class WebUtil {
 		infoView.setTextSize(12);
 		infoView.setTextColor(0xFF888888);
 		infoView.setPadding(0, i.dp2px(10), 0, 0);
-		infoView.setText(
-		i.getString(R.string.file_size) + "：" + DownloadTask.formatSize(length)
-		+ "\n"
-		+ i.getString(R.string.file_mime) + "：" + ((mime == null || mime.isEmpty()) ? i.getString(R.string.undefined) : mime)
-		);
+		infoView.setText(i.getString(R.string.file_size) + "：" + DownloadTask.formatSize(length) + "\n" + i.getString(R.string.file_mime) + "：" + ((mime == null || mime.isEmpty()) ? i.getString(R.string.undefined) : mime));
 		container.addView(infoView, new LinearLayout.LayoutParams(
 		LinearLayout.LayoutParams.MATCH_PARENT,
 		LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -420,8 +440,12 @@ public class WebUtil {
 				File downloadDir = new File(downloadDirPath);
 				if (!downloadDir.exists()) downloadDir.mkdirs();
 				
+				String headersJson = buildDownloadHeaders(userAgent, refererUrl, finalUrl);
 				DownloadManager.getInstance().startDownload(
-				m, finalUrl, name, downloadDir.getAbsolutePath());
+				m, finalUrl, name,
+				downloadDir.getAbsolutePath(),
+				headersJson,
+				VieYApp.getDownloadDefaultThreads(m));
 				i.twi(R.string.download_task_start);
 			}
 			
@@ -436,5 +460,47 @@ public class WebUtil {
 		});
 	}
 	
-	
+	private static String buildDownloadHeaders(String userAgent, String referer, String targetUrl) {
+		JSONObject headers = new JSONObject();
+		try {
+			
+			if (userAgent != null && !userAgent.isEmpty()) {
+				headers.put("User-Agent", userAgent);
+			}
+			
+			if (referer != null && !referer.isEmpty()
+			&& !referer.startsWith("data:")
+			&& !referer.startsWith("blob:")
+			&& !referer.startsWith("about:")) {
+				headers.put("Referer", referer);
+				
+				try {
+					java.net.URL u = new java.net.URL(referer);
+					String protocol = u.getProtocol();
+					String host = u.getHost();
+					if (protocol != null && host != null && !host.isEmpty()) {
+						int port = u.getPort();
+						int defPort = u.getDefaultPort();
+						StringBuilder origin = new StringBuilder(protocol).append("://").append(host);
+						if (port > 0 && port != defPort) origin.append(':').append(port);
+						headers.put("Origin", origin.toString());
+					}
+				} catch (Exception ignored) {}
+			}
+			
+			if (targetUrl != null && !targetUrl.isEmpty()
+			&& !targetUrl.startsWith("data:")
+			&& !targetUrl.startsWith("blob:")
+			&& !targetUrl.startsWith("about:")) {
+				try {
+					String cookie = android.webkit.CookieManager.getInstance().getCookie(targetUrl);
+					if (cookie != null && !cookie.isEmpty()) {
+						headers.put("Cookie", cookie);
+					}
+				} catch (Exception ignored) {}
+			}
+		} catch (Exception ignored) {
+		}
+		return headers.toString();
+	}
 }

@@ -148,7 +148,7 @@ public class mk {
 			mainLayout.addView(wrapLayout);
 			
 		} else if (content != null) {
-			ScrollView scrollView = new ScrollView(context);
+			ScrollViey scrollView = new ScrollViey(context);
 			scrollView.setPadding(dp2px(5), dp2px(10), dp2px(5), dp2px(10));
 			scrollView.setVerticalFadingEdgeEnabled(true);
 			scrollView.setFadingEdgeLength(80);
@@ -194,7 +194,7 @@ public class mk {
 						
 						if (item.startsWith("分类你好Vie浏览器#")) {
 							TextView categoryTv = new TextView(context);
-							categoryTv.setText("分类: "+item.substring("分类你好Vie浏览器#".length()));
+							categoryTv.setText(item.substring("分类你好Vie浏览器#".length()));
 							categoryTv.setTextSize(14);
 							categoryTv.setTypeface(Typeface.DEFAULT_BOLD);
 							categoryTv.setTextColor(night.equals("false") ? Color.parseColor("#333333") : Color.parseColor("#eeeeee"));
@@ -281,14 +281,15 @@ public class mk {
 						}
 					}
 				} else {
+                
 					for (int i = 0; i < contentArray.length; i++) {
 						final int position = i;
 						String item = contentArray[i];
 						if (item == null) continue;
-						
+                        
 						if (item.startsWith("分类你好Vie浏览器#")) {
 							TextView categoryTv = new TextView(context);
-							categoryTv.setText("分类: "+item.substring("分类你好Vie浏览器#".length()));
+							categoryTv.setText(item.substring("分类你好Vie浏览器#".length()));
 							categoryTv.setTextSize(14);
 							categoryTv.setTypeface(Typeface.DEFAULT_BOLD);
 							categoryTv.setTextColor(night.equals("false") ? Color.parseColor("#333333") : Color.parseColor("#eeeeee"));
@@ -300,7 +301,6 @@ public class mk {
 							
 							continue;
 						}
-						
 						TextView itemTv = new TextView(context);
 						
 						CardView cardView = new CardView(context);

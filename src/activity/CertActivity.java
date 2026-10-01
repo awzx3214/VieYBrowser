@@ -231,23 +231,7 @@ public class CertActivity extends BaseActivity {
 	
 	
 	private void readPemFromClipboard() {
-		android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-		if (clipboard == null) {
-			i.twi(R.string.clipboard_no_pem);
-			return;
-		}
-		android.content.ClipData clipData = clipboard.getPrimaryClip();
-		if (clipData == null || clipData.getItemCount() == 0) {
-			i.twi(R.string.clipboard_no_pem);
-			return;
-		}
-		android.content.ClipData.Item item = clipData.getItemAt(0);
-		CharSequence clipTextSeq = item.getText();
-		if (clipTextSeq == null || clipTextSeq.length() == 0) {
-			i.twi(R.string.clipboard_no_pem);
-			return;
-		}
-		String clipText = clipTextSeq.toString();
+		String clipText = i.copytext();
 		
 		StringBuilder sbCert = new StringBuilder();
 		StringBuilder sbKey = new StringBuilder();
@@ -517,10 +501,10 @@ public class CertActivity extends BaseActivity {
 						e.printStackTrace();
 					}
 					
-					i.twi(R.string.cert_import_success);
+					i.twi(R.string.import_success);
 					refreshCertList();
 				}else{
-					i.twi(R.string.cert_import_fail);
+					i.twi(R.string.import_failed);
 				}
 			}
 			

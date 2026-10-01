@@ -163,7 +163,7 @@ public class WebSelect {
 				if (TextUtils.isEmpty(text)) {
 					i.twi(R.string.no_select);
 				} else {
-					copyToClipboard(text);
+					i.copytext(text);
 					clearSelection();
 					i.twi(R.string.copied);
 				}
@@ -181,7 +181,7 @@ public class WebSelect {
 				if (TextUtils.isEmpty(text)) {
 					i.twi(R.string.no_select);
 				} else {
-					copyToClipboard(text);
+					i.copytext(text);
 					if (webView != null) {
 						try {
 							webView.evaluateJavascript(
@@ -202,7 +202,7 @@ public class WebSelect {
 	public void doPaste(final ActionMode mode) {
 		try {
 			if (webView == null) { finishModeSafely(mode); return; }
-			final String clipText = readFromClipboard();
+			final String clipText = i.copytext();
 			if (TextUtils.isEmpty(clipText)) {
 				i.twi(R.string.clip_null);
 				finishModeSafely(mode);
@@ -470,36 +470,7 @@ public class WebSelect {
 			cb.onResult("");
 		}
 	}
-	
-	private void copyToClipboard(String text) {
-		try {
-			ClipboardManager cm = (ClipboardManager)
-			context.getSystemService(Context.CLIPBOARD_SERVICE);
-			if (cm != null) {
-				cm.setPrimaryClip(ClipData.newPlainText("web_selection", text));
-			}
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-	}
-	
-	private String readFromClipboard() {
-		try {
-			ClipboardManager cm = (ClipboardManager)
-			context.getSystemService(Context.CLIPBOARD_SERVICE);
-			if (cm != null && cm.hasPrimaryClip() && cm.getPrimaryClip() != null) {
-				ClipData clip = cm.getPrimaryClip();
-				if (clip.getItemCount() > 0) {
-					CharSequence cs = clip.getItemAt(0).coerceToText(context);
-					return cs == null ? "" : cs.toString();
-				}
-			}
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-		return "";
-	}
-	
+
 	private void clearSelection() {
 		if (webView == null) return;
 		try {

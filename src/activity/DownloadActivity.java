@@ -1,7 +1,6 @@
 package kawaii.viey.browser;
 
 import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -337,7 +336,8 @@ public class DownloadActivity extends BaseActivity implements DownloadManager.Do
 			getString(R.string.share),
 			getString(R.string.redownload),
 			getString(R.string.only_delete_record),
-			getString(R.string.delete_record_and_file)
+			getString(R.string.delete_record_and_file),
+			getString(R.string.properties)
 		};
 		
 		i.utw(task.fileName, items, new mk.jk() {
@@ -356,12 +356,9 @@ public class DownloadActivity extends BaseActivity implements DownloadManager.Do
 					i.tw(task.savePath);
 					break;
 					case 2:
-					ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    String link = task.url;
-                    if(link.startsWith("viek://download/sign/")) link = i.sj(link, "?url=", null);
-					ClipData clip = ClipData.newPlainText("download_url", link);
-					cm.setPrimaryClip(clip);
-					i.twi(R.string.copied);
+					String link = task.url;
+					if(link.startsWith("viek://download/sign/")) link = i.sj(link, "?url=", null);
+					i.copytext(link);
 					break;
 					case 3:
 					shareTask(task);
@@ -379,75 +376,191 @@ public class DownloadActivity extends BaseActivity implements DownloadManager.Do
 					loadData();
 					i.twi(R.string.record_file_deleted);
 					break;
+					case 7:
+					showProperties(task);
+					break;
 				}
 			}
-			
 			@Override public void onSelect(String content) {}
 		});
 	}
-    
-
-private void shareTask(DownloadTask task) {
-    if (task == null) return;
-    
-    boolean finished = task.status == DownloadTask.STATUS_FINISHED;
-    File file = null;
-    if (task.savePath != null && !task.savePath.isEmpty()) {
-        File f = new File(task.savePath);
-        if (f.exists() && f.isFile()) file = f;
-    }
-    
-    if (finished && file != null) {
-        shareFile(task, file);
-    } else {
-        shareLink(task);
-    }
-}
-
-private void shareFile(DownloadTask task, File file) {
-    Uri uri;
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        uri = FileProvider.getUriForFile(this, getPackageName() + ".myFileProvider", file);
-    } else {
-        uri = Uri.fromFile(file);
-    }
-    
-    String mime = i.getMime(task.fileName);
-    
-    Intent intent = new Intent(Intent.ACTION_SEND);
-    intent.setType(mime);
-    intent.putExtra(Intent.EXTRA_STREAM, uri);
-    intent.putExtra(Intent.EXTRA_SUBJECT, task.fileName);
-    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-    
-    Intent chooser = Intent.createChooser(intent, getString(R.string.share));
-    if (chooser.resolveActivity(getPackageManager()) != null) {
-        startActivity(chooser);
-    } else {
-        i.twi(R.string.share_fail);
-    }
-}
-
-
-private void shareLink(DownloadTask task) {
-    if (task.url == null || task.url.isEmpty()) {
-        i.twi(R.string.share_fail);
-        return;
-    }
-    
-    Intent intent = new Intent(Intent.ACTION_SEND);
-    intent.setType("text/plain");
-    intent.putExtra(Intent.EXTRA_SUBJECT, task.fileName);
-    intent.putExtra(Intent.EXTRA_TEXT, task.url);
-    
-    Intent chooser = Intent.createChooser(intent, getString(R.string.share));
-    if (chooser.resolveActivity(getPackageManager()) != null) {
-        startActivity(chooser);
-    } else {
-        i.twi(R.string.share_fail);
-    }
-}
-
+	
+	private void showProperties(DownloadTask task) {
+		if (task == null) return;
+		
+		StringBuilder sb = new StringBuilder();
+		
+		String status;
+		switch (task.status) {
+			case DownloadTask.STATUS_WAIT:
+			status = i.getString(R.string.wait);
+			break;
+			case DownloadTask.STATUS_DOWNLOADING:
+			status = i.getString(R.string.start);
+			break;
+			case DownloadTask.STATUS_PAUSE:
+			status = i.getString(R.string.pause);
+			break;
+			case DownloadTask.STATUS_ERROR:
+			status = i.getString(R.string.error);
+			break;
+			case DownloadTask.STATUS_FINISHED:
+			status = i.getString(R.string.finish);
+			break;
+			default:
+			status = "--";
+			break;
+		}
+		
+		String category;
+		switch (task.category) {
+			case DownloadTask.CATEGORY_VIDEO:
+			category = i.getString(R.string.video);
+			break;
+			case DownloadTask.CATEGORY_IMAGE:
+			category = i.getString(R.string.pic);
+			break;
+			case DownloadTask.CATEGORY_DOC:
+			category = i.getString(R.string.doc);
+			break;
+			case DownloadTask.CATEGORY_APK:
+			category = i.getString(R.string.apk);
+			break;
+			case DownloadTask.CATEGORY_AUDIO:
+			category = i.getString(R.string.music);
+			break;
+			case DownloadTask.CATEGORY_ARCHIVE:
+			category = i.getString(R.string.zip);
+			break;
+			default:
+			category = i.getString(R.string.other);
+			break;
+		}
+		
+		String progress = "--";
+		if (task.totalSize > 0) {
+			int p = (int) (task.downloadedSize * 100 / task.totalSize);
+			if (p < 0) p = 0;
+			if (p > 100) p = 100;
+			progress = p + "%";
+		}
+		
+		String link = task.url == null ? "" : task.url;
+		if (link.startsWith("viek://download/sign/")) {
+			String decoded = i.sj(link, "?url=", null);
+			if (decoded != null) link = decoded;
+		}
+		
+		String finishTime = "--";
+		if (task.finishTime > 0) {
+			finishTime = i.formatTime(task.finishTime);
+		}
+		
+		sb.append(i.getString(R.string.task_id)).append("：").append(task.id).append("\n");
+		sb.append(i.getString(R.string.file_name)).append("：")
+		.append(task.fileName == null ? "" : task.fileName).append("\n");
+		sb.append(i.getString(R.string.status)).append("：").append(status).append("\n");
+		sb.append(i.getString(R.string.category)).append("：").append(category).append("\n");
+		sb.append(i.getString(R.string.file_size)).append("：")
+		.append(DownloadTask.formatSize(task.totalSize)).append("\n");
+		sb.append(i.getString(R.string.downloaded)).append("：")
+		.append(DownloadTask.formatSize(task.downloadedSize)).append("\n");
+		sb.append(i.getString(R.string.progress)).append("：").append(progress).append("\n");
+		
+		if (task.speed > 0) {
+			sb.append(i.getString(R.string.download_speed)).append("：")
+			.append(DownloadTask.formatSize(task.speed)).append("/s").append("\n");
+		}
+		
+		sb.append(i.getString(R.string.thread_count)).append("：")
+		.append(task.threadCount > 0 ? task.threadCount : "--").append("\n");
+		
+		if (task.segStart != null) {
+			sb.append(i.getString(R.string.segment_count)).append("：")
+			.append(task.segStart.length).append("\n");
+		}
+		
+		sb.append(i.getString(R.string.save_path)).append("：")
+		.append(task.savePath == null ? "" : task.savePath).append("\n");
+		sb.append(i.getString(R.string.download_link)).append("：").append(link).append("\n");
+		
+		if (task.finishTime > 0) {
+			sb.append(i.getString(R.string.finish_time)).append("：").append(finishTime).append("\n");
+		}
+		
+		if (task.note != null && !task.note.isEmpty()) {
+			sb.append(i.getString(R.string.note)).append("：").append(task.note).append("\n");
+		}
+		
+		if (task.errorMsg != null && !task.errorMsg.isEmpty()) {
+			sb.append(i.getString(R.string.error_msg)).append("：").append(task.errorMsg).append("\n");
+		}
+		
+		i.utw(i.getString(R.string.properties), sb.toString().trim());
+	}
+	
+	
+	private void shareTask(DownloadTask task) {
+		if (task == null) return;
+		
+		boolean finished = task.status == DownloadTask.STATUS_FINISHED;
+		File file = null;
+		if (task.savePath != null && !task.savePath.isEmpty()) {
+			File f = new File(task.savePath);
+			if (f.exists() && f.isFile()) file = f;
+		}
+		
+		if (finished && file != null) {
+			shareFile(task, file);
+		} else {
+			shareLink(task);
+		}
+	}
+	
+	private void shareFile(DownloadTask task, File file) {
+		Uri uri;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+			uri = FileProvider.getUriForFile(this, getPackageName() + ".myFileProvider", file);
+		} else {
+			uri = Uri.fromFile(file);
+		}
+		
+		String mime = i.getMime(task.fileName);
+		
+		Intent intent = new Intent(Intent.ACTION_SEND);
+		intent.setType(mime);
+		intent.putExtra(Intent.EXTRA_STREAM, uri);
+		intent.putExtra(Intent.EXTRA_SUBJECT, task.fileName);
+		intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+		
+		Intent chooser = Intent.createChooser(intent, getString(R.string.share));
+		if (chooser.resolveActivity(getPackageManager()) != null) {
+			startActivity(chooser);
+		} else {
+			i.twi(R.string.share_fail);
+		}
+	}
+	
+	
+	private void shareLink(DownloadTask task) {
+		if (task.url == null || task.url.isEmpty()) {
+			i.twi(R.string.share_fail);
+			return;
+		}
+		
+		Intent intent = new Intent(Intent.ACTION_SEND);
+		intent.setType("text/plain");
+		intent.putExtra(Intent.EXTRA_SUBJECT, task.fileName);
+		intent.putExtra(Intent.EXTRA_TEXT, task.url);
+		
+		Intent chooser = Intent.createChooser(intent, getString(R.string.share));
+		if (chooser.resolveActivity(getPackageManager()) != null) {
+			startActivity(chooser);
+		} else {
+			i.twi(R.string.share_fail);
+		}
+	}
+	
 	private void redownloadTask(DownloadTask task) {
 		if (task == null) return;
 		
@@ -456,15 +569,54 @@ private void shareLink(DownloadTask task) {
 			i.twi(R.string.download_error);
 			return;
 		}
+		
+		final Context self = this;
+		final long taskId = task.id;
 		final String fileName = task.fileName;
-		final int category = task.category;
+		final String headersJson = task.headersJson;
+		final int threadCount = task.threadCount;
+		final long totalSize = task.totalSize;
+		StringBuilder sb = new StringBuilder();
+		sb.append(i.getString(R.string.file_name)).append("：").append(fileName).append("\n");
+		sb.append(i.getString(R.string.file_size)).append("：").append(DownloadTask.formatSize(totalSize));
 		
-		DownloadManager.getInstance().deleteRecordOnly(this, task.id);
-		loadData();
-		
-		WebUtil.download(url, fileName, null, null, category);
-		
-		i.twi(R.string.redownloading);
+		i.utw(R.string.redownload, sb.toString(),
+		R.string.cancel, R.string.start_download,
+		new mk.jk() {
+			@Override
+			public void onButton1Click() {}
+			
+			@Override
+			public void onButton2Click() {}
+			
+			@Override
+			public void onButton3Click() {
+				DownloadManager.getInstance().deleteRecordOnly(self, taskId);
+				loadData();
+				String downloadDirPath = VieYApp.getDownloadPath(self);
+				File downloadDir = new File(downloadDirPath);
+				if (!downloadDir.exists()) downloadDir.mkdirs();
+				
+				DownloadManager.getInstance().startDownload(
+				self,
+				url,
+				fileName,
+				downloadDir.getAbsolutePath(),
+				headersJson,
+				threadCount > 0
+				? threadCount
+				: VieYApp.getDownloadDefaultThreads(self));
+				
+				i.twi(R.string.redownloading);
+			}
+			
+			@Override
+			public void onDialogDismissed() {}
+			@Override
+			public void onListClick(String nr, int num) {}
+			@Override
+			public void onSelect(String content) {}
+		});
 	}
 	
 	private void openFileLocation(DownloadTask task) {

@@ -3,7 +3,6 @@ package kawaii.viey.browser;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
@@ -39,6 +38,7 @@ public class DownloadTask {
 	public int maxRetry = 3;
 	public int threadCount = 4;
 	public boolean supportRange = false;
+	public boolean sizeUnknown = false;
 	public String headersJson = "{}";
 	public String note = "";
 	
@@ -57,8 +57,7 @@ public class DownloadTask {
 	}
 	
 	public String getFormatTime() {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-		return sdf.format(new Date(createTime));
+		return i.formatTime(createTime);
 	}
 	
 	public static String formatSize(long bytes) {
@@ -128,6 +127,7 @@ public class DownloadTask {
 			obj.put("maxRetry", maxRetry);
 			obj.put("threadCount", threadCount);
 			obj.put("supportRange", supportRange);
+			obj.put("sizeUnknown", sizeUnknown);
 			obj.put("note", note == null ? "" : note);
 			obj.put("headersJson", headersJson == null ? "{}" : headersJson);
 			if (segStart != null) {
@@ -170,6 +170,7 @@ public class DownloadTask {
 			t.maxRetry = obj.optInt("maxRetry", 3);
 			t.threadCount = obj.optInt("threadCount", 4);
 			t.supportRange = obj.optBoolean("supportRange", false);
+			t.sizeUnknown = obj.optBoolean("sizeUnknown", false);
 			t.headersJson = obj.optString("headersJson", "{}");
 			
 			JSONArray sa = obj.optJSONArray("segStart");

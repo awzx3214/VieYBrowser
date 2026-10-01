@@ -1,5 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+    <string name="im_bookmark_text">*.html: The format used by most browsers. Recommended\n*.bf: Format used by Vie Browser, convenient for users migrating from Vie to VieY\n*.mbak: Format used by M Browser and its derivatives. It is recommended to use *.html instead of *.mbak when exporting bookmarks\n*.xbel: Format used by Linux desktop browsers and some sync plugins\n*.txt: Format used by some browsers, can be exported in Settings - Backup\n*.ini: Format used by Lagrange. After Settings - Export User Data, you will get a compressed package. Unzip it to find bookmarks.ini</string>
+    <string name="im_bookmark_tips">Special formats and corresponding export methods</string>
+    <string name="import_empty">No new content was added</string>
+    <string name="task_id">Task ID</string>
+    <string name="status">Status</string>
+    <string name="file_size_unkonw">Unknown file size</string>
+    <string name="category">Category</string>
+    <string name="downloaded">Downloaded</string>
+    <string name="progress">Progress</string>
+    <string name="download_speed">Download Speed</string>
+    <string name="thread_count">Thread Count</string>
+    <string name="segment_count">Segment Count</string>
+    <string name="save_path">Save Path</string>
+    <string name="download_link">Download Link</string>
+    <string name="finish_time">Finish Time</string>
+    <string name="note">Note</string>
+    <string name="error_msg">Error Message</string>
+    <string name="properties">Properties</string>
+    <string name="no_bookmark">Bookmark does not exist</string>
+    <string name="edit">Edit</string>
+    <string name="batch_open">Batch Open</string>
+    <string name="other_offer">Provided by Caller</string>
+    <string name="viey_offer">Provided by VieY</string>
+    <string name="exit_page">Exit Page</string>
+    <string name="other_open">Open with Other</string>
+    <string name="refresh">Refresh</string>
+    <string name="go_back">Go Back</string>
+    <string name="go_forward">Go Forward</string>
     <string name="clip_null">Clipboard is empty</string>
     <string name="no_app_open">No corresponding app found</string>
     <string name="url_null">No link found</string>
@@ -156,7 +184,6 @@
     <string name="extract_page_cert">Import Certificate</string>
     <string name="data_blob_url">This is a data blob URL. This operation is not supported yet.</string>
     <string name="web_permission_request">Web Permission Request</string>
-    <string name="form_date">yyyy-MM-dd HH:mm:ss</string>
     <string name="request_camera_mic">Request to use [Camera] and [Microphone]</string>
     <string name="request_camera">Request to use [Camera]</string>
     <string name="request_mic">Request to use [Microphone]</string>
@@ -314,8 +341,6 @@
     <string name="cert_password_hint">Certificate password</string>
     <string name="cert_file_support">Only PKCS12 / BKS / PEM certificate files are supported</string>
     <string name="cert_password_error">Incorrect certificate password</string>
-    <string name="cert_import_success">Certificate imported successfully</string>
-    <string name="cert_import_fail">Failed to import certificate</string>
     <string name="add_bookmark">Add bookmark</string>
     <string name="rwindow">Would you like to restore the tabs from your last session?</string>
     <string name="setting_language">Language</string>
@@ -324,7 +349,6 @@
     <string name="lang_tw">繁體中文</string>
     <string name="lang_en">English</string>
     <string name="bookmark">Bookmark</string>
-    <string name="bookmarks">Bookmarks</string>
     <string name="press_back_again_exit">Press back again to exit</string>
     <string name="download_path">Download Path</string>
     <string name="set_download_path">Set Download Path</string>

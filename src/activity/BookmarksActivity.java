@@ -21,9 +21,14 @@ public class BookmarksActivity extends BaseActivity {
 
 	private static final int REQ_EXPORT_HTML = 1001;
 	private static final int REQ_IMPORT_HTML = 1002;
+	private static final int REQ_EXPORT_VIEK = 1003;
+	private static final int REQ_IMPORT_VIEK = 1004;
+	private static final int REQ_IMPORT_MBAK = 1005;
+	private static final int REQ_IMPORT_XBEL = 1006;
+	private static final int REQ_IMPORT_TXT = 1007;
+	private static final int REQ_IMPORT_INI = 1008;
 
 	private static final String UI_PREFS = "bookmarks_ui_prefs";
-	private static final String KEY_SHOW_DETAILS = "show_details";
 
 	private RecyclerView recyclerBookmarks;
 	private TextView emptyView, tvPath;
@@ -32,6 +37,8 @@ public class BookmarksActivity extends BaseActivity {
 	private EditText etSearchBookmark;
 	private String mSearchKey = "";
 	private boolean showDetails = true;
+
+	private String pendingTxtContent;
 
 	private final List<String> folderPath = new ArrayList<>();
 
@@ -45,8 +52,8 @@ public class BookmarksActivity extends BaseActivity {
 		etSearchBookmark = findViewById(R.id.etSearchBookmark);
 		tvPath = findViewById(R.id.tvPath);
 
-		SharedPreferences uiPrefs = getSharedPreferences(UI_PREFS, Context.MODE_PRIVATE);
-		showDetails = uiPrefs.getBoolean(KEY_SHOW_DETAILS, true);
+		SharedPreferences uiPrefs = getPrefs(this);
+		showDetails = uiPrefs.getBoolean("show_details", true);
 
 		findViewById(R.id.backPath).setOnClickListener(v -> {
 			if (!folderPath.isEmpty()) {
@@ -68,7 +75,7 @@ public class BookmarksActivity extends BaseActivity {
 			@Override
 			public String getUrl(BookmarkManager.Bookmark item) {
 				if (!showDetails) return "";
-                if (item.isFolder) return folderSummary(item);
+				if (item.isFolder) return folderSummary(item);
 				return item.url == null ? "" : item.url;
 			}
 			@Override
@@ -102,13 +109,13 @@ public class BookmarksActivity extends BaseActivity {
 			if (position < bookmarks.size()) {
 				BookmarkManager.Bookmark b = bookmarks.get(position);
 				if (b.isFolder) {
-					showFolderOperationMenu(b);
+					showFolderMenu(b);
 				} else {
-					showBookmarkOperationMenu(b);
+					showBookmarkMenu(b);
 				}
 			}
 		});
-
+        
 		etSearchBookmark.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -160,9 +167,11 @@ public class BookmarksActivity extends BaseActivity {
 	private void filterBookmark() {
 		if (mSearchKey.isEmpty()) {
 			bookmarks = new ArrayList<>(allBookmarkData);
+            tvPath.setVisibility(View.VISIBLE);
 		} else {
 			bookmarks = new ArrayList<>();
 			searchAll(BookmarkManager.getBookmarks(this), mSearchKey, bookmarks);
+            tvPath.setVisibility(View.GONE);
 		}
 
 		adapter.setSearchKey(mSearchKey);
@@ -217,76 +226,137 @@ public class BookmarksActivity extends BaseActivity {
 		}
 	}
 
-	private void showBookmarkOperationMenu(final BookmarkManager.Bookmark bookmark) {
-		i.utw(getString(R.string.operation),
-		getString(R.string.what_to_do),
-		getString(R.string.open),
-		getString(R.string.copy),
-		getString(R.string.delete),
-		new mk.jk() {
-			@Override public void onListClick(String nr, int num) {}
-			@Override public void onButton1Click() {
-				Intent resultIntent = new Intent();
-				resultIntent.putExtra("url", bookmark.url);
-				setResult(RESULT_OK, resultIntent);
-				finish();
-			}
-			@Override public void onButton2Click() {
-				showCopySelectDialog(bookmark);
-			}
-			@Override public void onButton3Click() {
-				showDeleteDialog(bookmark);
-			}
-			@Override public void onDialogDismissed() {}
-			@Override public void onSelect(String content) {}
-		});
+	private void openLink(String a, String url) {
+		Intent resultIntent = new Intent();
+		resultIntent.putExtra(a, url);
+		setResult(RESULT_OK, resultIntent);
+		finish();
 	}
 
-	private void showFolderOperationMenu(final BookmarkManager.Bookmark folder) {
-		final boolean locked = BookmarkManager.isProtectedFolder(this, folder);
-		i.utw(getString(R.string.operation),
-		getString(R.string.what_to_do),
-		locked ? "" : getString(R.string.rename),
-		locked ? "" : getString(R.string.delete),
-		getString(R.string.open),
-		new mk.jk() {
-			@Override public void onListClick(String nr, int num) {}
-			@Override public void onButton1Click() {
-				if (!locked) showRenameFolderDialog(folder);
-			}
-			@Override public void onButton2Click() {
-				if (!locked) showDeleteDialog(folder);
-			}
-			@Override public void onButton3Click() {
-				folderPath.add(folder.id);
-				loadBookmarks();
-				updatePathText();
-			}
-			@Override public void onDialogDismissed() {}
-			@Override public void onSelect(String content) {}
-		});
-	}
+	private void showFolderMenu(final BookmarkManager.Bookmark b) {
+		final boolean locked = BookmarkManager.isProtectedFolder(this, b);
 
-	private void showCopySelectDialog(final BookmarkManager.Bookmark bookmark) {
-		i.utw(getString(R.string.copy),
-		getString(R.string.what_to_do),
-		getString(R.string.copy_title),
-		getString(R.string.copy_link),
-		getString(R.string.cancel),
-		new mk.jk() {
-			@Override public void onListClick(String nr, int num) {}
-			@Override public void onButton1Click() {
-				ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-				String title = bookmark.title != null ? bookmark.title : "";
-				clipboard.setPrimaryClip(ClipData.newPlainText("title", title));
+		final String[] items = new String[] {
+			getString(R.string.rename),
+			getString(R.string.delete),
+			getString(R.string.copy_title),
+			getString(R.string.open),
+			getString(R.string.batch_open)
+		};
+
+		i.utw(getString(R.string.operation), items, new mk.jk() {
+			@Override
+			public void onListClick(String nr, int num) {
+				switch (num) {
+					case 0:
+					if (!locked) showRenameFolderDialog(b);
+					break;
+					case 1:
+					if (!locked) showDeleteDialog(b);
+					break;
+					case 2:
+					i.copytext(b.title);
+					break;
+					case 3:
+					folderPath.add(b.id);
+					loadBookmarks();
+					updatePathText();
+					break;
+					case 4:
+					batchOpen(b);
+					break;
+				}
 			}
-			@Override public void onButton2Click() {
-				ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-				String url = bookmark.url != null ? bookmark.url : "";
-				clipboard.setPrimaryClip(ClipData.newPlainText("url", url));
-			}
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
 			@Override public void onButton3Click() {}
 			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+		});
+	}
+
+	private void showBookmarkMenu(final BookmarkManager.Bookmark b) {
+
+		final String[] items = new String[] {
+			getString(R.string.edit),
+			getString(R.string.delete),
+			getString(R.string.copy_link),
+			getString(R.string.copy_title),
+			getString(R.string.open),
+			getString(R.string.new_window_open),
+			getString(R.string.background_open)
+		};
+
+		i.utw(getString(R.string.operation), items, new mk.jk() {
+			@Override
+			public void onListClick(String nr, int num) {
+				switch (num) {
+					case 0:
+					showEditBookmarkDialog(b);
+					break;
+					case 1:
+					showDeleteDialog(b);
+					break;
+					case 2:
+					i.copytext(b.url);
+					break;
+					case 3:
+					i.copytext(b.title);
+					break;
+					case 4:
+					openLink("url", b.url);
+					break;
+					case 5:
+					openLink("newurl", b.url);
+					break;
+					case 6:
+					openLink("backurl", b.url);
+					break;
+				}
+			}
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+		});
+	}
+
+	private void showEditBookmarkDialog(final BookmarkManager.Bookmark bookmark) {
+		LinearLayout layout = new LinearLayout(this);
+		layout.setOrientation(LinearLayout.VERTICAL);
+
+		final EditViey etTitle = new EditViey(this);
+		etTitle.setSingleLine(true);
+		etTitle.setHeight(i.dp2px(56));
+		etTitle.setHint(getString(R.string.title));
+		etTitle.setText(bookmark.title == null ? "" : bookmark.title);
+		etTitle.setSelection(etTitle.getText().length());
+		layout.addView(etTitle);
+
+		final EditViey etUrl = new EditViey(this);
+		etUrl.setSingleLine(true);
+		etUrl.setHeight(i.dp2px(56));
+		etUrl.setHint(getString(R.string.url));
+		etUrl.setText(bookmark.url == null ? "" : bookmark.url);
+		etUrl.setSelection(etUrl.getText().length());
+		layout.addView(etUrl);
+
+		i.utw(R.string.edit, layout, R.string.cancel, R.string.confirm,
+		new mk.jk() {
+			@Override
+			public void onButton3Click() {
+				String title = etTitle.getText().toString().trim();
+				String url = etUrl.getText().toString().trim();
+				if (url.isEmpty()) return;
+				if (title.isEmpty()) title = url;
+				BookmarkManager.updateBookmark(BookmarksActivity.this, bookmark.id, title, url);
+				loadBookmarks();
+			}
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onListClick(String nr, int num) {}
 			@Override public void onSelect(String content) {}
 		});
 	}
@@ -310,6 +380,39 @@ public class BookmarksActivity extends BaseActivity {
 		});
 	}
 
+	private void batchOpen(final BookmarkManager.Bookmark b) {
+		final List<String> urls = new ArrayList<>();
+		collectBookmarkUrls(b, urls);
+
+		if (urls.isEmpty()) {
+			i.tw(R.string.no_bookmark);
+			return;
+		}
+
+		Intent resultIntent = new Intent();
+		if (urls.size() == 1) {
+			resultIntent.putExtra("url", urls.get(0));
+		} else {
+			i.log(urls);
+			resultIntent.putStringArrayListExtra("urls", new ArrayList<>(urls));
+		}
+		setResult(RESULT_OK, resultIntent);
+		finish();
+	}
+
+	private void collectBookmarkUrls(BookmarkManager.Bookmark b, List<String> out) {
+		if (b == null) return;
+		if (b.isFolder) {
+			if (b.children != null) {
+				for (BookmarkManager.Bookmark c : b.children) {
+					collectBookmarkUrls(c, out);
+				}
+			}
+		} else if (b.url != null && !b.url.isEmpty()) {
+			out.add(b.url);
+		}
+	}
+
 	private void showAddMenu() {
 		i.utw(getString(R.string.operation),
 		new String[] {
@@ -320,8 +423,7 @@ public class BookmarksActivity extends BaseActivity {
 			showDetails ? getString(R.string.un_show_info) : getString(R.string.show_info)
 		},
 		new mk.jk() {
-			@Override public void onListClick(String nr, int num)
-			{
+			@Override public void onListClick(String nr, int num) {
 				switch (num) {
 					case 0:
 					showAddBookmarkDialog();
@@ -330,10 +432,10 @@ public class BookmarksActivity extends BaseActivity {
 					showAddFolderDialog();
 					break;
 					case 2:
-					startImportHtml();
+					showImportFormatMenu();
 					break;
 					case 3:
-					startExportHtml();
+					showExportFormatMenu();
 					break;
 					case 4:
 					toggleShowDetails();
@@ -348,12 +450,59 @@ public class BookmarksActivity extends BaseActivity {
 		});
 	}
 
+	private void showImportFormatMenu() {
+		i.utw(getString(R.string.import_bookmarks),
+		new String[] {
+			"*.html",
+			"*.bf",
+			"*.mbak",
+			"*.xbel",
+			"*.txt",
+			"*.ini",
+			getString(R.string.im_bookmark_tips)
+		},
+		new mk.jk() {
+			@Override public void onListClick(String nr, int num) {
+				switch (num) {
+					case 0: startImportHtml(); break;
+					case 1: startImportViek(); break;
+					case 2: startImportMbak(); break;
+					case 3: startImportXbel(); break;
+					case 4: startImportTxt(); break;
+					case 5: startImportIni(); break;
+                    case 6: i.utw(R.string.im_bookmark_tips, R.string.im_bookmark_text); break;
+				}
+			}
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+		});
+	}
+
+	private void showExportFormatMenu() {
+		i.utw(getString(R.string.export_bookmarks),
+		new String[] {
+			"*.html",
+			"*.bf"
+		},
+		new mk.jk() {
+			@Override public void onListClick(String nr, int num) {
+				if (num == 0) startExportHtml();
+				else if (num == 1) startExportViek();
+			}
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+		});
+	}
+
 	private void toggleShowDetails() {
 		showDetails = !showDetails;
-		getSharedPreferences(UI_PREFS, Context.MODE_PRIVATE)
-			.edit()
-			.putBoolean(KEY_SHOW_DETAILS, showDetails)
-			.apply();
+		getPrefs(this).edit().putBoolean("show_details", showDetails).apply();
 		adapter.notifyDataSetChanged();
 	}
 
@@ -485,20 +634,6 @@ public class BookmarksActivity extends BaseActivity {
 		}
 	}
 
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		if (resultCode != RESULT_OK || data == null) return;
-		Uri uri = data.getData();
-		if (uri == null) return;
-
-		if (requestCode == REQ_EXPORT_HTML) {
-			handleExportHtml(uri);
-		} else if (requestCode == REQ_IMPORT_HTML) {
-			handleImportHtml(uri);
-		}
-	}
-
 	private void handleExportHtml(Uri uri) {
 		OutputStream os = null;
 		try {
@@ -530,7 +665,7 @@ public class BookmarksActivity extends BaseActivity {
 
 			int count = BookmarkManager.importFromHtml(this, html);
 			if (count <= 0) {
-				i.twi(R.string.import_failed);
+				i.twi(R.string.import_empty);
 				return;
 			}
 			loadBookmarks();
@@ -541,6 +676,327 @@ public class BookmarksActivity extends BaseActivity {
 			if (is != null) {
 				try { is.close(); } catch (Exception ignored) {}
 			}
+		}
+	}
+
+	private void startExportViek() {
+		try {
+			Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+			intent.addCategory(Intent.CATEGORY_OPENABLE);
+			intent.setType("application/octet-stream");
+			intent.putExtra(Intent.EXTRA_TITLE, "bookmarks.bf");
+			startActivityForResult(intent, REQ_EXPORT_VIEK);
+		} catch (Exception e) {
+			i.twi(R.string.export_failed);
+		}
+	}
+
+	private void startImportViek() {
+		try {
+			Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+			intent.addCategory(Intent.CATEGORY_OPENABLE);
+			intent.setType("*/*");
+			intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+				"application/octet-stream",
+				"text/plain",
+				"*/*"
+			});
+			startActivityForResult(intent, REQ_IMPORT_VIEK);
+		} catch (Exception e) {
+			i.twi(R.string.import_failed);
+		}
+	}
+
+	private void handleExportViek(Uri uri) {
+		OutputStream os = null;
+		try {
+			os = getContentResolver().openOutputStream(uri);
+			if (os == null) throw new Exception("openOutputStream returned null");
+			String text = BookmarkManager.exportToViek(this);
+			os.write(text.getBytes("UTF-8"));
+			os.flush();
+			i.twi(R.string.export_success);
+		} catch (Exception e) {
+			i.twi(R.string.export_failed);
+		} finally {
+			if (os != null) {
+				try { os.close(); } catch (Exception ignored) {}
+			}
+		}
+	}
+
+	private void handleImportViek(Uri uri) {
+		InputStream is = null;
+		try {
+			is = getContentResolver().openInputStream(uri);
+			if (is == null) throw new Exception("openInputStream returned null");
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			byte[] buf = new byte[8192];
+			int n;
+			while ((n = is.read(buf)) > 0) baos.write(buf, 0, n);
+			String text = new String(baos.toByteArray(), "UTF-8");
+
+			int count = BookmarkManager.importFromViek(this, text);
+			if (count <= 0) {
+				i.twi(R.string.import_empty);
+				return;
+			}
+			loadBookmarks();
+			i.tw(getString(R.string.import_success) + " (" + count + ")");
+		} catch (Exception e) {
+			i.twi(R.string.import_failed);
+		} finally {
+			if (is != null) {
+				try { is.close(); } catch (Exception ignored) {}
+			}
+		}
+	}
+
+	private void startImportMbak() {
+		try {
+			Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+			intent.addCategory(Intent.CATEGORY_OPENABLE);
+			intent.setType("*/*");
+			intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+				"application/zip",
+				"application/x-zip-compressed",
+				"application/octet-stream",
+				"*/*"
+			});
+			startActivityForResult(intent, REQ_IMPORT_MBAK);
+		} catch (Exception e) {
+			i.twi(R.string.import_failed);
+		}
+	}
+
+	private void handleImportMbak(Uri uri) {
+		InputStream is = null;
+		java.util.zip.ZipInputStream zis = null;
+		try {
+			is = getContentResolver().openInputStream(uri);
+			if (is == null) throw new Exception("openInputStream returned null");
+			zis = new java.util.zip.ZipInputStream(is);
+
+			String json = null;
+			java.util.zip.ZipEntry entry;
+			byte[] buf = new byte[8192];
+
+			while ((entry = zis.getNextEntry()) != null) {
+				String name = entry.getName();
+				if (name == null) continue;
+				name = name.replace('\\', '/');
+				while (name.startsWith("/")) name = name.substring(1);
+
+				if ("bak2/bookmark.json".equals(name)) {
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					int n;
+					while ((n = zis.read(buf)) > 0) baos.write(buf, 0, n);
+					json = new String(baos.toByteArray(), "UTF-8");
+					break;
+				}
+				zis.closeEntry();
+			}
+
+			if (json == null || json.isEmpty()) {
+				i.twi(R.string.import_failed);
+				return;
+			}
+
+			int count = BookmarkManager.importFromJson(this, json);
+			if (count <= 0) {
+				i.twi(R.string.import_empty);
+				return;
+			}
+			loadBookmarks();
+			i.tw(getString(R.string.import_success) + " (" + count + ")");
+		} catch (Exception e) {
+			i.twi(R.string.import_failed);
+		} finally {
+			if (zis != null) {
+				try { zis.close(); } catch (Exception ignored) {}
+			} else if (is != null) {
+				try { is.close(); } catch (Exception ignored) {}
+			}
+		}
+	}
+
+	private void startImportXbel() {
+		try {
+			Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+			intent.addCategory(Intent.CATEGORY_OPENABLE);
+			intent.setType("*/*");
+			intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+				"application/xbel+xml",
+				"application/xml",
+				"text/xml",
+				"*/*"
+			});
+			startActivityForResult(intent, REQ_IMPORT_XBEL);
+		} catch (Exception e) {
+			i.twi(R.string.import_failed);
+		}
+	}
+
+	private void handleImportXbel(Uri uri) {
+		InputStream is = null;
+		try {
+			is = getContentResolver().openInputStream(uri);
+			if (is == null) throw new Exception("openInputStream returned null");
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			byte[] buf = new byte[8192];
+			int n;
+			while ((n = is.read(buf)) > 0) baos.write(buf, 0, n);
+			String xml = new String(baos.toByteArray(), "UTF-8");
+
+			int count = BookmarkManager.importFromXbel(this, xml);
+			if (count <= 0) {
+				i.twi(R.string.import_empty);
+				return;
+			}
+			loadBookmarks();
+			i.tw(getString(R.string.import_success) + " (" + count + ")");
+		} catch (Exception e) {
+			i.twi(R.string.import_failed);
+		} finally {
+			if (is != null) {
+				try { is.close(); } catch (Exception ignored) {}
+			}
+		}
+	}
+
+	private void startImportTxt() {
+		try {
+			Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+			intent.addCategory(Intent.CATEGORY_OPENABLE);
+			intent.setType("*/*");
+			intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+				"text/plain", "*/*"
+			});
+			startActivityForResult(intent, REQ_IMPORT_TXT);
+		} catch (Exception e) {
+			i.twi(R.string.import_failed);
+		}
+	}
+
+	private void handleImportTxt(Uri uri) {
+		InputStream is = null;
+		try {
+			is = getContentResolver().openInputStream(uri);
+			if (is == null) throw new Exception("openInputStream returned null");
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			byte[] buf = new byte[8192];
+			int n;
+			while ((n = is.read(buf)) > 0) baos.write(buf, 0, n);
+			pendingTxtContent = new String(baos.toByteArray(), "UTF-8");
+			showTxtFormatMenu();
+		} catch (Exception e) {
+			i.twi(R.string.import_failed);
+		} finally {
+			if (is != null) {
+				try { is.close(); } catch (Exception ignored) {}
+			}
+		}
+	}
+
+	private void showTxtFormatMenu() {
+		i.utw(getString(R.string.import_bookmarks),
+		new String[] {
+			"ROAM",
+			"Vie",
+			"Fulguris / 1DM+"
+		},
+		new mk.jk() {
+			@Override
+			public void onListClick(String nr, int num) {
+				if (pendingTxtContent == null) return;
+				int count = 0;
+				if (num == 0) {
+					count = BookmarkManager.importFromRoam(BookmarksActivity.this, pendingTxtContent);
+				} else if (num == 1) {
+					count = BookmarkManager.importFromViek(BookmarksActivity.this, pendingTxtContent);
+				} else if (num == 2) {
+					count = BookmarkManager.importFromFulguris(BookmarksActivity.this, pendingTxtContent);
+				}
+				pendingTxtContent = null;
+				if (count <= 0) {
+					i.twi(R.string.import_empty);
+					return;
+				}
+				loadBookmarks();
+				i.tw(getString(R.string.import_success) + " (" + count + ")");
+			}
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() { pendingTxtContent = null; }
+			@Override public void onSelect(String content) {}
+		});
+	}
+
+	private void startImportIni() {
+		try {
+			Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+			intent.addCategory(Intent.CATEGORY_OPENABLE);
+			intent.setType("*/*");
+			intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+				"text/plain", "text/*", "*/*"
+			});
+			startActivityForResult(intent, REQ_IMPORT_INI);
+		} catch (Exception e) {
+			i.twi(R.string.import_failed);
+		}
+	}
+
+	private void handleImportIni(Uri uri) {
+		InputStream is = null;
+		try {
+			is = getContentResolver().openInputStream(uri);
+			if (is == null) throw new Exception("openInputStream returned null");
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			byte[] buf = new byte[8192];
+			int n;
+			while ((n = is.read(buf)) > 0) baos.write(buf, 0, n);
+			String text = new String(baos.toByteArray(), "UTF-8");
+
+			int count = BookmarkManager.importFromIni(this, text);
+			if (count <= 0) {
+				i.twi(R.string.import_empty);
+				return;
+			}
+			loadBookmarks();
+			i.tw(getString(R.string.import_success) + " (" + count + ")");
+		} catch (Exception e) {
+			i.twi(R.string.import_failed);
+		} finally {
+			if (is != null) {
+				try { is.close(); } catch (Exception ignored) {}
+			}
+		}
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (resultCode != RESULT_OK || data == null) return;
+		Uri uri = data.getData();
+		if (uri == null) return;
+
+		if (requestCode == REQ_EXPORT_HTML) {
+			handleExportHtml(uri);
+		} else if (requestCode == REQ_IMPORT_HTML) {
+			handleImportHtml(uri);
+		} else if (requestCode == REQ_EXPORT_VIEK) {
+			handleExportViek(uri);
+		} else if (requestCode == REQ_IMPORT_VIEK) {
+			handleImportViek(uri);
+		} else if (requestCode == REQ_IMPORT_MBAK) {
+			handleImportMbak(uri);
+		} else if (requestCode == REQ_IMPORT_XBEL) {
+			handleImportXbel(uri);
+		} else if (requestCode == REQ_IMPORT_TXT) {
+			handleImportTxt(uri);
+		} else if (requestCode == REQ_IMPORT_INI) {
+			handleImportIni(uri);
 		}
 	}
 }

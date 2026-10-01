@@ -5,7 +5,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class DAdapter extends RecyclerView.Adapter<DAdapter.ViewHolder> {
@@ -168,6 +167,14 @@ public class DAdapter extends RecyclerView.Adapter<DAdapter.ViewHolder> {
 			return;
 		}
 		
+		boolean unknownSize = t.sizeUnknown && t.totalSize <= 0;
+		if (unknownSize) {
+			if (pb.getMode() != ProgressViey.MODE_BIDIRECTIONAL) {
+				pb.setMode(ProgressViey.MODE_BIDIRECTIONAL);
+			}
+			return;
+		}
+		
 		int segCount = t.getSegmentCount();
 		
 		boolean useSegment = segCount > 1
@@ -195,22 +202,41 @@ public class DAdapter extends RecyclerView.Adapter<DAdapter.ViewHolder> {
 	}
 	
 	private String buildDetailText(DownloadTask t) {
+		boolean unknownSize = t.sizeUnknown && t.totalSize <= 0
+		&& t.status != DownloadTask.STATUS_FINISHED;
+		String fileUnknown = i.getString(R.string.file_size_unkonw);
 		String base;
 		switch (t.status) {
 			case DownloadTask.STATUS_DOWNLOADING:
-			base = DownloadTask.formatSize(t.downloadedSize) + "/" + DownloadTask.formatSize(t.totalSize)
-			+ " · " + DownloadTask.formatSpeed(t.speed)
-			+ " · " + DownloadTask.formatEta(t);
+			if (unknownSize) {
+				base = DownloadTask.formatSize(t.downloadedSize)
+				+ " · " + DownloadTask.formatSpeed(t.speed)
+				+ " · " + fileUnknown;
+			} else {
+				base = DownloadTask.formatSize(t.downloadedSize) + "/" + DownloadTask.formatSize(t.totalSize)
+				+ " · " + DownloadTask.formatSpeed(t.speed)
+				+ " · " + DownloadTask.formatEta(t);
+			}
 			break;
 			case DownloadTask.STATUS_WAIT:
-			base = DownloadTask.formatSize(t.downloadedSize) + "/" + DownloadTask.formatSize(t.totalSize)
-			+ " · " + i.getString(R.string.download_wait)
-			+ " · " + t.threadCount + " " + i.getString(R.string.download_threads);
+			if (unknownSize) {
+				base = i.getString(R.string.download_wait) + " · " + fileUnknown;
+			} else {
+				base = DownloadTask.formatSize(t.downloadedSize) + "/" + DownloadTask.formatSize(t.totalSize)
+				+ " · " + i.getString(R.string.download_wait)
+				+ " · " + t.threadCount + " " + i.getString(R.string.download_threads);
+			}
 			break;
 			case DownloadTask.STATUS_PAUSE:
-			base = DownloadTask.formatSize(t.downloadedSize) + "/" + DownloadTask.formatSize(t.totalSize)
-			+ " · " + i.getString(R.string.download_pause)
-			+ " · " + t.threadCount + " " + i.getString(R.string.download_threads);
+			if (unknownSize) {
+				String prefix = t.downloadedSize > 0
+				? DownloadTask.formatSize(t.downloadedSize) + " · " : "";
+				base = prefix + i.getString(R.string.download_pause) + " · " + fileUnknown;
+			} else {
+				base = DownloadTask.formatSize(t.downloadedSize) + "/" + DownloadTask.formatSize(t.totalSize)
+				+ " · " + i.getString(R.string.download_pause)
+				+ " · " + t.threadCount + " " + i.getString(R.string.download_threads);
+			}
 			break;
 			case DownloadTask.STATUS_FINISHED:
 			base = formatTime(t.finishTime) + " · " + DownloadTask.formatSize(t.totalSize);
@@ -229,8 +255,7 @@ public class DAdapter extends RecyclerView.Adapter<DAdapter.ViewHolder> {
 	
 	private String formatTime(long ms) {
 		if (ms <= 0) return "--";
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-		return sdf.format(new Date(ms));
+		return i.formatTime(ms);
 	}
 	
 	@Override

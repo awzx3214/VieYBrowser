@@ -1,5 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+    <string name="im_bookmark_text">*.html: 絕大部分瀏覽器使用的格式，推薦使用\n*.bf: Vie 瀏覽器使用的格式，方便用戶從 Vie 遷移到 VieY\n*.mbak: M 瀏覽器及衍生軟件使用的格式，推薦在匯出書籤時用 *.html 而不是 *.mbak\n*.xbel: Linux 桌面瀏覽器和部分同步插件使用的格式\n*.txt 部分瀏覽器使用的格式，可其 設定-備份 中進行匯出\n*.ini: Lagrange 使用的格式，在其設定-匯出用戶資料後，獲取一個壓縮包文件，解壓這個壓縮包即可找到 bookmarks.ini</string>
+    <string name="im_bookmark_tips">特殊格式及對應匯出方式</string>
+    <string name="import_empty">哎呀，沒有新增內容呢</string>
+    <string name="task_id">任務ID</string>
+    <string name="status">狀態</string>
+    <string name="file_size_unkonw">檔案大小未知</string>
+    <string name="category">分類</string>
+    <string name="downloaded">已下載</string>
+    <string name="progress">進度</string>
+    <string name="download_speed">下載速度</string>
+    <string name="thread_count">執行緒數</string>
+    <string name="segment_count">分段數</string>
+    <string name="save_path">儲存路徑</string>
+    <string name="download_link">下載連結</string>
+    <string name="finish_time">完成時間</string>
+    <string name="note">備註</string>
+    <string name="error_msg">錯誤訊息</string>
+    <string name="properties">屬性</string>
+    <string name="no_bookmark">書籤不存在</string>
+    <string name="edit">編輯</string>
+    <string name="batch_open">批次開啟</string>
+    <string name="other_offer">呼叫者提供</string>
+    <string name="viey_offer">VieY 提供</string>
+    <string name="exit_page">退出頁面</string>
+    <string name="other_open">其他開啟</string>
+    <string name="refresh">重新整理頁面</string>
+    <string name="go_back">後退一步</string>
+    <string name="go_forward">前進一步</string>
     <string name="clip_null">剪貼簿為空</string>
     <string name="no_app_open">哎呀，沒有對應的應用程式呢</string>
     <string name="url_null">哎呀，未找到連結</string>
@@ -156,7 +184,6 @@
     <string name="extract_page_cert">提取頁面憑證</string>
     <string name="data_blob_url">這是資料流連結，暫時不支援這個操作</string>
     <string name="web_permission_request">網頁權限申請</string>
-    <string name="form_date">yyyy 年 MM 月 dd 日 HH:mm:ss</string>
     <string name="request_camera_mic">請求使用【相機拍照】和【麥克風錄音】</string>
     <string name="request_camera">請求使用【相機拍照】</string>
     <string name="request_mic">請求使用【麥克風錄音】</string>
@@ -314,8 +341,6 @@
     <string name="cert_password_hint">憑證密碼</string>
     <string name="cert_file_support">只支援 BKS / BKS / PEM 憑證檔案</string>
     <string name="cert_password_error">憑證密碼錯誤</string>
-    <string name="cert_import_success">憑證匯入成功</string>
-    <string name="cert_import_fail">憑證匯入失敗</string>
     <string name="add_bookmark">新增書籤</string>
     <string name="rwindow">你想恢復上次工作階段未關閉的分頁嗎？</string>
     <string name="setting_language">語言</string>
@@ -324,7 +349,6 @@
     <string name="lang_tw">繁體中文</string>
     <string name="lang_en">English</string>
     <string name="bookmark">書籤記錄</string>
-    <string name="bookmarks">書籤記錄</string>
     <string name="press_back_again_exit">再按一次退出瀏覽器</string>
     <string name="download_path">下載路徑</string>
     <string name="set_download_path">設定下載路徑</string>

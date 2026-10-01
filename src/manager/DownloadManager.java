@@ -1,37 +1,25 @@
 package kawaii.viey.browser;
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
+import android.app.*;
+import android.content.*;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
+import android.os.*;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import java.io.File;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-
 import kawaii.viey.browser.xy.*;
 
 public class DownloadManager {
@@ -210,6 +198,7 @@ public class DownloadManager {
 		task.category = DownloadTask.detectCategory(task.fileName);
 		task.status = DownloadTask.STATUS_WAIT;
 		task.downloadedSize = 0;
+		task.sizeUnknown = false;
 		
 		List<DownloadTask> all = getDownloadList(ctx);
 		all.add(0, task);
@@ -285,6 +274,7 @@ public class DownloadManager {
 				target.totalSize = 0;
 				target.retryCount = 0;
 				target.supportRange = false;
+				target.sizeUnknown = false;
 				target.errorMsg = null;
 				if (target.note != null && target.note.contains(i.getString(R.string.dis_dxc_download))) {
 					target.note = "";
@@ -303,6 +293,7 @@ public class DownloadManager {
 					target.totalSize = 0;
 					target.retryCount = 0;
 					target.supportRange = false;
+					target.sizeUnknown = false;
 					target.errorMsg = null;
 					if (target.note != null && target.note.contains(i.getString(R.string.dis_dxc_download))) {
 						target.note = "";
@@ -408,6 +399,7 @@ public class DownloadManager {
 		c.note = src.note;
 		c.threadCount = src.threadCount;
 		c.supportRange = src.supportRange;
+		c.sizeUnknown = src.sizeUnknown;
 		c.headersJson = src.headersJson;
 		if (src.segStart != null) c.segStart = src.segStart.clone();
 		if (src.segEnd != null) c.segEnd = src.segEnd.clone();
@@ -432,6 +424,47 @@ public class DownloadManager {
 		}
 	}
 	
+	private static void applyAntiHotlink(HttpURLConnection conn, DownloadTask task, URL url) {
+		if (conn == null || url == null) return;
+		boolean hasReferer = false;
+		boolean hasOrigin = false;
+		if (task != null && task.headersJson != null && !task.headersJson.isEmpty()) {
+			try {
+				JSONObject h = new JSONObject(task.headersJson);
+				java.util.Iterator<String> keys = h.keys();
+				while (keys.hasNext()) {
+					String k = keys.next();
+					if (k == null) continue;
+					if ("referer".equalsIgnoreCase(k)) hasReferer = true;
+					else if ("origin".equalsIgnoreCase(k)) hasOrigin = true;
+				}
+			} catch (Exception ignored) {
+			}
+		}
+		try {
+			String origin = buildOrigin(url);
+			if (!hasReferer && origin != null) {
+				conn.setRequestProperty("Referer", origin + "/");
+			}
+			if (!hasOrigin && origin != null) {
+				conn.setRequestProperty("Origin", origin);
+			}
+		} catch (Exception ignored) {
+		}
+	}
+	
+	private static String buildOrigin(URL url) {
+		if (url == null) return null;
+		String protocol = url.getProtocol();
+		String host = url.getHost();
+		if (protocol == null || host == null || host.isEmpty()) return null;
+		int port = url.getPort();
+		int defPort = url.getDefaultPort();
+		StringBuilder sb = new StringBuilder(protocol.length() + host.length() + 12);
+		sb.append(protocol).append("://").append(host);
+		if (port > 0 && port != defPort) sb.append(':').append(port);
+		return sb.toString();
+	}
 	
 	private int notifId(long taskId) {
 		return NOTIFY_BASE_ID + (int) (taskId & 0x7FFFFFF);
@@ -469,25 +502,51 @@ public class DownloadManager {
 		.setOnlyAlertOnce(!forceAlert)
 		.setAutoCancel(t.status == DownloadTask.STATUS_FINISHED);
 		
+		boolean unknownSize = t.sizeUnknown && t.totalSize <= 0;
+		
 		switch (t.status) {
+			
 			case DownloadTask.STATUS_DOWNLOADING: {
 				b.setOngoing(true);
-				b.setContentText(DownloadTask.formatSize(t.downloadedSize) + "/"
-				+ DownloadTask.formatSize(t.totalSize) + " · "
-				+ DownloadTask.formatSpeed(t.speed));
-				if (t.totalSize > 0) b.setProgress(100, t.getProgress(), false);
-				else b.setProgress(0, 0, true);
+				if (unknownSize) {
+					b.setContentText(DownloadTask.formatSize(t.downloadedSize)
+					+ " · " + DownloadTask.formatSpeed(t.speed)
+					+ " · " + i.getString(R.string.file_size_unkonw));
+					b.setProgress(0, 0, true);
+				} else if (t.totalSize > 0) {
+					b.setContentText(DownloadTask.formatSize(t.downloadedSize) + "/"
+					+ DownloadTask.formatSize(t.totalSize) + " · "
+					+ DownloadTask.formatSpeed(t.speed));
+					b.setProgress(100, t.getProgress(), false);
+				} else {
+					b.setContentText(DownloadTask.formatSize(t.downloadedSize) + "/"
+					+ DownloadTask.formatSize(t.totalSize) + " · "
+					+ DownloadTask.formatSpeed(t.speed));
+					b.setProgress(0, 0, true);
+				}
 				break;
 			}
 			case DownloadTask.STATUS_WAIT: {
 				b.setOngoing(true);
-				b.setContentText(i.getString(R.string.download_wait));
+				if (unknownSize) {
+					b.setContentText(i.getString(R.string.download_wait)
+					+ " · " + i.getString(R.string.file_size_unkonw));
+				} else {
+					b.setContentText(i.getString(R.string.download_wait));
+				}
 				b.setProgress(0, 0, true);
 				break;
 			}
 			case DownloadTask.STATUS_PAUSE: {
 				b.setOngoing(false);
-				b.setContentText(i.getString(R.string.download_pause));
+				if (unknownSize) {
+					String prefix = t.downloadedSize > 0
+					? DownloadTask.formatSize(t.downloadedSize) + " · " : "";
+					b.setContentText(prefix + i.getString(R.string.download_pause)
+					+ " · " + i.getString(R.string.file_size_unkonw));
+				} else {
+					b.setContentText(i.getString(R.string.download_pause));
+				}
 				b.setProgress(100, t.getProgress(), false);
 				break;
 			}
@@ -526,7 +585,6 @@ public class DownloadManager {
 		}
 	}
 	
-	
 	private void maybeAutoInstallApk(DownloadTask task) {
 		if (appContext == null) return;
 		if (task == null) return;
@@ -557,7 +615,6 @@ public class DownloadManager {
 		});
 	}
 	
-	
 	private class TaskRunner implements Runnable {
 		private final Context context;
 		private final DownloadTask task;
@@ -570,6 +627,7 @@ public class DownloadManager {
 		private long lastSpeedSize = 0;
 		private volatile boolean degradeToSingle = false;
 		private volatile boolean forceSingleThread = false;
+		private volatile String probeError = null;
 		
 		TaskRunner(Context c, DownloadTask t) {
 			context = c;
@@ -578,6 +636,34 @@ public class DownloadManager {
 		
 		void cancel() {
 			isCancel = true;
+		}
+		
+		private String describeException(Throwable e) {
+			if (e == null) return "unknown";
+			StringBuilder sb = new StringBuilder();
+			sb.append(e.getClass().getSimpleName());
+			String m = e.getMessage();
+			if (m != null && !m.isEmpty()) sb.append(": ").append(m);
+			Throwable cause = e.getCause();
+			if (cause != null && cause != e) {
+				sb.append(" <- ").append(cause.getClass().getSimpleName());
+				String cm = cause.getMessage();
+				if (cm != null && !cm.isEmpty()) sb.append(": ").append(cm);
+			}
+			return sb.toString();
+		}
+		
+		private HttpURLConnection openConnection(int connectTimeoutMs, int readTimeoutMs)
+		throws Exception {
+			URL url = new URL(task.url);
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn.setConnectTimeout(connectTimeoutMs);
+			conn.setReadTimeout(readTimeoutMs);
+			conn.setInstanceFollowRedirects(true);
+			conn.setRequestProperty("Accept-Encoding", "identity");
+			applyHeaders(conn, task);
+			applyAntiHotlink(conn, task, url);
+			return conn;
 		}
 		
 		@Override
@@ -611,7 +697,7 @@ public class DownloadManager {
 				doDownload();
 			} catch (Exception e) {
 				task.status = DownloadTask.STATUS_ERROR;
-				task.errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+				task.errorMsg = describeException(e);
 				task.speed = 0;
 				notifyUpdate(true);
 			} finally {
@@ -631,11 +717,14 @@ public class DownloadManager {
 			File parent = out.getParentFile();
 			if (parent != null && !parent.exists() && !parent.mkdirs() && !parent.exists()) {
 				task.status = DownloadTask.STATUS_ERROR;
-				task.errorMsg = "mkdirs failed: " + parent.getAbsolutePath();
+				task.errorMsg = "mkdirs failed: " + parent.getAbsolutePath()
+				+ " (exists=" + parent.exists()
+				+ ", canWrite=" + parent.canWrite() + ")";
 			}
 			if(i.fc(f, out)) {
 				task.totalSize = f.length();
 				task.downloadedSize = f.length();
+				task.sizeUnknown = false;
 				task.status = DownloadTask.STATUS_FINISHED;
 				task.finishTime = System.currentTimeMillis();
 				task.speed = 0;
@@ -690,6 +779,7 @@ public class DownloadManager {
 					
 					task.totalSize = data.length;
 					task.downloadedSize = data.length;
+					task.sizeUnknown = false;
 					task.status = DownloadTask.STATUS_FINISHED;
 					task.finishTime = System.currentTimeMillis();
 					task.speed = 0;
@@ -697,7 +787,7 @@ public class DownloadManager {
 					
 				} catch (Exception e) {
 					task.status = DownloadTask.STATUS_ERROR;
-					task.errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+					task.errorMsg = describeException(e);
 					task.speed = 0;
 				}
 			} else if(result.contains("文件内容:\n"))
@@ -731,7 +821,6 @@ public class DownloadManager {
 				File parent = outFile.getParentFile();
 				if (parent != null && !parent.exists()) parent.mkdirs();
 				
-				
 				if (!outFile.exists() && task.segStart != null) {
 					task.segStart = null;
 					task.segEnd = null;
@@ -740,6 +829,7 @@ public class DownloadManager {
 					task.totalSize = 0;
 					task.retryCount = 0;
 					task.supportRange = false;
+					task.sizeUnknown = false;
 					totalDownloaded.set(0);
 					errorMsg.set(null);
 				}
@@ -749,15 +839,15 @@ public class DownloadManager {
 						if (isCancel) {
 							task.status = DownloadTask.STATUS_PAUSE;
 							task.speed = 0;
-							notifyUpdate(true);
 							return;
 						}
 						task.status = DownloadTask.STATUS_ERROR;
-						task.errorMsg = i.getString(R.string.fail_to_con);
+						task.errorMsg = i.getString(R.string.fail_to_con)
+						+ (probeError != null ? ": " + probeError : "");
 						task.speed = 0;
-						notifyUpdate(true);
 						return;
 					}
+                    notifyUpdate(true);
 				}
 				
 				if (isCancel) {
@@ -776,7 +866,9 @@ public class DownloadManager {
 					long free = parent.getFreeSpace();
 					if (free > 0 && free < task.totalSize + 4L * 1024 * 1024) {
 						task.status = DownloadTask.STATUS_ERROR;
-						task.errorMsg = i.getString(R.string.no_space);
+						task.errorMsg = i.getString(R.string.no_space)
+						+ " (need " + DownloadTask.formatSize(task.totalSize + 4L * 1024 * 1024)
+						+ ", free " + DownloadTask.formatSize(free) + ")";
 						task.speed = 0;
 						notifyUpdate(true);
 						return;
@@ -798,7 +890,7 @@ public class DownloadManager {
 					task.segDone = new long[n];
 					if (n == 1) {
 						task.segStart[0] = 0;
-						task.segEnd[0] = Math.max(0, total - 1);
+						task.segEnd[0] = total > 0 ? (total - 1) : -1;
 					} else {
 						long segSize = total / n;
 						for (int i = 0; i < n; i++) {
@@ -818,12 +910,14 @@ public class DownloadManager {
 						boolean ok = outFile.createNewFile();
 						if (!ok && !outFile.exists()) throw new Exception(i.getString(R.string.add_file_fail));
 					}
-					try (RandomAccessFile raf = new RandomAccessFile(outFile, "rw")) {
-						if (total > 0 && raf.length() < total) raf.setLength(total);
+					if (total > 0) {
+						try (RandomAccessFile raf = new RandomAccessFile(outFile, "rw")) {
+							if (raf.length() < total) raf.setLength(total);
+						}
 					}
 				} catch (Exception e) {
 					task.status = DownloadTask.STATUS_ERROR;
-					task.errorMsg = i.getString(R.string.add_file_fail) + ": " + e.getMessage();
+					task.errorMsg = i.getString(R.string.add_file_fail) + ": " + describeException(e);
 					task.speed = 0;
 					notifyUpdate(true);
 					return;
@@ -859,6 +953,7 @@ public class DownloadManager {
 					task.segDone = null;
 					task.downloadedSize = 0;
 					task.errorMsg = null;
+                    task.threadCount = 1;
 					totalDownloaded.set(0);
 					errorMsg.set(null);
 					continue;
@@ -890,15 +985,17 @@ public class DownloadManager {
 					task.status = DownloadTask.STATUS_FINISHED;
 					task.finishTime = System.currentTimeMillis();
 					maybeAutoInstallApk(task);
-				} else if (total == 0 && outFile.exists()) {
+				} else if (total == 0 && outFile.exists() && s > 0) {
 					task.totalSize = outFile.length();
 					task.downloadedSize = task.totalSize;
+					task.sizeUnknown = false;
 					task.status = DownloadTask.STATUS_FINISHED;
 					task.finishTime = System.currentTimeMillis();
 					maybeAutoInstallApk(task);
 				} else {
 					task.status = DownloadTask.STATUS_ERROR;
-					task.errorMsg = i.getString(R.string.download_unfinish);
+					task.errorMsg = i.getString(R.string.download_unfinish)
+					+ " (" + task.downloadedSize + "/" + task.totalSize + ")";
 				}
 				task.speed = 0;
 				notifyUpdate(true);
@@ -908,37 +1005,56 @@ public class DownloadManager {
 		
 		private boolean probe() {
 			HttpURLConnection conn = null;
+			probeError = null;
 			try {
-				URL u = new URL(task.url);
-				conn = (HttpURLConnection) u.openConnection();
-				conn.setConnectTimeout(15000);
-				conn.setReadTimeout(15000);
-				conn.setRequestMethod("GET");
+				conn = openConnection(15000, 15000);
 				conn.setRequestProperty("Range", "bytes=0-0");
-				applyHeaders(conn, task);
 				
 				int code = conn.getResponseCode();
 				if (code == 206) {
-					task.supportRange = true;
 					String cr = conn.getHeaderField("Content-Range");
+					boolean sizeKnown = false;
 					if (cr != null) {
 						int slash = cr.indexOf('/');
 						if (slash > 0) {
-							try {
-								task.totalSize = Long.parseLong(cr.substring(slash + 1).trim());
-							} catch (Exception ignored) {
+							String totalStr = cr.substring(slash + 1).trim();
+							if (!"*".equals(totalStr)) {
+								try {
+									long t = Long.parseLong(totalStr);
+									if (t > 0) {
+										task.totalSize = t;
+										sizeKnown = true;
+									}
+								} catch (Exception ignored) {
+								}
 							}
 						}
+					}
+					if (sizeKnown) {
+						task.supportRange = true;
+						task.sizeUnknown = false;
+					} else {
+						task.supportRange = false;
+						task.totalSize = 0;
+						task.sizeUnknown = true;
 					}
 				} else if (code == 200) {
 					task.supportRange = false;
 					long len = conn.getContentLengthLong();
-					if (len > 0) task.totalSize = len;
+					if (len > 0) {
+						task.totalSize = len;
+						task.sizeUnknown = false;
+					} else {
+						task.totalSize = 0;
+						task.sizeUnknown = true;
+					}
 				} else if (code >= 400) {
+					probeError = "HTTP " + code + " " + conn.getResponseMessage();
 					return false;
 				}
 				return true;
 			} catch (Exception e) {
+				probeError = describeException(e);
 				i.log("Download", "probe failed:"+e);
 				return false;
 			} finally {
@@ -957,34 +1073,48 @@ public class DownloadManager {
 			public void run() {
 				long segS = task.segStart[index];
 				long segE = task.segEnd[index];
-				long expected = segE - segS + 1;
+				boolean unknownSize = task.totalSize <= 0;
+				long expected = unknownSize ? -1 : (segE - segS + 1);
 				
 				int retry = 0;
 				while (!isCancel && retry <= task.maxRetry) {
-					long curStart = segS + task.segDone[index];
-					if (curStart > segE) return;
+					long curStart;
+					if (unknownSize) {
+						if (retry > 0) {
+							long alreadyDone = task.segDone[index];
+							if (alreadyDone > 0) {
+								task.segDone[index] = 0;
+								totalDownloaded.addAndGet(-alreadyDone);
+								task.downloadedSize = totalDownloaded.get();
+							}
+						}
+						curStart = 0;
+					} else {
+						curStart = segS + task.segDone[index];
+						if (curStart > segE) return;
+					}
 					
 					HttpURLConnection conn = null;
 					InputStream is = null;
 					RandomAccessFile raf = null;
 					try {
-						URL u = new URL(task.url);
-						conn = (HttpURLConnection) u.openConnection();
-						conn.setConnectTimeout(15000);
-						conn.setReadTimeout(20000);
-						applyHeaders(conn, task);
-						conn.setRequestProperty("Range", "bytes=" + curStart + "-" + segE);
+						conn = openConnection(15000, 20000);
+						
+						if (!unknownSize) {
+							conn.setRequestProperty("Range", "bytes=" + curStart + "-" + segE);
+						}
 						
 						int code = conn.getResponseCode();
 						if (code == 200) {
-							if ((task.segStart != null && task.segStart.length > 1) || curStart != 0) {
+							if ((task.segStart != null && task.segStart.length > 1) || (!unknownSize && curStart != 0)) {
 								degradeToSingle = true;
 								return;
 							}
 							task.supportRange = false;
 						} else if (code != 206) {
-							throw new Exception("HTTP " + code);
+							throw new Exception("HTTP " + code + " " + conn.getResponseMessage());
 						}
+						
 						raf = new RandomAccessFile(task.savePath, "rw");
 						raf.seek(curStart);
 						is = conn.getInputStream();
@@ -996,10 +1126,12 @@ public class DownloadManager {
 						while ((len = is.read(buf)) != -1) {
 							if (isCancel || degradeToSingle) break;
 							
-							long written = task.segDone[index];
-							long remain = expected - written;
-							if (remain <= 0) break;
-							if (len > remain) len = (int) remain;
+							if (!unknownSize) {
+								long written = task.segDone[index];
+								long remain = expected - written;
+								if (remain <= 0) break;
+								if (len > remain) len = (int) remain;
+							}
 							
 							raf.write(buf, 0, len);
 							task.segDone[index] += len;
@@ -1032,6 +1164,9 @@ public class DownloadManager {
 							raf.getChannel().force(false);
 						} catch (Exception ignored) {
 						}
+						
+						if (unknownSize) return;
+						
 						if (task.segDone[index] >= expected) return;
 						if (isCancel || degradeToSingle) return;
 						throw new Exception(i.getString(R.string.dxc_fail));
@@ -1042,7 +1177,10 @@ public class DownloadManager {
 						task.retryCount++;
 						i.log("Download", "seg " + index + " retry " + retry+":"+e);
 						if (retry > task.maxRetry) {
-							errorMsg.compareAndSet(null, i.getString(R.string.net_fail));
+							String detail = describeException(e);
+							errorMsg.compareAndSet(null,
+							i.getString(R.string.net_fail)
+							+ " [seg#" + index + " " + detail + "]");
 							return;
 						}
 						try {
@@ -1082,6 +1220,7 @@ public class DownloadManager {
 						t.retryCount = task.retryCount;
 						t.note = task.note;
 						t.supportRange = task.supportRange;
+						t.sizeUnknown = task.sizeUnknown;
 						t.threadCount = task.threadCount;
 						t.segStart = task.segStart;
 						t.segEnd = task.segEnd;

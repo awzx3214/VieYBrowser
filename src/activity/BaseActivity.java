@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.WindowManager;
 import androidx.appcompat.app.AppCompatActivity;
 import android.graphics.*;
+import android.content.SharedPreferences;
 
 public class BaseActivity extends AppCompatActivity {
 	
@@ -15,6 +16,10 @@ public class BaseActivity extends AppCompatActivity {
 	
 	public boolean isDark(){
 		return VieYApp.isDarkMode(this);
+	}
+    
+    public SharedPreferences getPrefs(Context a) {
+		return VieYApp.getPrefs(a);
 	}
 	
 	@Override
