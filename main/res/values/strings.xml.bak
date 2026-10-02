@@ -4,7 +4,7 @@
     <string name="im_bookmark_text">*.html: 绝大部分浏览器使用的格式，推荐使用\n*.bf: Vie 浏览器使用的格式，方便用户从 Vie 迁移到 VieY\n*.mbak: M 浏览器及衍生软件使用的格式，推荐在导出书签时用 *.html 而不是 *.mbak\n*.xbel: Linux 桌面浏览器和部分同步插件使用的格式\n*.txt 部分浏览器使用的格式，可其 设置-备份 中进行导出\n*.ini: Lagrange 使用的格式，在其设置-导出用户数据后，获取一个压缩包文件，解压这个压缩包即可找到 bookmarks.ini</string>
     <string name="im_bookmark_tips">特殊格式及对应导出方式</string>
     <string name="import_empty">哎呀，没有新增内容呢</string>
-    <string name="task_id">任务 ID</string>
+    <string name="task_id">任务ID</string>
     <string name="status">状态</string>
     <string name="file_size_unkonw">文件大小未知</string>
     <string name="category">分类</string>

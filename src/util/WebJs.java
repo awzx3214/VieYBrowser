@@ -23,6 +23,13 @@ public class WebJs {
 			}
 		});
 	}
+    
+    @JavascriptInterface
+	public void toast(String str) {
+		mWeb.post(() -> {
+			i.tw(str);
+		});
+	}
 	
 	@JavascriptInterface
 	public void loadHtml(String html) {

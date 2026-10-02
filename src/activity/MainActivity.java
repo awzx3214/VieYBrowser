@@ -51,7 +51,7 @@ public class MainActivity extends BaseActivity {
 	private ArrayList<WindowItem> windowList = new ArrayList<>();
 	private TextView titleView, tvWindowCount, tip, barUrl;
 	private EditText urlEditText, etPageSearch;
-	private ProgressBar progressBar, bar;
+    private ProgressViey progressBar, bar;
 	private ImageView btnWindow, btnMenu2, btnBack, btnTool, btnForward, btnHome, btnRefresh;
 	private LinearLayout loadLayout, toolbarLayout, toolbarBg, btnMenu, bottomNav;
 	private boolean isDarkMode = false;
@@ -602,8 +602,6 @@ public class MainActivity extends BaseActivity {
 		barUrl = findViewById(R.id.barUrl);
 		
 		urlEditText.setText(VieYApp.getHomeUrl(this));
-		MainUtil.setJDT(progressBar);
-		MainUtil.setJDT(bar);
 		MainUtil.setDrag(toolbarBg, urlEditText);
 	}
 	

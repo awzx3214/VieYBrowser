@@ -20,7 +20,7 @@ public class SettingsActivity extends BaseActivity {
 	
 	private LinearLayout contentContainer;
 	
-	private TextView appVersion, textToolbarPosition, textCertStatus, textDownloadPath, textLanguage, textHomeUrl, textHomeMode, textSearchEngine, textMaxConcurrent, textDefaultThreads, textMaxRetry;
+	private TextView appVersion, textDateFormat, textToolbarPosition, textCertStatus, textDownloadPath, textLanguage, textHomeUrl, textHomeMode, textSearchEngine, textMaxConcurrent, textDefaultThreads, textMaxRetry;
 	private Switch switchPull, switchDarkMode, switchPreferIpv4, switchCustomTab, switchVolumePage, switchDownloadNotice, switchApkAutoInstall;
 	private ImageView appLogo;
 	
@@ -66,10 +66,13 @@ public class SettingsActivity extends BaseActivity {
 			recreate();
 		});
 		
+        
 		textLanguage = addValueItem(getString(R.string.setting_language), v -> showLanguageDialog());
 		textSearchEngine = addValueItem(getString(R.string.search_engine), v -> showSearchEngineDialog());
 		textHomeUrl = addValueItem(getString(R.string.home_url), v -> showHomeUrlDialog());
-		
+		textDateFormat = addValueItem(getString(R.string.date_format), v -> showDateFormatDialog());
+        
+        
 		addSection(getString(R.string.privacy));
 		
 		textCertStatus = addValueItem(getString(R.string.cert_settings), v -> startActivity(new Intent(this, CertActivity.class)));
@@ -89,17 +92,17 @@ public class SettingsActivity extends BaseActivity {
 		addSection(getString(R.string.download));
 		
 		textDownloadPath = addValueItem(getString(R.string.download_path), v -> showDownloadPathDialog());
-textMaxConcurrent = addValueItem(getString(R.string.max_concurrent_tasks), v -> showMaxConcurrentDialog());
-textDefaultThreads = addValueItem(getString(R.string.default_threads), v -> showDefaultThreadsDialog());
-textMaxRetry = addValueItem(getString(R.string.max_retry_count), v -> showMaxRetryDialog());
-switchDownloadNotice = addSwitchItem(getString(R.string.show_download_notice), VieYApp.isDownloadNotice(this), (v, is) -> VieYApp.isDownloadNotice(this, is));
-switchApkAutoInstall = addSwitchItem(getString(R.string.auto_install_apk), VieYApp.downloadApkAZ(this), (v, is) -> VieYApp.downloadApkAZ(this, is));
-
-addSection(getString(R.string.gesture));
-
-switchPull = addSwitchItem(getString(R.string.pull_refresh), VieYApp.isPullRefresh(this), (v, is) -> VieYApp.setPullRefresh(this, is));
-switchVolumePage = addSwitchItem(getString(R.string.volume_key_page), VieYApp.isVolumeKeyPage(this), (v, is) -> VieYApp.setVolumeKeyPage(this, is));
-
+		textMaxConcurrent = addValueItem(getString(R.string.max_concurrent_tasks), v -> showMaxConcurrentDialog());
+		textDefaultThreads = addValueItem(getString(R.string.default_threads), v -> showDefaultThreadsDialog());
+		textMaxRetry = addValueItem(getString(R.string.max_retry_count), v -> showMaxRetryDialog());
+		switchDownloadNotice = addSwitchItem(getString(R.string.show_download_notice), VieYApp.isDownloadNotice(this), (v, is) -> VieYApp.isDownloadNotice(this, is));
+		switchApkAutoInstall = addSwitchItem(getString(R.string.auto_install_apk), VieYApp.downloadApkAZ(this), (v, is) -> VieYApp.downloadApkAZ(this, is));
+		
+		addSection(getString(R.string.gesture));
+		
+		switchPull = addSwitchItem(getString(R.string.pull_refresh), VieYApp.isPullRefresh(this), (v, is) -> VieYApp.setPullRefresh(this, is));
+		switchVolumePage = addSwitchItem(getString(R.string.volume_key_page), VieYApp.isVolumeKeyPage(this), (v, is) -> VieYApp.setVolumeKeyPage(this, is));
+		
 		addSection(getString(R.string.customize));
 		
 		textToolbarPosition = addValueItem(getString(R.string.toolbar_position), v -> showToolbarPosDialog());
@@ -255,7 +258,8 @@ switchVolumePage = addSwitchItem(getString(R.string.volume_key_page), VieYApp.is
 		textHomeMode.setText(VieYApp.getHomeMode(this));
 		textSearchEngine.setText(VieYApp.getSearchEngine(this));
 		textDownloadPath.setText(VieYApp.getDownloadPath(this));
-		textToolbarPosition.setText(VieYApp.getToolbarPositionDisplayName(this, VieYApp.getToolbarPosition(this)));
+		textDateFormat.setText(VieYApp.getDateFormat(this));
+        textToolbarPosition.setText(VieYApp.getToolbarPositionDisplayName(this, VieYApp.getToolbarPosition(this)));
 		textMaxConcurrent.setText(String.valueOf(VieYApp.getDownloadMaxConcurrent(this)));
 		textDefaultThreads.setText(String.valueOf(VieYApp.getDownloadDefaultThreads(this)));
 		textMaxRetry.setText(String.valueOf(VieYApp.getDownloadMaxRetry(this)));
@@ -339,10 +343,33 @@ switchVolumePage = addSwitchItem(getString(R.string.volume_key_page), VieYApp.is
 			}
 		});
 	}
+    
+    
+    private void showDateFormatDialog() {
+		final String[] dateData = i.setWhich(new String[]{
+			"yyyy-MM-dd HH:mm:ss",
+            "dd-MM-yyyy HH:mm:ss",
+            "MM-dd-yyyy HH:mm:ss",
+            "dd-MMM-yyyy HH:mm:ss",
+            "MMM-dd-yyyy HH:mm:ss"
+		}, VieYApp.getDateFormat(this));
+		
+		i.utw(getString(R.string.date_format), dateData, new mk.jk() {
+			@Override public void onButton1Click() {}
+			@Override public void onButton2Click() {}
+			@Override public void onButton3Click() {}
+			@Override public void onDialogDismissed() {}
+			@Override public void onSelect(String content) {}
+			@Override public void onListClick(String nr, int num) {
+				VieYApp.setDateFormat(SettingsActivity.this, nr);
+				textDateFormat.setText(nr);
+			}
+		});
+	}
 	
 	private void showMaxConcurrentDialog() {
 		final int[] values = {1, 2, 3, 4, 5, 6, 7, 8};
-		final String[] names = {"1", "2", "3", "4", "5", "6", "7", "8"};
+		final String[] names = i.setWhich(new String[] {"1", "2", "3", "4", "5", "6", "7", "8"}, VieYApp.getDownloadMaxConcurrent(this)+"");
 		i.utw(R.string.max_concurrent_tasks, names, new mk.jk() {
 			@Override public void onButton1Click() {}
 			@Override public void onButton2Click() {}
@@ -359,7 +386,7 @@ switchVolumePage = addSwitchItem(getString(R.string.volume_key_page), VieYApp.is
 	
 	private void showDefaultThreadsDialog() {
 		final int[] values = {1, 2, 3, 4, 8, 16, 32};
-		final String[] names = {"1", "2", "3", "4", "8", "16", "32", i.getString(R.string.diy)};
+		final String[] names = i.setWhich(new String[] {"1", "2", "3", "4", "8", "16", "32", i.getString(R.string.diy)}, VieYApp.getDownloadDefaultThreads(this)+"");
 		i.utw(R.string.default_threads, names, new mk.jk() {
 			@Override public void onButton1Click() {}
 			@Override public void onButton2Click() {}
@@ -372,7 +399,7 @@ switchVolumePage = addSwitchItem(getString(R.string.volume_key_page), VieYApp.is
 					final EditViey input = new EditViey(SettingsActivity.this);
 					input.setSingleLine(true);
 					input.setHeight(i.dp2px(56));
-                    input.setHint("1~32");
+					input.setHint("1~32");
 					input.setInputType(InputType.TYPE_CLASS_NUMBER);
 					input.setKeyListener(DigitsKeyListener.getInstance("0123456789"));
 					
@@ -391,8 +418,8 @@ switchVolumePage = addSwitchItem(getString(R.string.volume_key_page), VieYApp.is
 							{
 								lin = Integer.parseInt(path);
 							} catch(Exception e){}
-                            if(lin<=0) lin=1;
-                            if(lin>=32) lin=32;
+							if(lin<=0) lin=1;
+							if(lin>=32) lin=32;
 							VieYApp.setDownloadDefaultThreads(SettingsActivity.this, lin);
 							textDefaultThreads.setText(lin+"");
 							i.twi(R.string.saved);
@@ -411,7 +438,7 @@ switchVolumePage = addSwitchItem(getString(R.string.volume_key_page), VieYApp.is
 	
 	private void showMaxRetryDialog() {
 		final int[] values = {0, 1, 2, 3};
-		final String[] names = {"0", "1", "2", "3"};
+		final String[] names = i.setWhich(new String[] {"0", "1", "2", "3"}, VieYApp.getDownloadMaxRetry(this)+"");
 		i.utw(R.string.max_retry_count, names, new mk.jk() {
 			@Override public void onButton1Click() {}
 			@Override public void onButton2Click() {}

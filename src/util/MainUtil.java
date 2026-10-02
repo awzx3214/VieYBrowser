@@ -75,11 +75,11 @@ public class MainUtil {
 	}
 	
 	public static void openPageSearch(Activity act, boolean isDarkMode, WebViey w, String str) {
-    
-        if(mPageSearchPopup != null && mPageSearchPopup.isShowing()){
+		
+		if(mPageSearchPopup != null && mPageSearchPopup.isShowing()){
 			mPageSearchPopup.dismiss();
 		}
-        
+		
 		View popupView = LayoutInflater.from(act).inflate(R.layout.popup_left_search, null);
 		EditText etPageSearch = popupView.findViewById(R.id.et_page_search);
 		ImageView btnSearchPrev  = popupView.findViewById(R.id.btn_search_prev);
@@ -146,7 +146,7 @@ public class MainUtil {
 		});
 		
 		etPageSearch.setText("");
-        if(!TextUtils.isEmpty(str)) etPageSearch.setText(str);
+		if(!TextUtils.isEmpty(str)) etPageSearch.setText(str);
 		etPageSearch.requestFocus();
 		etPageSearch.postDelayed(() -> {
 			InputMethodManager imm = (InputMethodManager) act.getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -224,27 +224,6 @@ public class MainUtil {
 		window.setAttributes(lp);
 	}
 	
-	public static void setJDT(ProgressBar bar)
-	{
-		int[] colors = {
-			0xff00ffdd,
-			0xff00e8cc,
-			0xff9198e5,
-			0xff9198e5
-		};
-		GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors);
-		ClipDrawable clipProgress = new ClipDrawable(gradientDrawable, Gravity.LEFT, ClipDrawable.HORIZONTAL);
-		ShapeDrawable bgDrawable = new ShapeDrawable();
-		bgDrawable.getPaint().setColor(0x00000000);
-		
-		LayerDrawable layerDrawable = new LayerDrawable(new Drawable[]{
-			bgDrawable,
-			bgDrawable,
-			clipProgress
-		});
-		bar.setProgressDrawable(layerDrawable);
-	}
-	
 	public static void goWebTo(final View view, final Context context, final WebViey web, final String js, final int intStr) {
 		RotateAnimation anim1 = new RotateAnimation(
 		0f,
@@ -311,31 +290,48 @@ public class MainUtil {
 		anim.start();
 	}
 	
-	public static void animateBar(final ProgressBar bar) {
+	public static void animateBar(final ProgressViey bar) {
 		if (bar == null) return;
-		final Context ctx = bar.getContext();
+		
 		final long switchDuration = 300L;
 		final long stayDuration = 750L;
-		final Drawable originalProgressDrawable = bar.getProgressDrawable();
-		final Drawable originalIndeterminateDrawable = bar.getIndeterminateDrawable();
+		final int originalMode = bar.getMode();
 		final int originalWidth = bar.getWidth();
+		final int originalHeight = bar.getHeight();
+		final ViewGroup.LayoutParams originalLp = bar.getLayoutParams();
 		ObjectAnimator out = ObjectAnimator.ofFloat(bar, View.ALPHA, 1f, 0f);
 		out.setDuration(switchDuration / 2);
 		out.setInterpolator(new LinearInterpolator());
 		out.addListener(new AnimatorListenerAdapter() {
 			@Override
 			public void onAnimationEnd(Animator animation) {
-				bar.setIndeterminate(true);
-				bar.setIndeterminateDrawable(getSystemCircleIndeterminateDrawable(ctx));
-				bar.setProgressDrawable(null);
-				setSize(bar,i.dp2px(30),i.dp2px(30));
+				bar.setCircleStrokeWidthDp(3f);
+				bar.setCircularIndeterminateMode();
+				ViewGroup.LayoutParams lp = bar.getLayoutParams();
+				lp.width = i.dp2px(30);
+				lp.height = i.dp2px(30);
+				bar.setLayoutParams(lp);
+				bar.requestLayout();
 				ObjectAnimator in = ObjectAnimator.ofFloat(bar, View.ALPHA, 0f, 1f);
 				in.setDuration(switchDuration / 2);
 				in.start();
 				bar.postDelayed(new Runnable() {
 					@Override
 					public void run() {
-						restoreHorizontal(bar,switchDuration,originalProgressDrawable,originalIndeterminateDrawable,originalWidth);
+						ViewGroup.LayoutParams lp2 = bar.getLayoutParams();
+						if (originalWidth > 0 && originalHeight > 0) {
+							lp2.width = originalWidth;
+							lp2.height = originalHeight;
+						} else {
+							lp2.width = originalLp.width;
+							lp2.height = originalLp.height;
+						}
+						bar.setLayoutParams(lp2);
+						bar.setMode(originalMode);
+						bar.requestLayout();
+						ObjectAnimator back = ObjectAnimator.ofFloat(bar, View.ALPHA, 0f, 1f);
+						back.setDuration(switchDuration);
+						back.start();
 					}
 				}, stayDuration);
 			}

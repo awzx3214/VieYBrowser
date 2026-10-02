@@ -200,7 +200,7 @@ public class i {
 	
 	public static String formatTime(long millis) {
 		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+			SimpleDateFormat sdf = new SimpleDateFormat(VieYApp.getDateFormat(i.m()), Locale.getDefault());
 			return sdf.format(new Date(millis));
 		} catch (Exception e) {
 			return "";
