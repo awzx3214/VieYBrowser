@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+    <string name="crash_dialog_title">Application has encountered an error</string>
+    <string name="crash_error_detail">Error Details</string>
+    <string name="date_format">Date Format</string>
     <string name="im_bookmark_text">*.html: The format used by most browsers. Recommended\n*.bf: Format used by Vie Browser, convenient for users migrating from Vie to VieY\n*.mbak: Format used by M Browser and its derivatives. It is recommended to use *.html instead of *.mbak when exporting bookmarks\n*.xbel: Format used by Linux desktop browsers and some sync plugins\n*.txt: Format used by some browsers, can be exported in Settings - Backup\n*.ini: Format used by Lagrange. After Settings - Export User Data, you will get a compressed package. Unzip it to find bookmarks.ini</string>
     <string name="im_bookmark_tips">Special formats and corresponding export methods</string>
     <string name="import_empty">No new content was added</string>

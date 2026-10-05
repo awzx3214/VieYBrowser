@@ -159,6 +159,7 @@ public class MainActivity extends BaseActivity {
 		}
 		if (!TextUtils.isEmpty(url)) {
 			createNewWindow(url);
+            urlEditText.setText(url);
 		}
 	}
 	

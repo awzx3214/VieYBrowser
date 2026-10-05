@@ -25,7 +25,14 @@ public class BaseActivity extends AppCompatActivity {
 	@Override
 	protected void onResume() {
 		i.m(this);
+		CrashHandler.currentActivity = this;
 		super.onResume();
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		CrashHandler.currentActivity = null;
 	}
 	
 	@Override
